@@ -109,7 +109,7 @@ const App = () => {
           </div>
           {rows.filtered.loading
             ? "Loading..."
-            : `${rows.filtered.data.length} rows`}
+            : `${rows.filtered.data.length.toLocaleString()} / ${rows.all.data.length.toLocaleString()} rows`}
         </div>
       </MainContainer>
     </>

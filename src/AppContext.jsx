@@ -289,6 +289,9 @@ const useProvideAppContext = () => {
         loading: dropdowns !== deferredDropdowns,
         data: filteredRows,
       },
+      all: {
+        data: rowData,
+      },
     },
   };
 };
