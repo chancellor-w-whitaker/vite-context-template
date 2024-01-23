@@ -38,7 +38,9 @@ const App = () => {
                       } pe-none z-1 shadow-sm opacity-${
                         allRelevantNotChecked ? 100 : 100
                       }`}
-                      style={{ transition: "opacity 0.15s ease-in-out" }}
+                      style={{
+                        transition: "all 0.15s ease-in-out",
+                      }}
                     >
                       {fraction}
                     </span>
