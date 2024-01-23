@@ -24,7 +24,7 @@ const App = () => {
               return (
                 <div className="dropdown col" key={field}>
                   <button
-                    className="btn btn-light dropdown-toggle w-100 shadow-sm d-flex justify-content-center align-items-center"
+                    className="btn btn-light bg-gradient dropdown-toggle w-100 shadow-sm d-flex justify-content-center align-items-center"
                     ref={(target) => dropdowns.targetStorer(field, target)}
                     data-bs-auto-close="outside"
                     data-bs-toggle="dropdown"

@@ -295,3 +295,11 @@ const useProvideAppContext = () => {
     },
   };
 };
+
+// divide relevant & irrelevant in lists
+// disable irrelevant options
+// total next to All
+// clicking All maybe only activates relevant?
+// reset button
+// weird behavior when turning All off on two different lists (maybe disable others when one is all items unchecked)
+// possibly add search (based on difficulty) (change way sorted--float relevant & matching to top)
