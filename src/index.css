@@ -283,25 +283,12 @@
     0px 4px 5px 0px rgba(0, 0, 0, 0.14), 0px 1px 10px 0px rgba(0, 0, 0, 0.12);
 }
 
-.welcome {
-  color: white;
-  padding: 50px;
-  text-align: center;
-  font-size: 50px;
-  background-image: radial-gradient(
-    circle,
-    rgba(63, 94, 251, 1) 0%,
-    rgba(252, 70, 107, 1) 100%
-  );
-
-  animation: fadeIn 1000ms;
+body {
+  overflow-y: scroll;
 }
 
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
+.list-item-sticky {
+  inset-block-start: 0;
+  position: sticky;
+  z-index: 1;
 }
