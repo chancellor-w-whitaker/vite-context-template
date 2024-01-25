@@ -5,9 +5,9 @@ import {
   useState,
   useMemo,
 } from "react";
-import { Str } from "@supercharge/strings";
 
 import { useSetBsBgVariantOfBody } from "./hooks/useSetBsBgVariantOfBody";
+import { standardizeKey } from "./functions/standardizeKey";
 import { useBsDropdowns } from "./hooks/useBsDropdowns";
 import { useData } from "./hooks/examples/useData";
 
@@ -21,60 +21,56 @@ export const AppContextProvider = ({ children }) => {
   );
 };
 
-const standardizeKey = (key) =>
-  Str(key)
-    .camel()
-    .words()
-    .filter((word) => word.toLowerCase() !== "desc")
-    .join("");
-
-/* 
-
-! relevant dropdowns algorithm
-
-what is the algorithm? (
-setDataDropdowns(getAllRelevantDropdowns(data, dropdowns, history))
-)
-- get secondary relevant dropdowns (
-getSecRelevantDropdowns(data, dropdowns, history, keys=Object.keys(dropdowns))
-)
-	- create copy of dropdowns where everything checked
-	- modify dropdowns from history
-		- each item in history contains field, action, option
-		- if option is undefined, means "all"
-		- based on item properties, assign actions to each field[option] in dropdowns
-	- then get relevant data using standard process
-	- then get relevant dropdowns (using relevant data & dropdowns & keys passed, mark which options for each field actually appear in the relevant data)
-- then get stack (reverse history, for each history obj, only traverse each field once) (determines order in which each field was modified)
-- for each field in stack, 
-	- get primary relevant dropdowns by (data, dropdowns, history, field)
-		- filtering field from history, then get secondary relevant dropdowns using data, dropdowns, filtered history, and sending field as the only item in keys
-	- assign field's secondary relevant dropdown to this newfound primary relevant dropdown
-- for each field in secondary relevant dropdowns, sort keys in dropdown
-
-*/
-
 // ! main method
+// ! what you return from here gets provided to App and can be consumed by App or any of its descendants
 const useProvideAppContext = () => {
+  // ! specify `bg-${variant}` to add to body classList
   useSetBsBgVariantOfBody("primary-subtle");
 
-  const { menuShownChecker, targetStorer } = useBsDropdowns();
+  // ! opt in to dynamically rendering content of dropdown menus only as dropdowns are opened
+  // ! dropdown button: ref={(node) => targetStorer(dropdownID, node)}
+  // ! place menuShownChecker(dropdownID) before dropdown menu descendant (if more than one descendant, wrap all in Fragment)
+  const { storeDropdownTarget, checkIfDropdownOpen } = useBsDropdowns();
 
-  const data = useData("data/fall.json");
+  // ! fetch json from url param
+  // ! place url or segment of url in state if need to fetch data dynamically
+  const currentData = useData("data/fall.json");
 
-  const { dropdownData, columnData, rowData } = useMemo(() => {
-    if (!(Array.isArray(data) && data.length > 0)) {
+  const {
+    dropdownData: currentDropdownData,
+    columnData: currentColumnData,
+    rowData: currentRowData,
+  } = useMemo(() => {
+    // ! if data is not lengthy array
+    if (!(Array.isArray(currentData) && currentData.length > 0)) {
+      // ! handle return values & their types early
       return { dropdownData: {}, columnData: {}, rowData: [] };
     }
 
+    // ! initialize row data (rebuild with standardized keys while looping data)
     const rowData = [];
 
+    /* 
+    ! for every key found in data, derive...
+    {
+      key1: {
+        types: { type1: timesCounted, ..., typeN: timesCounted },
+        values: Set(...),
+        field: "...",
+      },
+      ...,
+      keyN: { ... }
+    }
+    */
     let columnData = {};
 
-    data.forEach((row) => {
+    currentData.forEach((row) => {
+      // ! row that will have standardized keys
       const newRow = {};
 
+      // ! iterate keys for every row in case some rows are missing keys
       Object.keys(row).forEach((key) => {
+        // ! don't overwrite key in columnData once saved
         if (!(key in columnData)) {
           columnData[key] = {
             field: standardizeKey(key),
@@ -101,83 +97,118 @@ const useProvideAppContext = () => {
       rowData.push(newRow);
     });
 
+    // ! wrote to a variable in case this changes
     const validTypes = ["string", "number"];
 
+    // ! turn values to array to sort
+    // ! narrow type down to most frequently occurring valid type
+    // ! map field to respective info object instead of key
+    // ! return columnData as an object so it can be used as a lookup
     columnData = Object.fromEntries(
       Object.values(columnData).map(({ values, field, types }) => [
         field,
         {
           type: Object.keys(types)
             .filter((type) => validTypes.includes(type))
-            .sort((a, b) => types[b] - types[a])[0],
+            .sort((typeA, typeB) => types[typeB] - types[typeA])[0],
           values: Array.from(values).sort(),
         },
       ])
     );
 
+    // ! derive dropdown state structure from columnData as if they dropdown state is being initialized for the first time
     const dropdownData = Object.fromEntries(
       Object.entries(columnData)
-        .filter((arr) => arr[1].type === "string")
+        .filter((entry) => entry[1].type === "string")
         .map(([field, { values }]) => [
           field,
           Object.fromEntries(values.map((value) => [value, true])),
         ])
     );
 
+    // ! return each value that will be used elsewhere
     return { dropdownData, columnData, rowData };
-  }, [data]);
+  }, [currentData]);
 
-  const [prevDropdownData, setPrevDropdownData] = useState(dropdownData);
+  // ! save previous dropdown data to compare with current dropdown data--dropdown selections needs to handle differences
+  const [previousDropdownData, setPreviousDropdownData] =
+    useState(currentDropdownData);
 
-  const [dropdowns, setDropdowns] = useState({});
+  // ! structure designed for easy locating of dropdown items--find item state by looking up dropdownState[dropdownID][item] (will be true or false)
+  // ! depending on application, dropdown selections may be set up to remember every value of every dropdownID (field) that has ever appeared in data (assuming fetched data is dynamic)
+  const [dropdownSelections, setDropdownSelections] =
+    useState(currentDropdownData);
 
-  const deferredDropdowns = useDeferredValue(dropdowns);
+  // ! create deferred value of dropdown selections so can be passed to expensive calculation (keeps changing dropdown selections state responsive--expensive calculation happens later)
+  const deferredDropdownSelections = useDeferredValue(dropdownSelections);
 
-  if (prevDropdownData !== dropdownData) {
-    setPrevDropdownData(dropdownData);
+  // ! compare previous & current dropdown data in component body so no need to use effect
+  if (previousDropdownData !== currentDropdownData) {
+    // ! keep previous dropdown data synchronized
+    setPreviousDropdownData(currentDropdownData);
 
-    setDropdowns(dropdownData);
+    // ! reset dropdown selections (or handle differences in previous & current dropdown data)
+    setDropdownSelections(currentDropdownData);
   }
 
-  const onDropdownChange = useCallback(
-    ({ target: { value, name } }) =>
-      setDropdowns((previousState) => {
-        const nextState = { ...previousState };
+  // ! handler that gets passed to dropdown items
+  // ! dropdown items are input elements so field & value can just be passed as name & value respectively, allowing these variables to be extracted from event.target
+  // ! means handler doesn't need to be passed parameters when used
+  const onDropdownItemChange = useCallback(
+    ({ target: { name: field, value } }) =>
+      setDropdownSelections((prevState) => {
+        // ! new state reference
+        const nextState = { ...prevState };
 
-        nextState[name] = { ...nextState[name] };
+        // ! new dropdown reference
+        nextState[field] = { ...nextState[field] };
 
+        // ! clicked "All" button
+        // ! if value prop is undefined or "" (undefined prop arrives as empty string--means can't have specifically have a "" in list)
         if (value === "") {
-          const allAreChecked = !Object.values(nextState[name]).some(
+          // ! if not some item unchecked
+          const allChecked = !Object.values(nextState[field]).some(
             (condition) => !condition
           );
 
-          if (allAreChecked) {
-            Object.keys(nextState[name]).forEach(
-              (key) => (nextState[name][key] = false)
+          // ! only when all are checked should you set all false--otherwise, set all true
+          if (allChecked) {
+            Object.keys(nextState[field]).forEach(
+              (v) => (nextState[field][v] = false)
             );
           } else {
-            Object.keys(nextState[name]).forEach(
-              (key) => (nextState[name][key] = true)
+            Object.keys(nextState[field]).forEach(
+              (v) => (nextState[field][v] = true)
             );
           }
 
+          // ! if clicked all, return next state early so rest of code doesn't run
           return nextState;
         }
 
-        nextState[name][value] = !nextState[name][value];
+        // ! didn't click "All" button (clicked any item)
+        // ! flip condition (checked)
+        nextState[field][value] = !nextState[field][value];
 
         return nextState;
       }),
     []
   );
 
-  const { dropdownLists, filteredRows } = useMemo(() => {
-    const getFilteredRows = (rows, fields) => {
-      return rows.filter((row) => {
+  // ! dropdown list data recorded to separate relevant & irrelevant values as dropdown selection changes causes filtered data to change
+  // ! depends on deferred dropdown state so making changes to dropdowns remains responsive & so loading state of this memoization can be derived
+  const { dropdownListData, filteredRowData } = useMemo(() => {
+    // ! for each row -> for each field -> if some row[field] value not checked (state[field][value]), filter row out of data
+    const getFilteredRowData = (rowData, fields) => {
+      return rowData.filter((row) => {
         for (const field of fields) {
           const value = row[field];
 
-          if (deferredDropdowns[field] && !deferredDropdowns[field][value]) {
+          // ! precede condition in case dropdown doesn't exist (may be logic error)
+          if (
+            deferredDropdownSelections[field] &&
+            !deferredDropdownSelections[field][value]
+          ) {
             return false;
           }
         }
@@ -186,120 +217,107 @@ const useProvideAppContext = () => {
       });
     };
 
-    const getFilteredValues = (rows, fields) => {
-      const filteredValues = {};
+    // ! in passed row data, field all unique values of every field passed
+    const getRelevantValueData = (rowData, fields) => {
+      const relevantValueData = {};
 
-      rows.forEach((row) => {
+      rowData.forEach((row) => {
         fields.forEach((field) => {
-          if (!(field in filteredValues)) filteredValues[field] = new Set();
+          if (!(field in relevantValueData))
+            relevantValueData[field] = new Set();
 
           const value = row[field];
 
-          filteredValues[field].add(value);
+          relevantValueData[field].add(value);
         });
       });
 
-      return filteredValues;
+      return relevantValueData;
     };
 
-    const fields = Object.entries(columnData)
-      .filter((arr) => arr[1].type === "string")
+    // ! string fields of current column data--only columns that can be dropdowns with values relevant to current data
+    const currentFields = Object.entries(currentColumnData)
+      .filter((entry) => entry[1].type === "string")
       .map(([field]) => field);
 
-    const modifiedFields = fields.filter(
+    // ! of current fields, find fields in dropdown state where some values are unchecked
+    const modifiedDropdownFields = currentFields.filter(
       (field) =>
-        deferredDropdowns[field] &&
-        Object.values(deferredDropdowns[field]).some((checked) => !checked)
+        deferredDropdownSelections[field] &&
+        Object.values(deferredDropdownSelections[field]).some(
+          (checked) => !checked
+        )
     );
 
-    const filteredRows = getFilteredRows(rowData, fields);
+    // ! entire filtered row data--derived from current row data, string fields found in current column data, & deferred dropdown state
+    const filteredRowData = getFilteredRowData(currentRowData, currentFields);
 
-    const filteredValues = getFilteredValues(filteredRows, fields);
+    // ! find relevant values of every current string field
+    // ! relevant value data of modified dropdown fields will get overwritten--relevant values of those is being calculated here unnecessarily
+    const relevantValueData = getRelevantValueData(
+      filteredRowData,
+      currentFields
+    );
 
-    modifiedFields.forEach((field, index) => {
-      const modFieldsWithoutCurrent = [
-        ...modifiedFields.slice(0, index),
-        ...modifiedFields.slice(index + 1),
+    // ! for each relevant modified dropdown field, get filtered row data where all values of field are assumed to be checked
+    modifiedDropdownFields.forEach((field, index) => {
+      // ! don't need to consider field of current iteration in row data filtering algorithm
+      const currentOneRemoved = [
+        ...modifiedDropdownFields.slice(0, index),
+        ...modifiedDropdownFields.slice(index + 1),
       ];
 
-      const theseFilteredRows = getFilteredRows(
-        rowData,
-        modFieldsWithoutCurrent
+      const thisFilteredRowData = getFilteredRowData(
+        currentRowData,
+        currentOneRemoved
       );
 
-      const theseFilteredValues = getFilteredValues(theseFilteredRows, [field]);
+      // ! from this filtered row data, find every unique value found only for field of current iteration
+      const thisRelevantValueData = getRelevantValueData(thisFilteredRowData, [
+        field,
+      ]);
 
-      filteredValues[field] = theseFilteredValues[field];
+      // ! for every modified dropdown field,
+      // ! overwrite its unique values with its unique values found from a filtered row data where the field's dropdown selections are removed from the entire dropdown selections
+      relevantValueData[field] = thisRelevantValueData[field];
     });
 
-    const dropdownLists = Object.fromEntries(
-      fields.map((field) => [
+    // ! for each current field, differentiate relevant & irrelevant values of field's values in current row data
+    const dropdownListData = Object.fromEntries(
+      currentFields.map((field) => [
         field,
         {
-          irrelevant: columnData[field].values.filter(
-            (value) => !filteredValues[field]?.has(value)
+          irrelevant: currentColumnData[field].values.filter(
+            (value) => !relevantValueData[field]?.has(value)
           ),
-          relevant: columnData[field].values.filter((value) =>
-            filteredValues[field]?.has(value)
+          relevant: currentColumnData[field].values.filter((value) =>
+            relevantValueData[field]?.has(value)
           ),
         },
       ])
     );
 
-    return { dropdownLists, filteredRows };
-  }, [rowData, columnData, deferredDropdowns]);
-
-  // sticky all buttons
-  // checked fractions
-
-  // dropdowns?
-  // column data where type === "string"
-  // how should dropdowns data structure be set up?
-  // what to consider?
-  // when changing state of value of field, should be quick to locate
-  // how about dropdowns[field][value] = ? (true or false) ✅
-  // how about maintaining history?
-  // do you need history? what if there is a simpler way?
-  // ! when data gets filtered, relevant values for each field is subject to change
-  // ! you can find filtered rows from updated dropdowns,
-  // ! and then find relevant values from filtered rows
-  // what if you repeated a similar process for every field?
-  // imagine
-
-  // ! think about this!
-  // const data = useData(url);
-  // const [prevData, setPrevData] = useState(data);
-  // const [someState, setSomeState] = useState(null);
-  // if (prevData !== data) {
-  //   setPrevData(data);
-  //   setSomeState(data > prevData ? "increasing" : "decreasing");
-  // }
+    // ! return dropdown list data to be used when rendering dropdowns & filtered row data to be used when rendering Visualization or Data Grid
+    return { dropdownListData, filteredRowData };
+  }, [currentRowData, currentColumnData, deferredDropdownSelections]);
 
   return {
     dropdowns: {
-      onChange: onDropdownChange,
+      onChange: onDropdownItemChange,
+      state: dropdownSelections,
+      lists: dropdownListData,
       inputType: "checkbox",
-      lists: dropdownLists,
-      state: dropdowns,
-      menuShownChecker,
-      targetStorer,
+      storeDropdownTarget,
+      checkIfDropdownOpen,
     },
     rows: {
       filtered: {
-        loading: dropdowns !== deferredDropdowns,
-        data: filteredRows,
+        loading: dropdownSelections !== deferredDropdownSelections,
+        data: filteredRowData,
       },
       all: {
-        data: rowData,
+        data: currentRowData,
       },
     },
   };
 };
-
-// divide relevant & irrelevant in lists
-// disable irrelevant options
-// total next to All
-// clicking All maybe only activates relevant?
-// reset button
-// weird behavior when turning All off on two different lists (maybe disable others when one is all items unchecked)
-// possibly add search (based on difficulty) (change way sorted--float relevant & matching to top)

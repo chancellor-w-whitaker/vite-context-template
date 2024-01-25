@@ -25,7 +25,9 @@ const App = () => {
                 <div className="dropdown col" key={field}>
                   <button
                     className="btn btn-light bg-gradient dropdown-toggle w-100 shadow-sm d-flex justify-content-center align-items-center"
-                    ref={(target) => dropdowns.targetStorer(field, target)}
+                    ref={(target) =>
+                      dropdowns.storeDropdownTarget(field, target)
+                    }
                     data-bs-auto-close="outside"
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
@@ -49,7 +51,7 @@ const App = () => {
                     className="dropdown-menu shadow-sm overflow-y-scroll pt-0"
                     style={{ maxHeight: 300 }}
                   >
-                    {dropdowns.menuShownChecker(field) && (
+                    {dropdowns.checkIfDropdownOpen(field) && (
                       <div className="list-group">
                         <div className="list-item-sticky pt-2 bg-white">
                           <label className="list-group-item d-flex gap-2 border-0">
