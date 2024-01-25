@@ -1,8 +1,5 @@
 // todo: checklist
 
-// * clean up main method by extracting long, reusable calculations into separate functions
-// * make sure comments & variables names of separate modules are also clear (App & index.css)
-// * make sure App is clear (especially section where dropdowns are being mapped--mapping over dropdowns may change when dropdown list data includes fields & values that are irrelevant to current row data--relevance currently only pertains to filtered row data)
 // divide relevant & irrelevant in lists
 // disable irrelevant options
 // total next to All
@@ -10,6 +7,9 @@
 // reset button
 // weird behavior when turning All off on two different lists (maybe disable others when one is all items unchecked)
 // possibly add search (based on difficulty) (change way sorted--float relevant & matching to top)
+
+// clean up main method by extracting long, reusable calculations into separate functions
+// make sure App is clear (especially section where dropdowns are being mapped--mapping over dropdowns may change when dropdown list data includes fields & values that are irrelevant to current row data--relevance currently only pertains to filtered row data)
 
 // ? random notes
 

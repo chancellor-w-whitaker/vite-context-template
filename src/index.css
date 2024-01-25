@@ -1,3 +1,4 @@
+/* ! poppins font rules (https://fonts.cdnfonts.com/css/poppins) */
 @font-face {
   font-family: poppins;
   font-style: normal;
@@ -270,7 +271,10 @@
     url(https://fonts.cdnfonts.com/s/16009/Poppins-BlackItalic.woff)
       format("woff");
 }
+/* ! above are rules for poppins font (https://fonts.cdnfonts.com/css/poppins) */
+/* ! explicitly adding rules instead of importing rules prevents wrong font from being loaded in for a few seconds */
 
+/* ! override bootstrap css by changing values of bs css variables */
 :root,
 [data-bs-theme="light"] {
   --bs-font-sans-serif: "Poppins", sans-serif;
@@ -283,10 +287,13 @@
     0px 4px 5px 0px rgba(0, 0, 0, 0.14), 0px 1px 10px 0px rgba(0, 0, 0, 0.12);
 }
 
+/* ! add constant vertical scrollbar to body so there is no layout shift when body becomes scrollable */
 body {
   overflow-y: scroll;
 }
 
+/* ! makes item stick to top of scrollable container */
+/* ! used for "All" buttons in dropdown filters */
 .list-item-sticky {
   inset-block-start: 0;
   position: sticky;

@@ -303,21 +303,19 @@ const useProvideAppContext = () => {
 
   return {
     dropdowns: {
+      storeTarget: storeDropdownTarget,
+      checkShown: checkIfDropdownOpen,
       onChange: onDropdownItemChange,
       state: dropdownSelections,
       lists: dropdownListData,
       inputType: "checkbox",
-      storeDropdownTarget,
-      checkIfDropdownOpen,
     },
     rows: {
       filtered: {
         loading: dropdownSelections !== deferredDropdownSelections,
         data: filteredRowData,
       },
-      all: {
-        data: currentRowData,
-      },
+      current: { data: currentRowData },
     },
   };
 };
