@@ -13,13 +13,15 @@ const App = () => {
           <div className="d-flex flex-wrap gap-3">
             {/* iterates over dropdown entries in state--meaning will include data-irrelevant dropdowns when those are saved */}
             {Object.entries(dropdowns.state).map(([field, checklist]) => {
+              const { irrelevant, relevant } = dropdowns.lists[field];
+
               // of relevant values for each field (even though in the future some fields will be data-irrelevant), find number of those values that are checked
-              const totalCheckedAndRelevant = dropdowns.lists[
-                field
-              ].relevant.filter((value) => checklist[value]).length;
+              const totalCheckedAndRelevant = relevant.filter(
+                (value) => checklist[value]
+              ).length;
 
               // just take length of relevant list
-              const totalRelevant = dropdowns.lists[field].relevant.length;
+              const totalRelevant = relevant.length;
 
               // fraction to be displayed (fraction of checked values of relevant values)
               const fraction = `${totalCheckedAndRelevant} / ${totalRelevant}`;
@@ -34,7 +36,7 @@ const App = () => {
                   {/* added "w-100" to stretch button across stretched div */}
                   {/* centered using flex utilities in order to properly align dropdown toggle */}
                   <button
-                    className="btn btn-light bg-gradient dropdown-toggle w-100 shadow-sm d-flex justify-content-center align-items-center"
+                    className="btn btn-light bg-gradient dropdown-toggle w-100 shadow-sm position-relative d-flex justify-content-center align-items-center"
                     // stores dropdown identifier with target to be used when opting in to dynamic dropdown menu rendering
                     ref={(target) => dropdowns.storeTarget(field, target)}
                     data-bs-auto-close="outside"
@@ -45,12 +47,10 @@ const App = () => {
                     {toTitleCase(field)}
                     {/* use some unchecked condition to present badge differently */}
                     <span
-                      className={`position-absolute top-0 start-100 translate-middle badge rounded-pill bg-${
-                        someRelevantUnchecked ? "danger" : "success"
-                      } pe-none z-1 shadow-sm opacity-${
-                        someRelevantUnchecked ? 100 : 100
+                      className={`position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger pe-none z-1 shadow-sm opacity-${
+                        someRelevantUnchecked ? 100 : 0
                       }`}
-                      // in case you change how you transition fraction badge
+                      // in case you change how you transition fraction badge, transition all
                       style={{
                         transition: "all 0.15s ease-in-out",
                       }}
@@ -67,29 +67,28 @@ const App = () => {
                     {dropdowns.checkShown(field) && (
                       <div className="list-group">
                         {/* "All" button */}
-                        <div className="list-item-sticky pt-2 bg-white">
-                          <label className="list-group-item d-flex gap-2 border-0">
-                            <input
-                              // is checked as long as no condition unchecked
-                              checked={
-                                !Object.values(checklist).some(
-                                  (condition) => !condition
-                                )
-                              }
-                              className="form-check-input flex-shrink-0"
-                              onChange={dropdowns.onChange}
-                              type={dropdowns.inputType}
-                              name={field}
-                              // value could be undefined or ""--specified "" to be more explicit about intention
-                              value=""
-                            />
-                            <span>All</span>
-                          </label>
-                        </div>
+                        <label className="list-group-item list-item-sticky d-flex gap-2 border-0 shadow-sm pt-3">
+                          <input
+                            // is checked as long as no condition unchecked
+                            checked={
+                              !Object.values(checklist).some(
+                                (condition) => !condition
+                              )
+                            }
+                            className="form-check-input flex-shrink-0"
+                            onChange={dropdowns.onChange}
+                            type={dropdowns.inputType}
+                            name={field}
+                            // value could be undefined or ""--specified "" to be more explicit about intention
+                            value=""
+                          />
+                          {/* for now, includes number of items in checklist */}
+                          <span>All ({Object.keys(checklist).length})</span>
+                        </label>
                         {/* present relevant options first */}
-                        {dropdowns.lists[field].relevant.map((value) => (
+                        {relevant.map((value) => (
                           <label
-                            className={`list-group-item d-flex gap-2 border-0 opacity-100`}
+                            className="list-group-item d-flex gap-2 border-0"
                             key={value}
                           >
                             <input
@@ -104,9 +103,9 @@ const App = () => {
                           </label>
                         ))}
                         {/* present irrelevant values next */}
-                        {dropdowns.lists[field].irrelevant.map((value) => (
+                        {irrelevant.map((value) => (
                           <label
-                            className={`list-group-item d-flex gap-2 border-0 opacity-50`}
+                            className="list-group-item d-flex gap-2 border-0 opacity-50"
                             key={value}
                           >
                             <input

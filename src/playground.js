@@ -1,9 +1,8 @@
 // todo: checklist
 
-// divide relevant & irrelevant in lists
 // disable irrelevant options
-// total next to All
-// clicking All maybe only activates relevant?
+// total next to All (change this to total relevant)
+// clicking All maybe only activates relevant? (means All button onChange handler needs relevance data--since onChange for other options don't require dependencies, maybe make All button handler a different callback)
 // reset button
 // weird behavior when turning All off on two different lists (maybe disable others when one is all items unchecked)
 // possibly add search (based on difficulty) (change way sorted--float relevant & matching to top)
