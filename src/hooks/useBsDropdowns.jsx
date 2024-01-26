@@ -4,53 +4,53 @@ import { useWindowListener } from "./examples/useWindowListener";
 
 export const useBsDropdowns = () => {
   // ! will be Map of dropdown targets (dropdown buttons--dropdown button is "taSrget" in event)
-  const targetsRef = useRef(null);
+  const dropdownsRef = useRef(null);
 
   // ! helper function--used to get Map from ref or initialize Map if not initialized
-  const getTargetsMap = useCallback(() => {
-    if (!targetsRef.current) {
+  const getDropdownsMap = useCallback(() => {
+    if (!dropdownsRef.current) {
       // Initialize the Map on first usage.
-      targetsRef.current = new Map();
+      dropdownsRef.current = new Map();
     }
 
-    return targetsRef.current;
+    return dropdownsRef.current;
   }, []);
 
   // ! dropdown button callback ref
   // ! get targets Map, then set dropdown identifier -> dropdown target if target (node) if target attached to DOM
-  const storeDropdownTarget = useCallback(
-    (name, target) => {
-      const map = getTargetsMap();
+  const storeDropdownById = useCallback(
+    (dropdownID, dropdownButtonNode) => {
+      const map = getDropdownsMap();
 
-      if (target) {
+      if (dropdownButtonNode) {
         // Add to the Map
-        map.set(name, target);
+        map.set(dropdownID, dropdownButtonNode);
       } else {
         // Remove from the Map
-        map.delete(name);
+        map.delete(dropdownID);
       }
     },
-    [getTargetsMap]
+    [getDropdownsMap]
   );
 
   // ! state used to maintain relevant dropdown events
   // ! removes events with target of currently occurring event when currently occurring event type is "hidden"
   // ! as a result, state will always only contain events for dropdowns that are still open
   // ! therefore, this state can be used to dynamically render dropdown menu descendants of only opened dropdowns
-  const [dropdownEvents, setDropdownsEvents] = useState([]);
+  const [events, setEvents] = useState([]);
 
   // ! function to be used in JSX to opt in to dynamic rendering
   // ! find target by pointing to dropdown identifier in targets map
   // ! if some stored dropdown event matches found target, dropdown is open
-  const checkIfDropdownShown = useCallback(
-    (name) => {
-      const map = getTargetsMap();
+  const isDropdownWithIdOpen = useCallback(
+    (dropdownID) => {
+      const map = getDropdownsMap();
 
-      const currentTarget = map.get(name);
+      const dropdownButtonNode = map.get(dropdownID);
 
-      return dropdownEvents.find(({ target }) => target === currentTarget);
+      return events.find(({ target }) => target === dropdownButtonNode);
     },
-    [getTargetsMap, dropdownEvents]
+    [getDropdownsMap, events]
   );
 
   // ! handle each dropdown event that gets fired when dropdown opens and closes--implementation of logic described of dropdown events useState hook
@@ -58,17 +58,17 @@ export const useBsDropdowns = () => {
     (recentEvent) => {
       const { target, type } = recentEvent;
 
-      const targetsMap = getTargetsMap();
+      const dropdownsMap = getDropdownsMap();
 
-      const allTargets = Array.from(targetsMap.values());
+      const dropdownButtonNodes = Array.from(dropdownsMap.values());
 
-      const isValidTarget = allTargets.includes(target);
+      const targetIsStoredNode = dropdownButtonNodes.includes(target);
 
-      if (isValidTarget) {
-        setDropdownsEvents((previousArray) => {
-          const dropdownHidden = type.split(".")[0] === "hidden";
+      if (targetIsStoredNode) {
+        setEvents((previousArray) => {
+          const hiddenEventFired = type.split(".")[0] === "hidden";
 
-          if (dropdownHidden) {
+          if (hiddenEventFired) {
             return previousArray.filter(
               ({ target: thisTarget }) => thisTarget !== target
             );
@@ -78,7 +78,7 @@ export const useBsDropdowns = () => {
         });
       }
     },
-    [getTargetsMap]
+    [getDropdownsMap]
   );
 
   // ! listen to bootstrap events fired when a dropdown opens & closes
@@ -91,5 +91,5 @@ export const useBsDropdowns = () => {
   useWindowListener("hidden.bs.dropdown", handleEvent);
 
   // ! return dropdown button ref callback & function to opt in to dynamic rendering
-  return { checkIfDropdownShown, storeDropdownTarget };
+  return { isDropdownWithIdOpen, storeDropdownById };
 };

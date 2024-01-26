@@ -6,12 +6,11 @@ import {
   useMemo,
 } from "react";
 
-import { updateDropdownSelections } from "./functions/updateDropdownSelections";
-import { initializeDashboardData } from "./functions/initializeDashboardData";
 import { useSetBsBgVariantOfBody } from "./hooks/useSetBsBgVariantOfBody";
-import { findRelevanceData } from "./functions/findRelevanceData";
+import { standardizeKey } from "./functions/standardizeKey";
 import { useBsDropdowns } from "./hooks/useBsDropdowns";
 import { useData } from "./hooks/examples/useData";
+import { usePrevious } from "./hooks/usePrevious";
 
 export const AppContext = createContext(null);
 
@@ -119,91 +118,394 @@ const finalDropdownsToRender = {
 */
 
 export const AppContextProvider = ({ children }) => {
-  const appContext = useProvideAppContext();
+  const appContext = useMainMethod();
 
   return (
     <AppContext.Provider value={appContext}>{children}</AppContext.Provider>
   );
 };
 
-// ! main method
-// ! what you return from here gets provided to App and can be consumed by App or any of its descendants
-const useProvideAppContext = () => {
-  // ! specify `bg-${variant}` to add to body classList
+const dataOptions = [
+  { displayName: "Fall Enrollment", id: "fall" },
+  { displayName: "Spring Enrollment", id: "spring" },
+  { displayName: "Summer Enrollment", id: "summer" },
+  { displayName: "Degrees Awarded", id: "degrees" },
+  { displayName: "Retention Rates", id: "retention" },
+  { displayName: "Graduation Rates", id: "graduation" },
+  { displayName: "Credit Hours", id: "hours" },
+];
+
+const useMainMethod = () => {
   useSetBsBgVariantOfBody("primary-subtle");
 
-  // ! opt in to dynamically rendering content of dropdown menus only as dropdowns are opened
-  // ! dropdown button: ref={(node) => targetStorer(dropdownID, node)}
-  // ! place menuShownChecker(dropdownID) before dropdown menu descendant (if more than one descendant, wrap all in Fragment)
-  const { checkIfDropdownShown, storeDropdownTarget } = useBsDropdowns();
+  const { isDropdownWithIdOpen, storeDropdownById } = useBsDropdowns();
 
-  // ! fetch json from url param
-  // ! place url or segment of url in state if need to fetch data dynamically
-  const currentData = useData("data/fall.json");
+  const [selectedData, setSelectedData] = useState(dataOptions[0].id);
 
-  const {
-    dropdownData: currentDropdownData,
-    columnData: currentColumnData,
-    rowData: currentRowData,
-  } = useMemo(() => initializeDashboardData(currentData), [currentData]);
+  const deferredSelectedData = useDeferredValue(selectedData);
 
-  // ! save previous dropdown data to compare with current dropdown data--dropdown selections needs to handle differences
-  const [previousDropdownData, setPreviousDropdownData] =
-    useState(currentDropdownData);
+  const dataIsLoading = selectedData !== deferredSelectedData;
 
-  // ! structure designed for easy locating of dropdown items--find item state by looking up dropdownState[dropdownID][item] (will be true or false)
-  // ! depending on application, dropdown selections may be set up to remember every value of every dropdownID (field) that has ever appeared in data (assuming fetched data is dynamic)
-  const [dropdownSelections, setDropdownSelections] =
-    useState(currentDropdownData);
-
-  // ! create deferred value of dropdown selections so can be passed to expensive calculation (keeps changing dropdown selections state responsive--expensive calculation happens later)
-  const deferredDropdownSelections = useDeferredValue(dropdownSelections);
-
-  // ! compare previous & current dropdown data in component body so no need to use effect
-  if (previousDropdownData !== currentDropdownData) {
-    // ! keep previous dropdown data synchronized
-    setPreviousDropdownData(currentDropdownData);
-
-    // ! reset dropdown selections (or handle differences in previous & current dropdown data)
-    setDropdownSelections(currentDropdownData);
-  }
-
-  // ! handler that gets passed to dropdown items
-  // ! dropdown items are input elements so field & value can just be passed as name & value respectively, allowing these variables to be extracted from event.target
-  // ! means handler doesn't need to be passed parameters when used
-  const onDropdownItemChange = useCallback(
-    ({ target: { name: field, value } }) =>
-      setDropdownSelections(updateDropdownSelections(field, value)),
+  const onSelectedDataChange = useCallback(
+    ({ target: { value } }) => setSelectedData(value),
     []
   );
 
-  // ! dropdown list data recorded to separate relevant & irrelevant values as dropdown selection changes causes filtered data to change
-  // ! depends on deferred dropdown state so making changes to dropdowns remains responsive & so loading state of this memoization can be derived
-  const { dropdownListData, filteredRowData } = useMemo(
-    () =>
-      findRelevanceData(
-        currentRowData,
-        currentColumnData,
-        deferredDropdownSelections
-      ),
-    [currentRowData, currentColumnData, deferredDropdownSelections]
+  const data = useData(`data/${deferredSelectedData}.json`);
+
+  const [dropdowns, setDropdowns] = useState({});
+
+  const deferredDropdowns = useDeferredValue(dropdowns);
+
+  const filteredDataIsLoading = dropdowns !== deferredDropdowns;
+
+  const onDropdownItemChange = useCallback(
+    ({ target: { value, name } }) =>
+      setDropdowns((previousDropdowns) => {
+        // ! name is `${field}-items`
+        const field = name.split("-")[0];
+
+        const nextDropdowns = { ...previousDropdowns };
+
+        nextDropdowns[field] = { ...nextDropdowns[field] };
+
+        nextDropdowns[field].items = { ...nextDropdowns[field].items };
+
+        nextDropdowns[field].items[value] = {
+          ...nextDropdowns[field].items[value],
+        };
+
+        nextDropdowns[field].items[value].checked =
+          !nextDropdowns[field].items[value].checked;
+
+        return nextDropdowns;
+      }),
+    []
   );
 
+  const onDropdownAllItemChange = useCallback(
+    ({ target: { name } }) =>
+      setDropdowns((previousDropdowns) => {
+        // ! name is `${field}-items`
+        const field = name.split("-")[0];
+
+        const nextDropdowns = { ...previousDropdowns };
+
+        nextDropdowns[field] = { ...nextDropdowns[field] };
+
+        const noneUnchecked = !Object.values(nextDropdowns[field].items).some(
+          ({ checked }) => !checked
+        );
+
+        if (noneUnchecked) {
+          nextDropdowns[field].items = Object.fromEntries(
+            Object.entries(nextDropdowns[field].items).map(
+              ([value, object]) => [value, { ...object, checked: false }]
+            )
+          );
+        } else {
+          nextDropdowns[field].items = Object.fromEntries(
+            Object.entries(nextDropdowns[field].items).map(([value, object]) =>
+              !object.checked
+                ? [value, { ...object, checked: true }]
+                : [value, object]
+            )
+          );
+        }
+
+        return nextDropdowns;
+      }),
+    []
+  );
+
+  // ! can you pass 'name' prop to search input?
+  // ! do you need to distinguish between the search input & item inputs?
+  // ! for example, pass `${field}-items` to item inputs &
+  // ! pass `${field}-search` to search input
+  // ! remove '-items' & remove '-search' in onChange handlers
+  const onDropdownSearchChange = useCallback(
+    ({ target: { value, name } }) =>
+      setDropdowns((previousDropdowns) => {
+        // ! name is `${field}-search`
+        const field = name.split("-")[0];
+
+        const nextDropdowns = { ...previousDropdowns };
+
+        nextDropdowns[field] = { ...nextDropdowns[field] };
+
+        nextDropdowns[field].search = value;
+
+        return nextDropdowns;
+      }),
+    []
+  );
+
+  // ! get filtered data and derived dropdown information here
+  // ! dropdown state & rows should be enough to get you what you need
+  // ! dropdown state tells you which options are data relevant--then you derive filtered data relevance
+  /*
+  const valueRelevanceLookup = {
+    field1: {
+      filteredDataIrrelevant: ["...", "..."],
+      filteredDataRelevant: ["...", "..."],
+      dataIrrelevant: ["...", "..."],
+    },
+    fieldN: {
+      filteredDataIrrelevant: ["...", "..."],
+      filteredDataRelevant: ["...", "..."],
+      dataIrrelevant: ["...", "..."],
+    },
+  };
+  */
+
+  const { columns, rows } = useMemo(() => {
+    if (!(Array.isArray(data) && data.length > 0)) {
+      return { relevantDropdowns: {}, columns: {}, rows: [] };
+    }
+
+    const rows = [];
+
+    let columns = {};
+
+    data.forEach((object) => {
+      const row = {};
+
+      Object.keys(object).forEach((key) => {
+        if (!(key in columns)) {
+          columns[key] = {
+            field: standardizeKey(key),
+            values: new Set(),
+            types: {},
+          };
+        }
+
+        const { values, types, field } = columns[key];
+
+        const value = object[key];
+
+        const type = typeof value;
+
+        values.add(value);
+
+        if (!(type in types)) {
+          types[type] = 0;
+        }
+
+        types[type]++;
+
+        row[field] = value;
+      });
+
+      rows.push(row);
+    });
+
+    columns = Object.fromEntries(
+      Object.values(columns).map(({ values, field, types }) => [
+        field,
+        {
+          type: Object.keys(types)
+            .sort((typeA, typeB) => types[typeB] - types[typeA])
+            .filter((type) => ["string", "number"].includes(type))[0],
+          values: Array.from(values).sort(),
+        },
+      ])
+    );
+
+    return { columns, rows };
+  }, [data]);
+
+  const { fieldValueSets, filteredRows } = useMemo(() => {
+    const dataRelevantFields = Object.keys(deferredDropdowns).filter(
+      (field) => deferredDropdowns[field].dataRelevance
+    );
+
+    const dataRelevantModifiedFields = dataRelevantFields.filter((field) =>
+      // deferredDropdowns[field] &&
+      Object.values(deferredDropdowns[field].items).some(
+        ({ checked }) => !checked
+      )
+    );
+
+    const getFilteredRows = ({ dropdowns, fields, rows }) => {
+      return rows.filter((row) => {
+        for (const field of fields) {
+          const value = row[field];
+
+          // ! precede condition in case dropdown doesn't exist (may be logic error)
+          if (
+            // dropdowns[field] &&
+            !dropdowns[field].items[value].checked
+          ) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+    };
+
+    const findSetOfValuesPerField = ({ fields, rows }) => {
+      const valueSets = {};
+
+      rows.forEach((row) => {
+        fields.forEach((field) => {
+          if (!(field in valueSets)) valueSets[field] = new Set();
+
+          const value = row[field];
+
+          valueSets[field].add(value);
+        });
+      });
+
+      return valueSets;
+    };
+
+    const filteredRows = getFilteredRows({
+      dropdowns: deferredDropdowns,
+      fields: dataRelevantFields,
+      rows,
+    });
+
+    const fieldValueSets = findSetOfValuesPerField({
+      fields: dataRelevantFields,
+      rows: filteredRows,
+    });
+
+    dataRelevantModifiedFields.forEach((thisField, index) => {
+      const thisFieldRemoved = [
+        ...dataRelevantModifiedFields.slice(0, index),
+        ...dataRelevantModifiedFields.slice(index + 1),
+      ];
+
+      const thisFilteredRows = getFilteredRows({
+        dropdowns: deferredDropdowns,
+        fields: thisFieldRemoved,
+        rows,
+      });
+
+      const thisFieldValueSets = findSetOfValuesPerField({
+        rows: thisFilteredRows,
+        fields: [thisField],
+      });
+
+      fieldValueSets[thisField] = thisFieldValueSets[thisField];
+    });
+
+    return { fieldValueSets, filteredRows };
+  }, [deferredDropdowns, rows]);
+
+  const handleDataChangeInDropdowns = useCallback(() => {
+    const nextDropdowns = Object.fromEntries(
+      Object.entries(columns)
+        .filter((entry) => entry[1].type === "string")
+        .map(([field, { values }]) => [
+          field,
+          {
+            items: Object.fromEntries(
+              values.map((value) => [
+                value,
+                { dataRelevance: true, checked: true },
+              ])
+            ),
+            dataRelevance: true,
+            search: "",
+          },
+        ])
+    );
+
+    setDropdowns((previousDropdowns) => {
+      // next dropdowns gets manipulated based on previous dropdowns
+      Object.entries(previousDropdowns).forEach(
+        ([field, { search, items }]) => {
+          // if a prior field also appears in current data
+          if (field in nextDropdowns) {
+            // is new obj in state
+            const nextDropdown = nextDropdowns[field];
+
+            // maintain prior search value
+            nextDropdown.search = search;
+
+            // for prior dropdown's items
+            Object.entries(items).forEach(([value, { checked }]) => {
+              // is new obj in state
+              const nextItems = nextDropdown.items;
+
+              // prior item is relevant if appears in next items due to being derived from next data
+              const dataRelevance = value in nextItems;
+
+              // is new obj in state
+              // dataRelevance is dynamic; checked is consistent
+              nextItems[value] = { dataRelevance, checked };
+            });
+          } else {
+            // set prior dropdown in next dropdown if not found in next data
+            nextDropdowns[field] = { dataRelevance: false, search, items };
+
+            // is new obj in state
+            const nextDropdown = nextDropdowns[field];
+
+            // is new obj in state
+            const nextItems = nextDropdown.items;
+
+            // this prior dropdown's items cannot be relevant if the dropdown itself is not relevant
+            Object.entries(items).forEach(
+              ([value, item]) =>
+                // each item becomes a new obj in state
+                (nextItems[value] = { ...item, dataRelevance: false })
+            );
+          }
+        }
+      );
+
+      // after being manipulated by previous dropdowns
+      return nextDropdowns;
+    });
+  }, [columns]);
+
+  usePrevious(columns, handleDataChangeInDropdowns);
+
+  // ! need to make All buttons sticky
+  // ! need to make search form not scroll with list
+  // ! need to disable enter of search form
+
+  // ! (already tried--might be better to use combo of both) might want to use transition for selected data -> data state changes (startTransition around set data)
+  // ! need to handle changing selected data
+  // ! need to handle search re-sort
+  // ! what about disabling dropdown items & All button not activating irrelevant dropdown items?
+
+  // ! need to handle best method of storing derived dropdown info
+  // ! basically, the only thing derived is order (existing values is always maintained in state)
+  // ! structures:
+  /*
+  const valueRelevanceLookup = {
+    field1: {
+      filteredDataIrrelevant: ["...", "..."],
+      filteredDataRelevant: ["...", "..."],
+      dataIrrelevant: ["...", "..."],
+    },
+    fieldN: {
+      filteredDataIrrelevant: ["...", "..."],
+      filteredDataRelevant: ["...", "..."],
+      dataIrrelevant: ["...", "..."],
+    },
+  };
+  */
+
   return {
-    dropdowns: {
-      storeTarget: storeDropdownTarget,
-      checkShown: checkIfDropdownShown,
-      onChange: onDropdownItemChange,
-      state: dropdownSelections,
-      lists: dropdownListData,
-      inputType: "checkbox",
-    },
-    rows: {
-      filtered: {
-        loading: dropdownSelections !== deferredDropdownSelections,
-        data: filteredRowData,
-      },
-      current: { data: currentRowData },
-    },
+    onDropdownAllItemChange,
+    onDropdownSearchChange,
+    filteredDataIsLoading,
+    isDropdownWithIdOpen,
+    onDropdownItemChange,
+    onSelectedDataChange,
+    storeDropdownById,
+    fieldValueSets,
+    dataIsLoading,
+    selectedData,
+    filteredRows,
+    dataOptions,
+    dropdowns,
+    columns,
+    rows,
   };
 };
