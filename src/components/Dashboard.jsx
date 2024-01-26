@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, memo } from "react";
 
 import { useConsumeAppContext } from "../hooks/useConsumeAppContext";
 import { toTitleCase } from "../functions/toTitleCase";
@@ -9,21 +9,24 @@ export const Dashboard = () => {
   const {
     onDropdownAllItemChange,
     onDropdownSearchChange,
+    filteredRowsIsLoading,
     isDropdownWithIdOpen,
     onDropdownItemChange,
     onSelectedDataChange,
+    dropdownValueLists,
     storeDropdownById,
+    dataIsLoading,
     selectedData,
+    filteredRows,
     dataOptions,
     dropdowns,
+    rows,
   } = context;
-
-  console.log(context);
 
   return (
     <>
       <div className="d-flex flex-column gap-4">
-        <ListGroup>
+        <ListGroup className="shadow-sm">
           {dataOptions.map(({ displayName, id }) => (
             <ListGroupItem
               onChange={onSelectedDataChange}
@@ -39,84 +42,129 @@ export const Dashboard = () => {
         </ListGroup>
         <div className="d-flex flex-wrap gap-3">
           {Object.entries(dropdowns).map(
-            ([field, { dataRelevance: fieldDataRelevance, search, items }]) => (
-              <Dropdown
-                ref={(buttonNode) => storeDropdownById(field, buttonNode)}
-                className={`opacity-${fieldDataRelevance ? 100 : 50}`}
-                title={toTitleCase(field)}
-                key={field}
-              >
-                <DropdownMenu style={{ maxHeight: 300 }} className="pt-0">
-                  {isDropdownWithIdOpen(field) && (
-                    <>
-                      <DropdownSearch
-                        onChange={onDropdownSearchChange}
-                        name={`${field}-search`}
-                        value={search}
-                      ></DropdownSearch>
-                      <ListGroup>
-                        <ListGroupItem
-                          checked={
-                            !Object.values(items).some(
-                              ({ checked }) => !checked
+            ([field, { dataRelevance: fieldDataRelevance, search, items }]) => {
+              const currentValues = dropdownValueLists[field]?.currentValues;
+
+              const lostValues = dropdownValueLists[field]?.lostValues;
+
+              return (
+                <Dropdown
+                  ref={(buttonNode) => storeDropdownById(field, buttonNode)}
+                  className={`opacity-${fieldDataRelevance ? 100 : 25}`}
+                  title={toTitleCase(field)}
+                  key={field}
+                >
+                  <DropdownMenu
+                    className="overflow-y-scroll shadow-sm pt-0"
+                    style={{ maxHeight: 300 }}
+                  >
+                    {isDropdownWithIdOpen(field) && (
+                      <>
+                        <div className="list-item-sticky">
+                          <DropdownSearch
+                            onChange={onDropdownSearchChange}
+                            name={`${field}-search`}
+                            value={search}
+                          ></DropdownSearch>
+                        </div>
+                        <ListGroup>
+                          <ListGroupItem
+                            checked={
+                              !Object.values(items).some(
+                                ({ checked }) => !checked
+                              )
+                            }
+                            onChange={onDropdownAllItemChange}
+                            name={`${field}-items`}
+                            className="border-0"
+                            type="checkbox"
+                          >
+                            All (
+                            {`${
+                              currentValues.relevantValues.length +
+                              currentValues.irrelevantValues.length +
+                              lostValues.length
+                            }`}
                             )
-                          }
-                          onChange={onDropdownAllItemChange}
-                          name={`${field}-items`}
-                          type="checkbox"
-                        >
-                          All
-                        </ListGroupItem>
-                        {Object.entries(items).map(
-                          ([
-                            value,
-                            { dataRelevance: valueDataRelevance, checked },
-                          ]) => (
+                          </ListGroupItem>
+                          {currentValues.relevantValues.map((value) => (
                             <ListGroupItem
-                              className={`opacity-${
-                                valueDataRelevance ? 100 : 50
-                              }`}
+                              className={`border-0 opacity-100`}
                               onChange={onDropdownItemChange}
+                              checked={items[value].checked}
                               name={`${field}-items`}
-                              checked={checked}
                               type="checkbox"
                               value={value}
                               key={value}
                             >
                               {value}
                             </ListGroupItem>
-                          )
-                        )}
-                      </ListGroup>
-                    </>
-                  )}
-                </DropdownMenu>
-              </Dropdown>
-            )
+                          ))}
+                          {currentValues.irrelevantValues.map((value) => (
+                            <ListGroupItem
+                              className={`border-0 opacity-50`}
+                              onChange={onDropdownItemChange}
+                              checked={items[value].checked}
+                              name={`${field}-items`}
+                              type="checkbox"
+                              value={value}
+                              key={value}
+                            >
+                              {value}
+                            </ListGroupItem>
+                          ))}
+                          {lostValues.map((value) => (
+                            <ListGroupItem
+                              className={`border-0 opacity-25`}
+                              onChange={onDropdownItemChange}
+                              checked={items[value].checked}
+                              name={`${field}-items`}
+                              type="checkbox"
+                              value={value}
+                              key={value}
+                            >
+                              {value}
+                            </ListGroupItem>
+                          ))}
+                        </ListGroup>
+                      </>
+                    )}
+                  </DropdownMenu>
+                </Dropdown>
+              );
+            }
           )}
+        </div>
+        <div>
+          {dataIsLoading || filteredRowsIsLoading
+            ? "Loading..."
+            : `${filteredRows.length.toLocaleString()} / ${rows.length.toLocaleString()} filtered rows`}
         </div>
       </div>
     </>
   );
 };
 
-const ListGroupItem = ({ className = "", children, ...restOfProps }) => {
+const ListGroupItem = memo(({ className = "", children, ...restOfProps }) => {
   return (
     <>
-      <label
-        className={`list-group-item d-flex gap-2 border-0 ${className}`.trimEnd()}
-      >
+      <label className={`list-group-item d-flex gap-2 ${className}`.trimEnd()}>
         <input className="form-check-input flex-shrink-0" {...restOfProps} />
         <span>{children}</span>
       </label>
     </>
   );
-};
+});
 
-const ListGroup = ({ children }) => {
+ListGroupItem.displayName = "ListGroupItem";
+
+const ListGroup = ({ className = "", ...restOfProps }) => {
   return (
     <>
-      <div className="list-group">{children}</div>
+      <div
+        className={`list-group ${className}`.trimEnd()}
+        {...restOfProps}
+      ></div>
     </>
   );
 };
@@ -126,7 +174,7 @@ const Dropdown = forwardRef(({ className = "", children, title }, ref) => {
     <>
       <div className="dropdown col">
         <button
-          className={`btn btn-secondary dropdown-toggle w-100 shadow-sm ${className}`.trimEnd()}
+          className={`btn btn-secondary bg-gradient dropdown-toggle w-100 shadow-sm ${className}`.trimEnd()}
           data-bs-auto-close="outside"
           data-bs-toggle="dropdown"
           aria-expanded="false"
@@ -147,14 +195,14 @@ const DropdownMenu = ({ className = "", ...restOfProps }) => {
   return (
     <>
       <ul
-        className={`dropdown-menu overflow-y-scroll shadow-sm ${className}`.trimEnd()}
+        className={`dropdown-menu ${className}`.trimEnd()}
         {...restOfProps}
       ></ul>
     </>
   );
 };
 
-const DropdownSearch = (props) => {
+const DropdownSearch = memo((props) => {
   return (
     <>
       <form className="p-2 mb-2 bg-body-tertiary border-bottom">
@@ -168,4 +216,6 @@ const DropdownSearch = (props) => {
       </form>
     </>
   );
-};
+});
+
+DropdownSearch.displayName = "DropdownSearch";

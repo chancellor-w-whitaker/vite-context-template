@@ -157,7 +157,7 @@ const useMainMethod = () => {
 
   const deferredDropdowns = useDeferredValue(dropdowns);
 
-  const filteredDataIsLoading = dropdowns !== deferredDropdowns;
+  const filteredRowsIsLoading = dropdowns !== deferredDropdowns;
 
   const onDropdownItemChange = useCallback(
     ({ target: { value, name } }) =>
@@ -313,7 +313,7 @@ const useMainMethod = () => {
     },
   };
   */
-  const { fieldValueSets, filteredRows } = useMemo(() => {
+  const { dropdownValueLists, filteredRows } = useMemo(() => {
     const dataRelevantFields = Object.keys(deferredDropdowns).filter(
       (field) => deferredDropdowns[field].dataRelevance
     );
@@ -390,7 +390,51 @@ const useMainMethod = () => {
       fieldValueSets[thisField] = thisFieldValueSets[thisField];
     });
 
-    return { fieldValueSets, filteredRows };
+    const booleanToBinary = (boolean) => (boolean ? 1 : 0);
+
+    const findQueryInValue = (query, value) =>
+      booleanToBinary(value.toLowerCase().includes(query.toLowerCase()));
+
+    const sortBySearch = (search) => (valueA, valueB) =>
+      findQueryInValue(search, valueB) - findQueryInValue(search, valueA);
+
+    const dropdownValueLists = Object.fromEntries(
+      Object.entries(deferredDropdowns).map(([field, { search, items }]) => [
+        field,
+        {
+          currentValues: {
+            irrelevantValues: (!(field in fieldValueSets)
+              ? Object.entries(items)
+                  .filter((entry) => entry[1].dataRelevance)
+                  .map(([value]) => value)
+              : Object.entries(items)
+                  .filter(
+                    ([value, { dataRelevance }]) =>
+                      dataRelevance && !fieldValueSets[field].has(value)
+                  )
+                  .map(([value]) => value)
+            ).sort(sortBySearch(search)),
+            relevantValues: (!(field in fieldValueSets)
+              ? []
+              : Object.entries(items)
+                  .filter(
+                    ([value, { dataRelevance }]) =>
+                      dataRelevance && fieldValueSets[field].has(value)
+                  )
+                  .map(([value]) => value)
+            ).sort(sortBySearch(search)),
+          },
+          lostValues: Object.entries(items)
+            .filter((entry) => !entry[1].dataRelevance)
+            .map(([value]) => value)
+            .sort(sortBySearch(search)),
+        },
+      ])
+    );
+
+    console.log(dropdownValueLists);
+
+    return { dropdownValueLists, filteredRows };
   }, [deferredDropdowns, rows]);
 
   const handleDataChangeInDropdowns = useCallback(() => {
@@ -463,42 +507,22 @@ const useMainMethod = () => {
 
   usePrevious(columns, handleDataChangeInDropdowns);
 
-  // ! need to make All buttons sticky
-  // ! need to make search form not scroll with list
+  // * need to make All buttons sticky
+  // * need to make search form not scroll with list
+  // * need to add fraction to dropdowns
+
   // ! need to disable enter of search form
-
-  // ! (already tried--might be better to use combo of both) might want to use transition for selected data -> data state changes (startTransition around set data)
-  // ! need to handle changing selected data
-  // ! need to handle search re-sort
   // ! what about disabling dropdown items & All button not activating irrelevant dropdown items?
-
-  // ! need to handle best method of storing derived dropdown info
-  // ! basically, the only thing derived is order (existing values is always maintained in state)
-  // ! structures:
-  /*
-  const valueRelevanceLookup = {
-    field1: {
-      filteredDataIrrelevant: ["...", "..."],
-      filteredDataRelevant: ["...", "..."],
-      dataIrrelevant: ["...", "..."],
-    },
-    fieldN: {
-      filteredDataIrrelevant: ["...", "..."],
-      filteredDataRelevant: ["...", "..."],
-      dataIrrelevant: ["...", "..."],
-    },
-  };
-  */
 
   return {
     onDropdownAllItemChange,
     onDropdownSearchChange,
-    filteredDataIsLoading,
+    filteredRowsIsLoading,
     isDropdownWithIdOpen,
     onDropdownItemChange,
     onSelectedDataChange,
+    dropdownValueLists,
     storeDropdownById,
-    fieldValueSets,
     dataIsLoading,
     selectedData,
     filteredRows,
