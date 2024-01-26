@@ -18,7 +18,7 @@ export const Dashboard = () => {
     dropdowns,
   } = context;
 
-  //   console.log(context);
+  console.log(context);
 
   return (
     <>

@@ -240,24 +240,6 @@ const useMainMethod = () => {
     []
   );
 
-  // ! get filtered data and derived dropdown information here
-  // ! dropdown state & rows should be enough to get you what you need
-  // ! dropdown state tells you which options are data relevant--then you derive filtered data relevance
-  /*
-  const valueRelevanceLookup = {
-    field1: {
-      filteredDataIrrelevant: ["...", "..."],
-      filteredDataRelevant: ["...", "..."],
-      dataIrrelevant: ["...", "..."],
-    },
-    fieldN: {
-      filteredDataIrrelevant: ["...", "..."],
-      filteredDataRelevant: ["...", "..."],
-      dataIrrelevant: ["...", "..."],
-    },
-  };
-  */
-
   const { columns, rows } = useMemo(() => {
     if (!(Array.isArray(data) && data.length > 0)) {
       return { relevantDropdowns: {}, columns: {}, rows: [] };
@@ -314,6 +296,23 @@ const useMainMethod = () => {
     return { columns, rows };
   }, [data]);
 
+  // ! get filtered data and derived dropdown information here
+  // ! dropdown state & rows should be enough to get you what you need
+  // ! dropdown state tells you which options are data relevant--then you derive filtered data relevance
+  /*
+  const valueRelevanceLookup = {
+    field1: {
+      filteredDataIrrelevant: ["...", "..."],
+      filteredDataRelevant: ["...", "..."],
+      dataIrrelevant: ["...", "..."],
+    },
+    fieldN: {
+      filteredDataIrrelevant: ["...", "..."],
+      filteredDataRelevant: ["...", "..."],
+      dataIrrelevant: ["...", "..."],
+    },
+  };
+  */
   const { fieldValueSets, filteredRows } = useMemo(() => {
     const dataRelevantFields = Object.keys(deferredDropdowns).filter(
       (field) => deferredDropdowns[field].dataRelevance
@@ -333,7 +332,7 @@ const useMainMethod = () => {
 
           // ! precede condition in case dropdown doesn't exist (may be logic error)
           if (
-            // dropdowns[field] &&
+            dropdowns[field].items[value] &&
             !dropdowns[field].items[value].checked
           ) {
             return false;
