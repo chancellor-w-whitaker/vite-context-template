@@ -31,6 +31,8 @@ export const AppContext = createContext(null);
 // need to include field data relevance & value data relevance in state & state setting
 // should you implement the logic for this now as well?
 // your App jsx doesn't matter right now--work on implementing the dropdown data structures below and the dropdown state updating processes
+// how does dropdown search change what you have described?
+// should dropdown search just be another key in value object? (probably)
 
 // ! dropdown data structures
 /*
