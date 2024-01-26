@@ -42,7 +42,7 @@ export const useBsDropdowns = () => {
   // ! function to be used in JSX to opt in to dynamic rendering
   // ! find target by pointing to dropdown identifier in targets map
   // ! if some stored dropdown event matches found target, dropdown is open
-  const checkIfDropdownOpen = useCallback(
+  const checkIfDropdownShown = useCallback(
     (name) => {
       const map = getTargetsMap();
 
@@ -91,5 +91,5 @@ export const useBsDropdowns = () => {
   useWindowListener("hidden.bs.dropdown", handleEvent);
 
   // ! return dropdown button ref callback & function to opt in to dynamic rendering
-  return { storeDropdownTarget, checkIfDropdownOpen };
+  return { checkIfDropdownShown, storeDropdownTarget };
 };
