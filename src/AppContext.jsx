@@ -402,28 +402,26 @@ const useMainMethod = () => {
       Object.entries(deferredDropdowns).map(([field, { search, items }]) => [
         field,
         {
-          currentValues: {
-            irrelevantValues: (!(field in fieldValueSets)
-              ? Object.entries(items)
-                  .filter((entry) => entry[1].dataRelevance)
-                  .map(([value]) => value)
-              : Object.entries(items)
-                  .filter(
-                    ([value, { dataRelevance }]) =>
-                      dataRelevance && !fieldValueSets[field].has(value)
-                  )
-                  .map(([value]) => value)
-            ).sort(sortBySearch(search)),
-            relevantValues: (!(field in fieldValueSets)
-              ? []
-              : Object.entries(items)
-                  .filter(
-                    ([value, { dataRelevance }]) =>
-                      dataRelevance && fieldValueSets[field].has(value)
-                  )
-                  .map(([value]) => value)
-            ).sort(sortBySearch(search)),
-          },
+          irrelevantValues: (!(field in fieldValueSets)
+            ? Object.entries(items)
+                .filter((entry) => entry[1].dataRelevance)
+                .map(([value]) => value)
+            : Object.entries(items)
+                .filter(
+                  ([value, { dataRelevance }]) =>
+                    dataRelevance && !fieldValueSets[field].has(value)
+                )
+                .map(([value]) => value)
+          ).sort(sortBySearch(search)),
+          relevantValues: (!(field in fieldValueSets)
+            ? []
+            : Object.entries(items)
+                .filter(
+                  ([value, { dataRelevance }]) =>
+                    dataRelevance && fieldValueSets[field].has(value)
+                )
+                .map(([value]) => value)
+          ).sort(sortBySearch(search)),
           lostValues: Object.entries(items)
             .filter((entry) => !entry[1].dataRelevance)
             .map(([value]) => value)
@@ -436,6 +434,45 @@ const useMainMethod = () => {
 
     return { dropdownValueLists, filteredRows };
   }, [deferredDropdowns, rows]);
+
+  const onDropdownAllSubsetChange = useCallback(
+    ({ target: { name } }, subset = "relevantValues") =>
+      setDropdowns((previousDropdowns) => {
+        // ! name is `${field}-items`
+        const field = name.split("-")[0];
+
+        const nextDropdowns = { ...previousDropdowns };
+
+        nextDropdowns[field] = { ...nextDropdowns[field] };
+
+        const setOfSubsetValues = new Set(dropdownValueLists[field][subset]);
+
+        const noneUnchecked = !Object.entries(nextDropdowns[field].items).some(
+          ([value, { checked }]) => !checked && setOfSubsetValues.has(value)
+        );
+
+        if (noneUnchecked) {
+          nextDropdowns[field].items = Object.fromEntries(
+            Object.entries(nextDropdowns[field].items).map(([value, object]) =>
+              setOfSubsetValues.has(value)
+                ? [value, { ...object, checked: false }]
+                : [value, object]
+            )
+          );
+        } else {
+          nextDropdowns[field].items = Object.fromEntries(
+            Object.entries(nextDropdowns[field].items).map(([value, object]) =>
+              !object.checked && setOfSubsetValues.has(value)
+                ? [value, { ...object, checked: true }]
+                : [value, object]
+            )
+          );
+        }
+
+        return nextDropdowns;
+      }),
+    [dropdownValueLists]
+  );
 
   const handleDataChangeInDropdowns = useCallback(() => {
     const nextDropdowns = Object.fromEntries(
@@ -510,11 +547,19 @@ const useMainMethod = () => {
   // * need to make All buttons sticky
   // * need to make search form not scroll with list
   // * need to add fraction to dropdowns
+  // * dynamic all buttons
+  // * smaller text (can be used to distinguish all buttons)
+  // * no text wrapping
 
+  // ! start working with asana first thing tomorrow!
   // ! need to disable enter of search form
-  // ! what about disabling dropdown items & All button not activating irrelevant dropdown items?
+  // ! disable some dropdown items (lower opacity ones)
+  // ! change appearance of all or subset buttons
+  // ! some visual indicator of modified dropdowns (on button)
+  // ! less padding between dropdown items (list group items)
 
   return {
+    onDropdownAllSubsetChange,
     onDropdownAllItemChange,
     onDropdownSearchChange,
     filteredRowsIsLoading,

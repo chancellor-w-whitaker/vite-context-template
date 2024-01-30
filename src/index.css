@@ -299,3 +299,17 @@ body {
   position: sticky;
   z-index: 1;
 }
+
+.w-280px {
+  width: 280px;
+}
+
+.scroll-sticky-0 {
+  z-index: 1;
+  position: sticky;
+  inset-block-start: 0px;
+}
+
+.fs-small {
+  font-size: small;
+}
