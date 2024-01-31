@@ -61,3 +61,108 @@ getSecRelevantDropdowns(data, dropdowns, history, keys=Object.keys(dropdowns))
 	- assign field's secondary relevant dropdown to this newfound primary relevant dropdown
 - for each field in secondary relevant dropdowns, sort keys in dropdown
 */
+
+// ? random
+
+// what is "dropdowns"?
+// each dropdown has a field
+// each field has a relevance boolean to current data
+// each field has values
+// each value has a relevance boolean to current data
+// each value has a relevance boolean to filtered data
+
+// what components should be made to control rendering?
+
+// what about "All" buttons having a different onChange handler?
+
+// need to achieve structures below
+// how?
+// need to include field data relevance & value data relevance in state & state setting
+// should you implement the logic for this now as well?
+// your App jsx doesn't matter right now--work on implementing the dropdown data structures below and the dropdown state updating processes
+// how does dropdown search change what you have described?
+// should dropdown search just be another key in value object? (probably)
+
+// ! dropdown data structures
+/*
+const dropdownState = {
+  field1: {
+    items: {
+      value1: { dataRelevant: true, checked: true },
+      valueN: { dataRelevant: true, checked: true },
+    },
+    dataRelevant: true,
+  },
+  fieldN: {
+    items: {
+      valueN: { dataRelevant: true, checked: true },
+      value1: { dataRelevant: true, checked: true },
+    },
+    dataRelevant: true,
+  },
+};
+
+const allDropdownInformationVisualized = {
+  field1: {
+    items: {
+      value1: {
+        filteredDataRelevant: true,
+        dataRelevant: true,
+        checked: true,
+      },
+      valueN: {
+        filteredDataRelevant: true,
+        dataRelevant: true,
+        checked: true,
+      },
+    },
+    dataRelevant: true,
+  },
+  fieldN: {
+    items: {
+      valueN: {
+        filteredDataRelevant: true,
+        dataRelevant: true,
+        checked: true,
+      },
+      value1: {
+        filteredDataRelevant: true,
+        dataRelevant: true,
+        checked: true,
+      },
+    },
+    dataRelevant: true,
+  },
+};
+
+const finalDropdownsToRender = {
+  dataRelevant: [
+    {
+      items: {
+        filteredDataIrrelevant: [
+          { checked: true, value: "..." },
+          { checked: true, value: "..." },
+        ],
+        filteredDataRelevant: [
+          { checked: true, value: "..." },
+          { checked: true, value: "..." },
+        ],
+        dataIrrelevant: [
+          { checked: true, value: "..." },
+          { checked: true, value: "..." },
+        ],
+      },
+      field: "...",
+    },
+  ],
+  dataIrrelevant: [
+    {
+      items: [
+        { checked: true, value: "..." },
+        { checked: true, value: "..." },
+      ],
+      field: "...",
+    },
+  ],
+};
+*/

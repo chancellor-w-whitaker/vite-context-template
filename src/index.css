@@ -310,6 +310,16 @@ body {
   inset-block-start: 0px;
 }
 
+.scroll-sticky-8 {
+  z-index: 1;
+  position: sticky;
+  inset-block-start: 8px;
+}
+
 .fs-small {
   font-size: small;
+}
+
+.bg-transition {
+  transition: background-color 0.15s ease-in-out;
 }

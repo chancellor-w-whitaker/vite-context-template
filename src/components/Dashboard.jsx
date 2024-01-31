@@ -3,19 +3,28 @@ import { forwardRef, memo } from "react";
 import { useConsumeAppContext } from "../hooks/useConsumeAppContext";
 import { toTitleCase } from "../functions/toTitleCase";
 
+// * fix unknown error from yesterday
+// * change fraction color if not all checked
+// * opacity should only affect list item text?
+// * prevent enter submit
+// * disable irrelevant & unavailable items
+// ! visually differentiate modified dropdowns
+// ! visually differentiate "All" buttons
+// clean up jsx
+
 export const Dashboard = () => {
   const context = useConsumeAppContext();
 
   const {
-    onDropdownAllSubsetChange,
-    onDropdownAllItemChange,
+    onDropdownAllItemsChange,
+    onDropdownSubListChange,
     onDropdownSearchChange,
     filteredRowsIsLoading,
     isDropdownWithIdOpen,
     onDropdownItemChange,
     onSelectedDataChange,
-    dropdownValueLists,
     storeDropdownById,
+    dropdownItems,
     dataIsLoading,
     selectedData,
     filteredRows,
@@ -35,50 +44,38 @@ export const Dashboard = () => {
 
   const getDropdownData = ({ field, items }) => {
     const {
-      irrelevantValues = [],
-      relevantValues = [],
-      lostValues = [],
-    } = dropdownValueLists[field] ?? {};
+      unavailable = [],
+      irrelevant = [],
+      relevant = [],
+    } = dropdownItems[field] ?? {};
 
-    const checkedValues = Object.entries(items)
+    const checked = Object.entries(items)
       .filter((entry) => entry[1].checked)
       .map(([value]) => value);
 
-    const setOfCheckedValues = new Set(checkedValues);
+    const checkedSet = new Set(checked);
 
-    const checkedIrrelevantValues = irrelevantValues.filter((value) =>
-      setOfCheckedValues.has(value)
+    const irrelevantChecked = irrelevant.filter((value) =>
+      checkedSet.has(value)
     );
 
-    const checkedRelevantValues = relevantValues.filter((value) =>
-      setOfCheckedValues.has(value)
-    );
+    const relevantChecked = relevant.filter((value) => checkedSet.has(value));
 
-    const checkedLostValues = lostValues.filter((value) =>
-      setOfCheckedValues.has(value)
+    const unavailableChecked = unavailable.filter((value) =>
+      checkedSet.has(value)
     );
 
     const fractions = {
-      irrelevant: getFractionData(
-        checkedIrrelevantValues.length,
-        irrelevantValues.length
+      unavailable: getFractionData(
+        unavailableChecked.length,
+        unavailable.length
       ),
-      relevant: getFractionData(
-        checkedRelevantValues.length,
-        relevantValues.length
-      ),
-      all: getFractionData(checkedValues.length, Object.keys(items).length),
-      lost: getFractionData(checkedLostValues.length, lostValues.length),
+      irrelevant: getFractionData(irrelevantChecked.length, irrelevant.length),
+      relevant: getFractionData(relevantChecked.length, relevant.length),
+      all: getFractionData(checked.length, Object.keys(items).length),
     };
 
-    return {
-      values: {
-        irrelevant: irrelevantValues,
-        relevant: relevantValues,
-        lost: lostValues,
-      },
-      fractions,
-    };
+    return { values: { unavailable, irrelevant, relevant }, fractions };
   };
 
   return (
@@ -102,156 +99,191 @@ export const Dashboard = () => {
         <div className="d-flex flex-wrap gap-3">
           {/* column filters */}
           {Object.entries(dropdowns).map(
-            ([field, { dataRelevance: fieldDataRelevance, search, items }]) => {
+            ([field, { dataRelevance, search, items }]) => {
               const {
-                values: { irrelevant, relevant, lost },
+                values: { unavailable, irrelevant, relevant },
                 fractions,
               } = getDropdownData({ items, field });
 
               return (
-                <Dropdown
-                  ref={(buttonNode) => storeDropdownById(field, buttonNode)}
-                  className={`opacity-${fieldDataRelevance ? 100 : 25}`}
-                  title={toTitleCase(field)}
-                  key={field}
-                >
-                  <div className="dropdown-menu py-0 mx-0 rounded-3 shadow-sm overflow-hidden">
-                    {isDropdownWithIdOpen(field) && (
-                      <>
-                        <form className="p-2 mb-2 bg-body-tertiary border-bottom">
-                          <input
-                            onChange={onDropdownSearchChange}
-                            placeholder="Type to search..."
-                            className="form-control"
-                            name={`${field}-search`}
-                            autoComplete="false"
-                            value={search}
-                            type="search"
-                          />
-                        </form>
-                        <div
-                          className="list-group list-group-flush text-nowrap pb-2 bg-white overflow-y-scroll"
-                          style={{ maxHeight: 300 }}
-                        >
-                          {[irrelevant, relevant, lost].filter(
-                            (array) => array.length > 0
-                          ).length > 1 && (
-                            <label className="list-group-item d-flex gap-2  scroll-sticky-0">
-                              <input
-                                className="form-check-input flex-shrink-0"
-                                onChange={onDropdownAllItemChange}
-                                checked={fractions.all.condition}
-                                name={`${field}-items`}
-                                type="checkbox"
-                              />
-                              <span>All ({fractions.all.string})</span>
-                            </label>
-                          )}
-                          {relevant.length > 0 && (
-                            <label className="list-group-item d-flex gap-2  scroll-sticky-0">
-                              <input
-                                onChange={(e) =>
-                                  onDropdownAllSubsetChange(e, "relevantValues")
-                                }
-                                className="form-check-input flex-shrink-0"
-                                checked={fractions.relevant.condition}
-                                name={`${field}-items`}
-                                type="checkbox"
-                              />
-                              <span>
-                                Relevant ({fractions.relevant.string})
-                              </span>
-                            </label>
-                          )}
-                          {relevant.map((value) => (
-                            <label
-                              className="list-group-item d-flex gap-2 fs-small"
-                              key={value}
-                            >
-                              <input
-                                className="form-check-input flex-shrink-0"
-                                onChange={onDropdownItemChange}
-                                checked={items[value].checked}
-                                name={`${field}-items`}
-                                type="checkbox"
-                                value={value}
+                dataRelevance && (
+                  <Dropdown
+                    ref={(buttonNode) => storeDropdownById(field, buttonNode)}
+                    className={`opacity-${dataRelevance ? 100 : 25}`}
+                    title={toTitleCase(field)}
+                    key={field}
+                  >
+                    <div className="dropdown-menu py-0 mx-0 rounded-3 shadow-sm overflow-hidden">
+                      {isDropdownWithIdOpen(field) && (
+                        <>
+                          <form
+                            className="p-2 bg-body-tertiary border-bottom"
+                            onSubmit={(e) => e.preventDefault()}
+                          >
+                            <input
+                              onChange={onDropdownSearchChange}
+                              placeholder="Type to search..."
+                              className="form-control"
+                              name={`${field}-search`}
+                              autoComplete="false"
+                              value={search}
+                              type="search"
+                            />
+                          </form>
+                          <div
+                            className="list-group list-group-flush text-nowrap overflow-y-scroll"
+                            style={{ maxHeight: 300 }}
+                          >
+                            {[irrelevant, relevant, unavailable].filter(
+                              (array) => array.length > 0
+                            ).length > 1 && (
+                              <label className="list-group-item d-flex gap-2 scroll-sticky-0">
+                                <input
+                                  className="form-check-input flex-shrink-0"
+                                  onChange={onDropdownAllItemsChange}
+                                  checked={fractions.all.condition}
+                                  name={`${field}-items`}
+                                  type="checkbox"
+                                />
+                                <span>All</span>
+                                <span
+                                  className={`ms-auto badge bg-transition shadow-sm bg-${
+                                    fractions.all.condition
+                                      ? "success"
+                                      : "danger"
+                                  } rounded-pill d-flex align-items-center`}
+                                >
+                                  {fractions.all.string}
+                                </span>
+                              </label>
+                            )}
+                            {relevant.length > 0 && (
+                              <label className="list-group-item d-flex gap-2 scroll-sticky-0">
+                                <input
+                                  onChange={(e) =>
+                                    onDropdownSubListChange(e, "relevant")
+                                  }
+                                  className="form-check-input flex-shrink-0"
+                                  checked={fractions.relevant.condition}
+                                  name={`${field}-items`}
+                                  type="checkbox"
+                                />
+                                <span>Relevant</span>
+                                <span
+                                  className={`ms-auto badge bg-transition shadow-sm bg-${
+                                    fractions.relevant.condition
+                                      ? "success"
+                                      : "danger"
+                                  } rounded-pill d-flex align-items-center`}
+                                >
+                                  {fractions.relevant.string}
+                                </span>
+                              </label>
+                            )}
+                            {relevant.map((value) => (
+                              <label
+                                className="list-group-item d-flex gap-2 small"
                                 key={value}
-                              />
-                              <span>{value}</span>
-                            </label>
-                          ))}
-                          {irrelevant.length > 0 && (
-                            <label className="list-group-item d-flex gap-2  scroll-sticky-0">
-                              <input
-                                onChange={(e) =>
-                                  onDropdownAllSubsetChange(
-                                    e,
-                                    "irrelevantValues"
-                                  )
-                                }
-                                className="form-check-input flex-shrink-0"
-                                checked={fractions.irrelevant.condition}
-                                name={`${field}-items`}
-                                type="checkbox"
-                              />
-                              <span>
-                                Irrelevant ({fractions.irrelevant.string})
-                              </span>
-                            </label>
-                          )}
-                          {irrelevant.map((value) => (
-                            <label
-                              className="list-group-item d-flex gap-2 fs-small opacity-50"
-                              key={value}
-                            >
-                              <input
-                                className="form-check-input flex-shrink-0"
-                                onChange={onDropdownItemChange}
-                                checked={items[value].checked}
-                                name={`${field}-items`}
-                                type="checkbox"
-                                value={value}
+                              >
+                                <input
+                                  className="form-check-input flex-shrink-0"
+                                  onChange={onDropdownItemChange}
+                                  checked={items[value].checked}
+                                  name={`${field}-items`}
+                                  type="checkbox"
+                                  value={value}
+                                  key={value}
+                                />
+                                <span>{value}</span>
+                              </label>
+                            ))}
+                            {irrelevant.length > 0 && (
+                              <label className="list-group-item d-flex gap-2 scroll-sticky-0">
+                                <input
+                                  onChange={(e) =>
+                                    onDropdownSubListChange(e, "irrelevant")
+                                  }
+                                  className="form-check-input flex-shrink-0"
+                                  checked={fractions.irrelevant.condition}
+                                  name={`${field}-items`}
+                                  type="checkbox"
+                                  readOnly
+                                />
+                                <span>Irrelevant</span>
+                                <span
+                                  className={`ms-auto badge bg-transition shadow-sm bg-${
+                                    fractions.irrelevant.condition
+                                      ? "success"
+                                      : "danger"
+                                  } rounded-pill d-flex align-items-center`}
+                                >
+                                  {fractions.irrelevant.string}
+                                </span>
+                              </label>
+                            )}
+                            {irrelevant.map((value) => (
+                              <label
+                                className="list-group-item d-flex gap-2 small pe-none"
                                 key={value}
-                              />
-                              <span>{value}</span>
-                            </label>
-                          ))}
-                          {lost.length > 0 && (
-                            <label className="list-group-item d-flex gap-2  scroll-sticky-0">
-                              <input
-                                onChange={(e) =>
-                                  onDropdownAllSubsetChange(e, "lostValues")
-                                }
-                                className="form-check-input flex-shrink-0"
-                                checked={fractions.lost.condition}
-                                name={`${field}-items`}
-                                type="checkbox"
-                              />
-                              <span>Unavailable ({fractions.lost.string})</span>
-                            </label>
-                          )}
-                          {lost.map((value) => (
-                            <label
-                              className="list-group-item d-flex gap-2 fs-small opacity-25"
-                              key={value}
-                            >
-                              <input
-                                className="form-check-input flex-shrink-0"
-                                onChange={onDropdownItemChange}
-                                checked={items[value].checked}
-                                name={`${field}-items`}
-                                type="checkbox"
-                                value={value}
+                              >
+                                <input
+                                  className="form-check-input flex-shrink-0 opacity-50"
+                                  checked={items[value].checked}
+                                  name={`${field}-items`}
+                                  type="checkbox"
+                                  value={value}
+                                  key={value}
+                                  readOnly
+                                />
+                                <span className="opacity-50">{value}</span>
+                              </label>
+                            ))}
+                            {unavailable.length > 0 && (
+                              <label className="list-group-item d-flex gap-2 scroll-sticky-0">
+                                <input
+                                  onChange={(e) =>
+                                    onDropdownSubListChange(e, "unavailable")
+                                  }
+                                  className="form-check-input flex-shrink-0"
+                                  checked={fractions.unavailable.condition}
+                                  name={`${field}-items`}
+                                  type="checkbox"
+                                />
+                                <span>Unavailable</span>
+                                <span
+                                  className={`ms-auto badge bg-transition shadow-sm bg-${
+                                    fractions.unavailable.condition
+                                      ? "success"
+                                      : "danger"
+                                  } rounded-pill d-flex align-items-center`}
+                                >
+                                  {fractions.unavailable.string}
+                                </span>
+                              </label>
+                            )}
+                            {unavailable.map((value) => (
+                              <label
+                                className="list-group-item d-flex gap-2 small pe-none"
                                 key={value}
-                              />
-                              <span>{value}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </Dropdown>
+                              >
+                                <input
+                                  className="form-check-input flex-shrink-0 opacity-25"
+                                  checked={items[value].checked}
+                                  name={`${field}-items`}
+                                  type="checkbox"
+                                  value={value}
+                                  key={value}
+                                  readOnly
+                                />
+                                <span className="opacity-25">{value}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </Dropdown>
+                )
               );
             }
           )}
@@ -288,25 +320,27 @@ const ListGroup = ({ className = "", ...restOfProps }) => {
   );
 };
 
-const Dropdown = forwardRef(({ className = "", children, title }, ref) => {
-  return (
-    <>
-      <div className="dropdown col">
-        <button
-          className={`btn btn-secondary bg-gradient dropdown-toggle w-100 shadow-sm ${className}`.trimEnd()}
-          data-bs-auto-close="outside"
-          data-bs-toggle="dropdown"
-          aria-expanded="false"
-          type="button"
-          ref={ref}
-        >
-          {title}
-        </button>
-        {children}
-      </div>
-    </>
-  );
-});
+const Dropdown = forwardRef(
+  ({ variant = "secondary", className = "", children, title }, ref) => {
+    return (
+      <>
+        <div className="dropdown col">
+          <button
+            className={`btn btn-${variant} bg-gradient dropdown-toggle w-100 shadow-sm ${className}`.trimEnd()}
+            data-bs-auto-close="outside"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            type="button"
+            ref={ref}
+          >
+            {title}
+          </button>
+          {children}
+        </div>
+      </>
+    );
+  }
+);
 
 Dropdown.displayName = "Dropdown";
 

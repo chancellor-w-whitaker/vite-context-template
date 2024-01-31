@@ -14,109 +14,6 @@ import { usePrevious } from "./hooks/usePrevious";
 
 export const AppContext = createContext(null);
 
-// what is "dropdowns"?
-// each dropdown has a field
-// each field has a relevance boolean to current data
-// each field has values
-// each value has a relevance boolean to current data
-// each value has a relevance boolean to filtered data
-
-// what components should be made to control rendering?
-
-// what about "All" buttons having a different onChange handler?
-
-// need to achieve structures below
-// how?
-// need to include field data relevance & value data relevance in state & state setting
-// should you implement the logic for this now as well?
-// your App jsx doesn't matter right now--work on implementing the dropdown data structures below and the dropdown state updating processes
-// how does dropdown search change what you have described?
-// should dropdown search just be another key in value object? (probably)
-
-// ! dropdown data structures
-/*
-const dropdownState = {
-  field1: {
-    items: {
-      value1: { dataRelevant: true, checked: true },
-      valueN: { dataRelevant: true, checked: true },
-    },
-    dataRelevant: true,
-  },
-  fieldN: {
-    items: {
-      valueN: { dataRelevant: true, checked: true },
-      value1: { dataRelevant: true, checked: true },
-    },
-    dataRelevant: true,
-  },
-};
-
-const allDropdownInformationVisualized = {
-  field1: {
-    items: {
-      value1: {
-        filteredDataRelevant: true,
-        dataRelevant: true,
-        checked: true,
-      },
-      valueN: {
-        filteredDataRelevant: true,
-        dataRelevant: true,
-        checked: true,
-      },
-    },
-    dataRelevant: true,
-  },
-  fieldN: {
-    items: {
-      valueN: {
-        filteredDataRelevant: true,
-        dataRelevant: true,
-        checked: true,
-      },
-      value1: {
-        filteredDataRelevant: true,
-        dataRelevant: true,
-        checked: true,
-      },
-    },
-    dataRelevant: true,
-  },
-};
-
-const finalDropdownsToRender = {
-  dataRelevant: [
-    {
-      items: {
-        filteredDataIrrelevant: [
-          { checked: true, value: "..." },
-          { checked: true, value: "..." },
-        ],
-        filteredDataRelevant: [
-          { checked: true, value: "..." },
-          { checked: true, value: "..." },
-        ],
-        dataIrrelevant: [
-          { checked: true, value: "..." },
-          { checked: true, value: "..." },
-        ],
-      },
-      field: "...",
-    },
-  ],
-  dataIrrelevant: [
-    {
-      items: [
-        { checked: true, value: "..." },
-        { checked: true, value: "..." },
-      ],
-      field: "...",
-    },
-  ],
-};
-*/
-
 export const AppContextProvider = ({ children }) => {
   const appContext = useMainMethod();
 
@@ -183,7 +80,7 @@ const useMainMethod = () => {
     []
   );
 
-  const onDropdownAllItemChange = useCallback(
+  const onDropdownAllItemsChange = useCallback(
     ({ target: { name } }) =>
       setDropdowns((previousDropdowns) => {
         // ! name is `${field}-items`
@@ -313,7 +210,7 @@ const useMainMethod = () => {
     },
   };
   */
-  const { dropdownValueLists, filteredRows } = useMemo(() => {
+  const { dropdownItems, filteredRows } = useMemo(() => {
     const dataRelevantFields = Object.keys(deferredDropdowns).filter(
       (field) => deferredDropdowns[field].dataRelevance
     );
@@ -398,31 +295,31 @@ const useMainMethod = () => {
     const sortBySearch = (search) => (valueA, valueB) =>
       findQueryInValue(search, valueB) - findQueryInValue(search, valueA);
 
-    const dropdownValueLists = Object.fromEntries(
+    const dropdownItems = Object.fromEntries(
       Object.entries(deferredDropdowns).map(([field, { search, items }]) => [
         field,
         {
-          irrelevantValues: (!(field in fieldValueSets)
+          irrelevant: (!(field in fieldValueSets)
             ? Object.entries(items)
                 .filter((entry) => entry[1].dataRelevance)
                 .map(([value]) => value)
             : Object.entries(items)
                 .filter(
                   ([value, { dataRelevance }]) =>
-                    dataRelevance && !fieldValueSets[field].has(value)
+                    dataRelevance && !fieldValueSets[field]?.has(value)
                 )
                 .map(([value]) => value)
           ).sort(sortBySearch(search)),
-          relevantValues: (!(field in fieldValueSets)
+          relevant: (!(field in fieldValueSets)
             ? []
             : Object.entries(items)
                 .filter(
                   ([value, { dataRelevance }]) =>
-                    dataRelevance && fieldValueSets[field].has(value)
+                    dataRelevance && fieldValueSets[field]?.has(value)
                 )
                 .map(([value]) => value)
           ).sort(sortBySearch(search)),
-          lostValues: Object.entries(items)
+          unavailable: Object.entries(items)
             .filter((entry) => !entry[1].dataRelevance)
             .map(([value]) => value)
             .sort(sortBySearch(search)),
@@ -430,13 +327,11 @@ const useMainMethod = () => {
       ])
     );
 
-    console.log(dropdownValueLists);
-
-    return { dropdownValueLists, filteredRows };
+    return { dropdownItems, filteredRows };
   }, [deferredDropdowns, rows]);
 
-  const onDropdownAllSubsetChange = useCallback(
-    ({ target: { name } }, subset = "relevantValues") =>
+  const onDropdownSubListChange = useCallback(
+    ({ target: { name } }, subset = "relevant") =>
       setDropdowns((previousDropdowns) => {
         // ! name is `${field}-items`
         const field = name.split("-")[0];
@@ -445,7 +340,7 @@ const useMainMethod = () => {
 
         nextDropdowns[field] = { ...nextDropdowns[field] };
 
-        const setOfSubsetValues = new Set(dropdownValueLists[field][subset]);
+        const setOfSubsetValues = new Set(dropdownItems[field][subset]);
 
         const noneUnchecked = !Object.entries(nextDropdowns[field].items).some(
           ([value, { checked }]) => !checked && setOfSubsetValues.has(value)
@@ -471,7 +366,7 @@ const useMainMethod = () => {
 
         return nextDropdowns;
       }),
-    [dropdownValueLists]
+    [dropdownItems]
   );
 
   const handleDataChangeInDropdowns = useCallback(() => {
@@ -544,13 +439,6 @@ const useMainMethod = () => {
 
   usePrevious(columns, handleDataChangeInDropdowns);
 
-  // * need to make All buttons sticky
-  // * need to make search form not scroll with list
-  // * need to add fraction to dropdowns
-  // * dynamic all buttons
-  // * smaller text (can be used to distinguish all buttons)
-  // * no text wrapping
-
   // ! start working with asana first thing tomorrow!
   // ! need to disable enter of search form
   // ! disable some dropdown items (lower opacity ones)
@@ -559,15 +447,15 @@ const useMainMethod = () => {
   // ! less padding between dropdown items (list group items)
 
   return {
-    onDropdownAllSubsetChange,
-    onDropdownAllItemChange,
+    onDropdownAllItemsChange,
+    onDropdownSubListChange,
     onDropdownSearchChange,
     filteredRowsIsLoading,
     isDropdownWithIdOpen,
     onDropdownItemChange,
     onSelectedDataChange,
-    dropdownValueLists,
     storeDropdownById,
+    dropdownItems,
     dataIsLoading,
     selectedData,
     filteredRows,
