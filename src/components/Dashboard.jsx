@@ -8,9 +8,13 @@ import { toTitleCase } from "../functions/toTitleCase";
 // * opacity should only affect list item text?
 // * prevent enter submit
 // * disable irrelevant & unavailable items
-// ! visually differentiate modified dropdowns
-// ! visually differentiate "All" buttons
-// clean up jsx
+// * visually differentiate modified dropdowns
+
+// ! visually differentiate "All" buttons (might want to fool with borders on "All" button)
+// ! accordion in lists
+// ! highlight matching search in items
+
+// clean up jsx, transitions, & control rendering better (map it out) (deferred values as expensive calculation deps, state values as render values, start transition when setting state, memoize components for less render computation)
 
 export const Dashboard = () => {
   const context = useConsumeAppContext();
@@ -108,8 +112,19 @@ export const Dashboard = () => {
               return (
                 dataRelevance && (
                   <Dropdown
-                    ref={(buttonNode) => storeDropdownById(field, buttonNode)}
-                    className={`opacity-${dataRelevance ? 100 : 25}`}
+                    ref={(buttonNode) => {
+                      storeDropdownById(field, buttonNode);
+                      if (buttonNode) {
+                        buttonNode.classList.remove("btn-secondary");
+                        buttonNode.classList.remove("btn-warning");
+                        if (fractions.all.condition) {
+                          buttonNode.classList.add("btn-secondary");
+                        } else {
+                          buttonNode.classList.add("btn-warning");
+                        }
+                      }
+                    }}
+                    className={`shadow-sm opacity-${dataRelevance ? 100 : 25}`}
                     title={toTitleCase(field)}
                     key={field}
                   >
@@ -147,10 +162,10 @@ export const Dashboard = () => {
                                 />
                                 <span>All</span>
                                 <span
-                                  className={`ms-auto badge bg-transition shadow-sm bg-${
+                                  className={`ms-auto badge transition-all shadow-sm text-bg-${
                                     fractions.all.condition
-                                      ? "success"
-                                      : "danger"
+                                      ? "primary"
+                                      : "light"
                                   } rounded-pill d-flex align-items-center`}
                                 >
                                   {fractions.all.string}
@@ -170,10 +185,10 @@ export const Dashboard = () => {
                                 />
                                 <span>Relevant</span>
                                 <span
-                                  className={`ms-auto badge bg-transition shadow-sm bg-${
+                                  className={`ms-auto badge transition-all shadow-sm text-bg-${
                                     fractions.relevant.condition
-                                      ? "success"
-                                      : "danger"
+                                      ? "primary"
+                                      : "light"
                                   } rounded-pill d-flex align-items-center`}
                                 >
                                   {fractions.relevant.string}
@@ -182,11 +197,11 @@ export const Dashboard = () => {
                             )}
                             {relevant.map((value) => (
                               <label
-                                className="list-group-item d-flex gap-2 small"
+                                className="list-group-item border-0 d-flex gap-2 small"
                                 key={value}
                               >
                                 <input
-                                  className="form-check-input flex-shrink-0"
+                                  className="ms-4 form-check-input flex-shrink-0"
                                   onChange={onDropdownItemChange}
                                   checked={items[value].checked}
                                   name={`${field}-items`}
@@ -211,10 +226,10 @@ export const Dashboard = () => {
                                 />
                                 <span>Irrelevant</span>
                                 <span
-                                  className={`ms-auto badge bg-transition shadow-sm bg-${
+                                  className={`ms-auto badge transition-all shadow-sm text-bg-${
                                     fractions.irrelevant.condition
-                                      ? "success"
-                                      : "danger"
+                                      ? "primary"
+                                      : "light"
                                   } rounded-pill d-flex align-items-center`}
                                 >
                                   {fractions.irrelevant.string}
@@ -223,11 +238,11 @@ export const Dashboard = () => {
                             )}
                             {irrelevant.map((value) => (
                               <label
-                                className="list-group-item d-flex gap-2 small pe-none"
+                                className="list-group-item border-0 d-flex gap-2 small pe-none"
                                 key={value}
                               >
                                 <input
-                                  className="form-check-input flex-shrink-0 opacity-50"
+                                  className="ms-4 form-check-input flex-shrink-0 opacity-50"
                                   checked={items[value].checked}
                                   name={`${field}-items`}
                                   type="checkbox"
@@ -251,10 +266,10 @@ export const Dashboard = () => {
                                 />
                                 <span>Unavailable</span>
                                 <span
-                                  className={`ms-auto badge bg-transition shadow-sm bg-${
+                                  className={`ms-auto badge transition-all shadow-sm text-bg-${
                                     fractions.unavailable.condition
-                                      ? "success"
-                                      : "danger"
+                                      ? "primary"
+                                      : "light"
                                   } rounded-pill d-flex align-items-center`}
                                 >
                                   {fractions.unavailable.string}
@@ -263,11 +278,11 @@ export const Dashboard = () => {
                             )}
                             {unavailable.map((value) => (
                               <label
-                                className="list-group-item d-flex gap-2 small pe-none"
+                                className="list-group-item border-0 d-flex gap-2 small pe-none"
                                 key={value}
                               >
                                 <input
-                                  className="form-check-input flex-shrink-0 opacity-25"
+                                  className="ms-4 form-check-input flex-shrink-0 opacity-25"
                                   checked={items[value].checked}
                                   name={`${field}-items`}
                                   type="checkbox"
@@ -299,7 +314,9 @@ export const Dashboard = () => {
 const ListGroupItem = memo(({ className = "", children, ...restOfProps }) => {
   return (
     <>
-      <label className={`list-group-item d-flex gap-2 ${className}`.trimEnd()}>
+      <label
+        className={`list-group-item border-0 d-flex gap-2 ${className}`.trimEnd()}
+      >
         <input className="form-check-input flex-shrink-0" {...restOfProps} />
         <span>{children}</span>
       </label>
@@ -320,27 +337,25 @@ const ListGroup = ({ className = "", ...restOfProps }) => {
   );
 };
 
-const Dropdown = forwardRef(
-  ({ variant = "secondary", className = "", children, title }, ref) => {
-    return (
-      <>
-        <div className="dropdown col">
-          <button
-            className={`btn btn-${variant} bg-gradient dropdown-toggle w-100 shadow-sm ${className}`.trimEnd()}
-            data-bs-auto-close="outside"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            type="button"
-            ref={ref}
-          >
-            {title}
-          </button>
-          {children}
-        </div>
-      </>
-    );
-  }
-);
+const Dropdown = forwardRef(({ className = "", children, title }, ref) => {
+  return (
+    <>
+      <div className="dropdown col">
+        <button
+          className={`btn bg-gradient dropdown-toggle w-100 ${className}`.trimEnd()}
+          data-bs-auto-close="outside"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+          type="button"
+          ref={ref}
+        >
+          {title}
+        </button>
+        {children}
+      </div>
+    </>
+  );
+});
 
 Dropdown.displayName = "Dropdown";
 
