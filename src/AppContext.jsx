@@ -439,11 +439,6 @@ const useMainMethod = () => {
 
   usePrevious(columns, handleDataChangeInDropdowns);
 
-  // ! start working with asana first thing tomorrow!
-  // ! need to disable enter of search form
-  // ! disable some dropdown items (lower opacity ones)
-  // ! change appearance of all or subset buttons
-  // ! some visual indicator of modified dropdowns (on button)
   // ! less padding between dropdown items (list group items)
 
   return {

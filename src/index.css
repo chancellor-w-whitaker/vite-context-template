@@ -323,3 +323,19 @@ body {
 .transition-all {
   transition: all 0.15s ease-in-out;
 }
+
+/* .form-check-input {
+  margin-top: 0;
+} */
+
+.list-group-item-sticky {
+}
+
+.form-check-input {
+  border-color: var(--bs-secondary);
+}
+
+.list-group-item {
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+}
