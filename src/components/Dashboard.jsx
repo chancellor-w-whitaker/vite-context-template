@@ -1,9 +1,9 @@
 import { forwardRef, memo } from "react";
 
 import { useConsumeAppContext } from "../hooks/useConsumeAppContext";
+import { Dropdown as DropdownComp } from "./bootstrap/Dropdown";
 import { toTitleCase } from "../functions/toTitleCase";
-import { BsAccordion } from "./BsAccordion";
-import { BsDropdown } from "./BsDropdown";
+import { Accordion } from "./bootstrap/Accordion";
 
 // * fix unknown error from yesterday
 // * change fraction color if not all checked
@@ -358,8 +358,8 @@ export const Dashboard2 = () => {
 export const Dashboard = () => {
   return (
     <div className="d-flex flex-column gap-5">
-      <BsAccordion></BsAccordion>
-      <BsDropdown autoClose="outside"></BsDropdown>
+      <Accordion></Accordion>
+      <DropdownComp autoClose="outside" variant="primary"></DropdownComp>
     </div>
   );
 };
