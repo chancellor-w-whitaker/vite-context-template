@@ -1,14 +1,17 @@
-import { forwardRef, memo } from "react";
+import { forwardRef, Fragment, memo } from "react";
 
 import { useConsumeAppContext } from "../hooks/useConsumeAppContext";
+import { combineClassNames } from "../functions/combineClassNames";
 import { toTitleCase } from "../functions/toTitleCase";
 
 export const Dashboard = () => {
   const context = useConsumeAppContext();
 
   const {
+    onDropdownAllUnavailableChange,
+    onDropdownAllIrrelevantChange,
+    onDropdownAllRelevantChange,
     onDropdownAllItemsChange,
-    onDropdownSubListChange,
     onDropdownSearchChange,
     filteredRowsIsLoading,
     isDropdownWithIdOpen,
@@ -67,6 +70,37 @@ export const Dashboard = () => {
     };
 
     return { values: { unavailable, irrelevant, relevant }, fractions };
+  };
+
+  const findSingleItemLabel = ({ search, value }) => {
+    const indexOfQuery = value.toLowerCase().indexOf(search.toLowerCase());
+
+    const queryFound = indexOfQuery !== -1;
+
+    const queryValid = search.trim().length > 0;
+
+    const shouldHighlight = queryFound && queryValid;
+
+    return !shouldHighlight
+      ? value
+      : [
+          {
+            text: value.substring(0, indexOfQuery),
+            highlight: false,
+          },
+          {
+            text: value.substring(indexOfQuery, indexOfQuery + search.length),
+            highlight: true,
+          },
+          {
+            text: value.substring(indexOfQuery + search.length),
+            highlight: false,
+          },
+        ].map(({ highlight, text }, index) => (
+          <Fragment key={index}>
+            {!highlight ? <span>{text}</span> : <mark>{text}</mark>}
+          </Fragment>
+        ));
   };
 
   return (
@@ -140,187 +174,85 @@ export const Dashboard = () => {
                             {[irrelevant, relevant, unavailable].filter(
                               (array) => array.length > 0
                             ).length > 1 && (
-                              <label className="list-group-item d-flex gap-2 scroll-sticky-0">
-                                <input
-                                  className="form-check-input flex-shrink-0"
-                                  onChange={onDropdownAllItemsChange}
-                                  checked={fractions.all.condition}
-                                  name={`${field}-items`}
-                                  type="checkbox"
-                                />
-                                <span>All</span>
-                                <span
-                                  className={`ms-auto badge transition-all shadow-sm text-bg-${
-                                    fractions.all.condition
-                                      ? "primary"
-                                      : "light"
-                                  } rounded-pill d-flex align-items-center`}
-                                >
-                                  {fractions.all.string}
-                                </span>
-                              </label>
+                              <MyDropdownItem
+                                onChange={onDropdownAllItemsChange}
+                                checked={fractions.all.condition}
+                                fraction={fractions.all.string}
+                                name={`${field}-items`}
+                                relevance="all"
+                              >
+                                All
+                              </MyDropdownItem>
                             )}
                             {relevant.length > 0 && (
-                              <label className="list-group-item d-flex gap-2 scroll-sticky-0">
-                                <input
-                                  onChange={(e) =>
-                                    onDropdownSubListChange(e, "relevant")
-                                  }
-                                  className="form-check-input flex-shrink-0"
-                                  checked={fractions.relevant.condition}
-                                  name={`${field}-items`}
-                                  type="checkbox"
-                                />
-                                <span>Relevant</span>
-                                <span
-                                  className={`ms-auto badge transition-all shadow-sm text-bg-${
-                                    fractions.relevant.condition
-                                      ? "primary"
-                                      : "light"
-                                  } rounded-pill d-flex align-items-center`}
-                                >
-                                  {fractions.relevant.string}
-                                </span>
-                              </label>
+                              <MyDropdownItem
+                                onChange={onDropdownAllRelevantChange}
+                                checked={fractions.relevant.condition}
+                                fraction={fractions.relevant.string}
+                                name={`${field}-items`}
+                                relevance="relevant"
+                              >
+                                Relevant
+                              </MyDropdownItem>
                             )}
-                            {relevant.map((value) => {
-                              const indexOfSearch = value
-                                .toLowerCase()
-                                .indexOf(search.toLowerCase());
-
-                              const substrings =
-                                indexOfSearch === -1
-                                  ? [
-                                      {
-                                        text: value.substring(),
-                                        bg: "transparent",
-                                      },
-                                    ]
-                                  : [
-                                      {
-                                        text: value.substring(0, indexOfSearch),
-                                        bg: "transparent",
-                                      },
-                                      {
-                                        text: value.substring(
-                                          indexOfSearch,
-                                          indexOfSearch + search.length
-                                        ),
-                                        bg: "warning",
-                                      },
-                                      {
-                                        text: value.substring(
-                                          indexOfSearch + search.length
-                                        ),
-                                        bg: "transparent",
-                                      },
-                                    ];
-
-                              return (
-                                <label
-                                  className="list-group-item border-0 d-flex gap-2 small"
-                                  key={value}
-                                >
-                                  <input
-                                    className="ms-4 form-check-input flex-shrink-0"
-                                    onChange={onDropdownItemChange}
-                                    checked={items[value].checked}
-                                    name={`${field}-items`}
-                                    type="checkbox"
-                                    value={value}
-                                    key={value}
-                                  />
-                                  <span>
-                                    {substrings.map(({ text, bg }, index) => (
-                                      <span className={`bg-${bg}`} key={index}>
-                                        {text}
-                                      </span>
-                                    ))}
-                                  </span>
-                                  {/* <span>{value}</span> */}
-                                </label>
-                              );
-                            })}
+                            {relevant.map((value) => (
+                              <MyDropdownItem
+                                onChange={onDropdownItemChange}
+                                checked={items[value].checked}
+                                name={`${field}-items`}
+                                relevance="relevant"
+                                value={value}
+                                key={value}
+                                singleItem
+                              >
+                                {findSingleItemLabel({ search, value })}
+                              </MyDropdownItem>
+                            ))}
                             {irrelevant.length > 0 && (
-                              <label className="list-group-item d-flex gap-2 scroll-sticky-0">
-                                <input
-                                  onChange={(e) =>
-                                    onDropdownSubListChange(e, "irrelevant")
-                                  }
-                                  className="form-check-input flex-shrink-0"
-                                  checked={fractions.irrelevant.condition}
-                                  name={`${field}-items`}
-                                  type="checkbox"
-                                  readOnly
-                                />
-                                <span>Irrelevant</span>
-                                <span
-                                  className={`ms-auto badge transition-all shadow-sm text-bg-${
-                                    fractions.irrelevant.condition
-                                      ? "primary"
-                                      : "light"
-                                  } rounded-pill d-flex align-items-center`}
-                                >
-                                  {fractions.irrelevant.string}
-                                </span>
-                              </label>
+                              <MyDropdownItem
+                                onChange={onDropdownAllIrrelevantChange}
+                                checked={fractions.irrelevant.condition}
+                                fraction={fractions.irrelevant.string}
+                                name={`${field}-items`}
+                                relevance="irrelevant"
+                              >
+                                Irrelevant
+                              </MyDropdownItem>
                             )}
                             {irrelevant.map((value) => (
-                              <label
-                                className="list-group-item border-0 d-flex gap-2 small pe-none"
+                              <MyDropdownItem
+                                checked={items[value].checked}
+                                name={`${field}-items`}
+                                relevance="irrelevant"
+                                value={value}
                                 key={value}
+                                singleItem
                               >
-                                <input
-                                  className="ms-4 form-check-input flex-shrink-0 opacity-50"
-                                  checked={items[value].checked}
-                                  name={`${field}-items`}
-                                  type="checkbox"
-                                  value={value}
-                                  key={value}
-                                  readOnly
-                                />
-                                <span className="opacity-50">{value}</span>
-                              </label>
+                                {findSingleItemLabel({ search, value })}
+                              </MyDropdownItem>
                             ))}
                             {unavailable.length > 0 && (
-                              <label className="list-group-item d-flex gap-2 scroll-sticky-0">
-                                <input
-                                  onChange={(e) =>
-                                    onDropdownSubListChange(e, "unavailable")
-                                  }
-                                  className="form-check-input flex-shrink-0"
-                                  checked={fractions.unavailable.condition}
-                                  name={`${field}-items`}
-                                  type="checkbox"
-                                />
-                                <span>Unavailable</span>
-                                <span
-                                  className={`ms-auto badge transition-all shadow-sm text-bg-${
-                                    fractions.unavailable.condition
-                                      ? "primary"
-                                      : "light"
-                                  } rounded-pill d-flex align-items-center`}
-                                >
-                                  {fractions.unavailable.string}
-                                </span>
-                              </label>
+                              <MyDropdownItem
+                                onChange={onDropdownAllUnavailableChange}
+                                checked={fractions.unavailable.condition}
+                                fraction={fractions.unavailable.string}
+                                name={`${field}-items`}
+                                relevance="unavailable"
+                              >
+                                Unavailable
+                              </MyDropdownItem>
                             )}
                             {unavailable.map((value) => (
-                              <label
-                                className="list-group-item border-0 d-flex gap-2 small pe-none"
+                              <MyDropdownItem
+                                checked={items[value].checked}
+                                name={`${field}-items`}
+                                relevance="unavailable"
+                                value={value}
                                 key={value}
+                                singleItem
                               >
-                                <input
-                                  className="ms-4 form-check-input flex-shrink-0 opacity-25"
-                                  checked={items[value].checked}
-                                  name={`${field}-items`}
-                                  type="checkbox"
-                                  value={value}
-                                  key={value}
-                                  readOnly
-                                />
-                                <span className="opacity-25">{value}</span>
-                              </label>
+                                {findSingleItemLabel({ search, value })}
+                              </MyDropdownItem>
                             ))}
                           </div>
                         </>
@@ -337,6 +269,107 @@ export const Dashboard = () => {
         </div>
       </div>
     </>
+  );
+};
+
+const MyDropdownItem = memo(
+  ({
+    relevance = "relevant",
+    singleItem = false,
+    fraction = false,
+    value = "value",
+    checked = true,
+    name = "name",
+    onChange,
+    children,
+  }) => {
+    const labelClassList = [];
+
+    const inputClassList = [];
+
+    let opacity = 100;
+
+    const readOnly =
+      singleItem && ["unavailable", "irrelevant"].includes(relevance);
+
+    if (singleItem) {
+      inputClassList.push("ms-4");
+
+      labelClassList.push(...["border-0", "small"]);
+
+      if (readOnly) {
+        labelClassList.push("pe-none");
+      }
+
+      if (relevance === "irrelevant") {
+        opacity = 50;
+      }
+
+      if (relevance === "unavailable") {
+        opacity = 25;
+      }
+    } else {
+      labelClassList.push("scroll-sticky-0");
+    }
+
+    inputClassList.push(`opacity-${opacity}`);
+
+    return (
+      <MyDropdownLabel className={labelClassList.join(" ")}>
+        <MyDropdownInput
+          className={inputClassList.join(" ")}
+          onChange={onChange}
+          readOnly={readOnly}
+          checked={checked}
+          value={value}
+          name={name}
+        ></MyDropdownInput>
+        <span className={`opacity-${opacity}`}>{children}</span>
+        {fraction && (
+          <MyDropdownBadge checked={checked}>{fraction}</MyDropdownBadge>
+        )}
+      </MyDropdownLabel>
+    );
+  }
+);
+
+MyDropdownItem.displayName = "MyDropdownItem";
+
+const MyDropdownLabel = ({ className = "", children }) => {
+  return (
+    <label
+      className={combineClassNames("list-group-item d-flex gap-2", className)}
+    >
+      {children}
+    </label>
+  );
+};
+
+const MyDropdownInput = ({ type = "checkbox", className = "", ...rest }) => {
+  return (
+    <input
+      {...rest}
+      className={combineClassNames("form-check-input flex-shrink-0", className)}
+      type={type}
+    />
+  );
+};
+
+const MyDropdownBadge = ({
+  checkedVariant = "primary",
+  uncheckedVariant = "light",
+  className = "",
+  children,
+  checked,
+}) => {
+  const origClassName = `ms-auto badge transition-all shadow-sm text-bg-${
+    checked ? checkedVariant : uncheckedVariant
+  } rounded-pill d-flex align-items-center`;
+
+  return (
+    <span className={combineClassNames(origClassName, className)}>
+      {children}
+    </span>
   );
 };
 

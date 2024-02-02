@@ -1,5 +1,6 @@
 import {
   useDeferredValue,
+  startTransition,
   createContext,
   useCallback,
   useState,
@@ -7,6 +8,7 @@ import {
 } from "react";
 
 import { useSetBsBgVariantOfBody } from "./hooks/useSetBsBgVariantOfBody";
+import { useDelayedValue } from "./hooks/examples/useDelayedValue";
 import { standardizeKey } from "./functions/standardizeKey";
 import { useBsDropdowns } from "./hooks/useBsDropdowns";
 import { useData } from "./hooks/examples/useData";
@@ -50,11 +52,16 @@ const useMainMethod = () => {
 
   const data = useData(`data/${deferredSelectedData}.json`);
 
-  const [dropdowns, setDropdowns] = useState({});
+  const [dropdowns, dropdownsSetter] = useState({});
 
-  const deferredDropdowns = useDeferredValue(dropdowns);
+  const setDropdowns = useCallback(
+    (param) => startTransition(() => dropdownsSetter(param)),
+    []
+  );
 
-  const filteredRowsIsLoading = dropdowns !== deferredDropdowns;
+  const delayedDropdowns = useDelayedValue(dropdowns, 200);
+
+  const filteredRowsIsLoading = dropdowns !== delayedDropdowns;
 
   const onDropdownItemChange = useCallback(
     ({ target: { value, name } }) =>
@@ -77,7 +84,7 @@ const useMainMethod = () => {
 
         return nextDropdowns;
       }),
-    []
+    [setDropdowns]
   );
 
   const onDropdownAllItemsChange = useCallback(
@@ -112,7 +119,7 @@ const useMainMethod = () => {
 
         return nextDropdowns;
       }),
-    []
+    [setDropdowns]
   );
 
   // ! can you pass 'name' prop to search input?
@@ -134,7 +141,7 @@ const useMainMethod = () => {
 
         return nextDropdowns;
       }),
-    []
+    [setDropdowns]
   );
 
   const { columns, rows } = useMemo(() => {
@@ -211,13 +218,13 @@ const useMainMethod = () => {
   };
   */
   const { dropdownItems, filteredRows } = useMemo(() => {
-    const dataRelevantFields = Object.keys(deferredDropdowns).filter(
-      (field) => deferredDropdowns[field].dataRelevance
+    const dataRelevantFields = Object.keys(delayedDropdowns).filter(
+      (field) => delayedDropdowns[field].dataRelevance
     );
 
     const dataRelevantModifiedFields = dataRelevantFields.filter((field) =>
-      // deferredDropdowns[field] &&
-      Object.values(deferredDropdowns[field].items).some(
+      // delayedDropdowns[field] &&
+      Object.values(delayedDropdowns[field].items).some(
         ({ checked }) => !checked
       )
     );
@@ -257,7 +264,7 @@ const useMainMethod = () => {
     };
 
     const filteredRows = getFilteredRows({
-      dropdowns: deferredDropdowns,
+      dropdowns: delayedDropdowns,
       fields: dataRelevantFields,
       rows,
     });
@@ -274,7 +281,7 @@ const useMainMethod = () => {
       ];
 
       const thisFilteredRows = getFilteredRows({
-        dropdowns: deferredDropdowns,
+        dropdowns: delayedDropdowns,
         fields: thisFieldRemoved,
         rows,
       });
@@ -296,7 +303,7 @@ const useMainMethod = () => {
       findQueryInValue(search, valueB) - findQueryInValue(search, valueA);
 
     const dropdownItems = Object.fromEntries(
-      Object.entries(deferredDropdowns).map(([field, { search, items }]) => [
+      Object.entries(delayedDropdowns).map(([field, { search, items }]) => [
         field,
         {
           irrelevant: (!(field in fieldValueSets)
@@ -328,7 +335,7 @@ const useMainMethod = () => {
     );
 
     return { dropdownItems, filteredRows };
-  }, [deferredDropdowns, rows]);
+  }, [delayedDropdowns, rows]);
 
   const onDropdownSubListChange = useCallback(
     ({ target: { name } }, subset = "relevant") =>
@@ -366,7 +373,22 @@ const useMainMethod = () => {
 
         return nextDropdowns;
       }),
-    [dropdownItems]
+    [dropdownItems, setDropdowns]
+  );
+
+  const onDropdownAllRelevantChange = useCallback(
+    (e) => onDropdownSubListChange(e, "relevant"),
+    [onDropdownSubListChange]
+  );
+
+  const onDropdownAllIrrelevantChange = useCallback(
+    (e) => onDropdownSubListChange(e, "irrelevant"),
+    [onDropdownSubListChange]
+  );
+
+  const onDropdownAllUnavailableChange = useCallback(
+    (e) => onDropdownSubListChange(e, "unavailable"),
+    [onDropdownSubListChange]
   );
 
   const handleDataChangeInDropdowns = useCallback(() => {
@@ -435,15 +457,17 @@ const useMainMethod = () => {
       // after being manipulated by previous dropdowns
       return nextDropdowns;
     });
-  }, [columns]);
+  }, [columns, setDropdowns]);
 
   usePrevious(columns, handleDataChangeInDropdowns);
 
   // ! less padding between dropdown items (list group items)
 
   return {
+    onDropdownAllUnavailableChange,
+    onDropdownAllIrrelevantChange,
+    onDropdownAllRelevantChange,
     onDropdownAllItemsChange,
-    onDropdownSubListChange,
     onDropdownSearchChange,
     filteredRowsIsLoading,
     isDropdownWithIdOpen,

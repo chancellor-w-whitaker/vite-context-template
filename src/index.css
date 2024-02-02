@@ -328,9 +328,6 @@ body {
   margin-top: 0;
 } */
 
-.list-group-item-sticky {
-}
-
 .form-check-input {
   border-color: var(--bs-secondary);
 }
@@ -338,4 +335,9 @@ body {
 .list-group-item {
   padding-top: 0.25rem !important;
   padding-bottom: 0.25rem !important;
+}
+
+mark {
+  padding: 0;
+  background-color: var(--bs-warning);
 }
