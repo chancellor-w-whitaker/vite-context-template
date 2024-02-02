@@ -166,3 +166,47 @@ const finalDropdownsToRender = {
   ],
 };
 */
+
+// ! fun notes
+
+// clean up jsx, transitions, & control rendering better (map it out) (deferred values as expensive calculation deps, state values as render values, start transition when setting state, memoize components for less render computation)
+
+// other bs components to consider--
+// modal
+// offcanvas
+// tabbable tab (navs & tabs)
+// tabbable list item (list group)
+// carousel
+// popovers
+// scrollspy
+// toast
+// tooltip
+// collapse
+
+// enable predefined gradients & shadows?
+// https://getbootstrap.com/docs/5.3/customize/options/
+
+// can you do anything with this color modes function?
+// https://getbootstrap.com/docs/5.3/customize/color-modes/#javascript
+
+// shows every bs component containing js
+// https://getbootstrap.com/docs/5.3/getting-started/introduction/#js-components
+// https://getbootstrap.com/docs/5.3/customize/optimize/#lean-javascript
+
+// info about using bs js
+// https://getbootstrap.com/docs/5.3/getting-started/javascript/
+
+// info about modals & dropdowns on mobile
+// https://getbootstrap.com/docs/5.3/getting-started/browsers-devices/#modals-and-dropdowns-on-mobile
+
+// info on color contrast
+// https://getbootstrap.com/docs/5.3/getting-started/accessibility/#color-contrast
+
+// could create Components from all bs components found in sidebar
+// https://getbootstrap.com/docs/5.3/components/accordion/
+
+// could create Components from bs examples (snippets, navbars, custom components, ...)
+// https://getbootstrap.com/docs/5.3/examples/
+
+// icon component? (probably highly unnecessary)
+// https://icons.getbootstrap.com/

@@ -1,24 +1,9 @@
 import { forwardRef, memo } from "react";
 
 import { useConsumeAppContext } from "../hooks/useConsumeAppContext";
-import { Dropdown as DropdownComp } from "./bootstrap/Dropdown";
 import { toTitleCase } from "../functions/toTitleCase";
-import { Accordion } from "./bootstrap/Accordion";
 
-// * fix unknown error from yesterday
-// * change fraction color if not all checked
-// * opacity should only affect list item text?
-// * prevent enter submit
-// * disable irrelevant & unavailable items
-// * visually differentiate modified dropdowns
-
-// ! visually differentiate "All" buttons (might want to fool with borders on "All" button)
-// ! accordion in lists
-// ! highlight matching search in items
-
-// clean up jsx, transitions, & control rendering better (map it out) (deferred values as expensive calculation deps, state values as render values, start transition when setting state, memoize components for less render computation)
-
-export const Dashboard2 = () => {
+export const Dashboard = () => {
   const context = useConsumeAppContext();
 
   const {
@@ -113,7 +98,7 @@ export const Dashboard2 = () => {
 
               return (
                 dataRelevance && (
-                  <Dropdown
+                  <OldDropdown
                     ref={(buttonNode) => {
                       storeDropdownById(field, buttonNode);
                       if (buttonNode) {
@@ -341,7 +326,7 @@ export const Dashboard2 = () => {
                         </>
                       )}
                     </div>
-                  </Dropdown>
+                  </OldDropdown>
                 )
               );
             }
@@ -355,14 +340,24 @@ export const Dashboard2 = () => {
   );
 };
 
-export const Dashboard = () => {
-  return (
-    <div className="d-flex flex-column gap-5">
-      <Accordion></Accordion>
-      <DropdownComp autoClose="outside" variant="primary"></DropdownComp>
-    </div>
-  );
-};
+// export const Dashboard = () => {
+//   return (
+//     <div className="d-flex flex-column gap-5">
+//       <Accordion></Accordion>
+//       <Dropdown
+//         button={({ header, ref }) => (
+//           <DropdownButton variant="primary" ref={ref}>
+//             {header}
+//           </DropdownButton>
+//         )}
+//         menu={({ content, isOpen }) => (
+//           <DropdownMenu>{isOpen && content}</DropdownMenu>
+//         )}
+//         autoClose="outside"
+//       ></Dropdown>
+//     </div>
+//   );
+// };
 
 const ListGroupItem = memo(({ className = "", children, ...restOfProps }) => {
   return (
@@ -390,7 +385,7 @@ const ListGroup = ({ className = "", ...restOfProps }) => {
   );
 };
 
-const Dropdown = forwardRef(
+const OldDropdown = forwardRef(
   ({ className = "", children, title, style }, ref) => {
     return (
       <>
@@ -413,33 +408,4 @@ const Dropdown = forwardRef(
   }
 );
 
-Dropdown.displayName = "Dropdown";
-
-// const DropdownMenu = ({ className = "", ...restOfProps }) => {
-//   return (
-//     <>
-//       <ul
-//         className={`dropdown-menu ${className}`.trimEnd()}
-//         {...restOfProps}
-//       ></ul>
-//     </>
-//   );
-// };
-
-const DropdownSearch = memo((props) => {
-  return (
-    <>
-      <form className="p-2 mb-2 bg-body-tertiary border-bottom">
-        <input
-          placeholder="Type to search..."
-          className="form-control"
-          autoComplete="false"
-          type="search"
-          {...props}
-        />
-      </form>
-    </>
-  );
-});
-
-DropdownSearch.displayName = "DropdownSearch";
+OldDropdown.displayName = "Dropdown";

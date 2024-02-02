@@ -1,5 +1,6 @@
-import { useRef, memo } from "react";
+import { forwardRef, useRef, memo } from "react";
 
+import { combineClassNames } from "../../functions/combineClassNames";
 import { useDropdown } from "../../hooks/bootstrap/useDropdown";
 
 const defaultOffset = [0, 2];
@@ -27,14 +28,17 @@ export const Dropdown = memo(
     ),
     boundary = "clippingParents",
     offset = defaultOffset,
-    variant = "secondary",
     reference = "toggle",
     header = "Dropdown",
     display = "dynamic",
     popperConfig = null,
     autoClose = true,
+    className = "",
+    button = null,
+    menu = null,
+    ...rest
   }) => {
-    const triggerRef = useRef();
+    const ref = useRef();
 
     const options = {
       popperConfig,
@@ -45,22 +49,56 @@ export const Dropdown = memo(
       offset,
     };
 
-    const showContent = useDropdown({ ref: triggerRef, ...options });
+    const isOpen = useDropdown({ ref, ...options });
 
     return (
-      <div className="dropdown">
-        <button
-          className={`btn btn-${variant} dropdown-toggle`}
-          data-bs-toggle="dropdown"
-          ref={triggerRef}
-          type="button"
-        >
-          {header}
-        </button>
-        <ul className="dropdown-menu">{showContent && content}</ul>
+      <div {...rest} className={combineClassNames("dropdown", className)}>
+        {button ? (
+          button({ header, ref })
+        ) : (
+          <DropdownButton ref={ref}>{header}</DropdownButton>
+        )}
+        {menu ? (
+          menu({ content, isOpen })
+        ) : (
+          <DropdownMenu>{isOpen && content}</DropdownMenu>
+        )}
       </div>
     );
   }
 );
+
+export const DropdownButton = memo(
+  forwardRef(
+    (
+      { variant = "secondary", type = "button", className = "", ...rest },
+      ref
+    ) => {
+      return (
+        <button
+          {...rest}
+          className={combineClassNames(
+            `btn btn-${variant} dropdown-toggle`,
+            className
+          )}
+          data-bs-toggle="dropdown"
+          type={type}
+          ref={ref}
+        ></button>
+      );
+    }
+  )
+);
+
+export const DropdownMenu = memo(({ className = "", ...rest }) => {
+  return (
+    <ul
+      {...rest}
+      className={combineClassNames("dropdown-menu", className)}
+    ></ul>
+  );
+});
+
+DropdownMenu.displayName = "DropdownMenu";
 
 Dropdown.displayName = "Dropdown";
