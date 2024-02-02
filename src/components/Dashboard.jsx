@@ -1,8 +1,9 @@
-import { Collapse } from "bootstrap/dist/js/bootstrap.bundle.min";
-import { forwardRef, useEffect, useRef, memo } from "react";
+import { forwardRef, memo } from "react";
 
 import { useConsumeAppContext } from "../hooks/useConsumeAppContext";
 import { toTitleCase } from "../functions/toTitleCase";
+import { BsAccordion } from "./BsAccordion";
+import { BsDropdown } from "./BsDropdown";
 
 // * fix unknown error from yesterday
 // * change fraction color if not all checked
@@ -17,7 +18,7 @@ import { toTitleCase } from "../functions/toTitleCase";
 
 // clean up jsx, transitions, & control rendering better (map it out) (deferred values as expensive calculation deps, state values as render values, start transition when setting state, memoize components for less render computation)
 
-export const Dashboard = () => {
+export const Dashboard2 = () => {
   const context = useConsumeAppContext();
 
   const {
@@ -349,220 +350,16 @@ export const Dashboard = () => {
         <div>
           {loading ? "Loading..." : `${numberOfFilteredRows} filtered rows`}
         </div>
-        <div>
-          <div className="dropdown">
-            <button
-              className="btn btn-secondary dropdown-toggle"
-              data-bs-auto-close="outside"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-              type="button"
-            >
-              Dropdown
-            </button>
-            <ul className="dropdown-menu border-0 py-0 shadow-sm">
-              <Accordion>
-                <AccordionItem
-                  buttonChildren={
-                    <>
-                      <input
-                        onClick={(e) => e.stopPropagation()}
-                        className="form-check-input mt-0"
-                        type="checkbox"
-                      />
-                      Accordion Item #1
-                    </>
-                  }
-                >
-                  <strong>This is the first item's accordion body.</strong> It
-                  is shown by default, until the collapse plugin adds the
-                  appropriate classes that we use to style each element. These
-                  classes control the overall appearance, as well as the showing
-                  and hiding via CSS transitions. You can modify any of this
-                  with custom CSS or overriding our default variables. It's also
-                  worth noting that just about any HTML can go within the{" "}
-                  <code>.accordion-body</code>, though the transition does limit
-                  overflow.
-                </AccordionItem>
-                <AccordionItem
-                  buttonChildren={
-                    <>
-                      <input
-                        onClick={(e) => e.stopPropagation()}
-                        className="form-check-input mt-0"
-                        type="checkbox"
-                      />
-                      Accordion Item #2
-                    </>
-                  }
-                >
-                  <strong>This is the second item's accordion body.</strong> It
-                  is hidden by default, until the collapse plugin adds the
-                  appropriate classes that we use to style each element. These
-                  classes control the overall appearance, as well as the showing
-                  and hiding via CSS transitions. You can modify any of this
-                  with custom CSS or overriding our default variables. It's also
-                  worth noting that just about any HTML can go within the{" "}
-                  <code>.accordion-body</code>, though the transition does limit
-                  overflow.
-                </AccordionItem>
-                <AccordionItem
-                  buttonChildren={
-                    <>
-                      <input
-                        onClick={(e) => e.stopPropagation()}
-                        className="form-check-input mt-0"
-                        type="checkbox"
-                      />
-                      Accordion Item #3
-                    </>
-                  }
-                >
-                  <strong>This is the third item's accordion body.</strong> It
-                  is hidden by default, until the collapse plugin adds the
-                  appropriate classes that we use to style each element. These
-                  classes control the overall appearance, as well as the showing
-                  and hiding via CSS transitions. You can modify any of this
-                  with custom CSS or overriding our default variables. It's also
-                  worth noting that just about any HTML can go within the{" "}
-                  <code>.accordion-body</code>, though the transition does limit
-                  overflow.
-                </AccordionItem>
-              </Accordion>
-            </ul>
-          </div>
-        </div>
-        <div className="accordion" id="accordionExample">
-          <div className="accordion-item">
-            <h2 className="accordion-header">
-              <button
-                data-bs-target="#collapseOne"
-                className="accordion-button"
-                aria-controls="collapseOne"
-                data-bs-toggle="collapse"
-                aria-expanded="true"
-                type="button"
-              >
-                Accordion Item #1
-              </button>
-            </h2>
-            <div
-              className="accordion-collapse collapse show"
-              data-bs-parent="#accordionExample"
-              id="collapseOne"
-            >
-              <div className="accordion-body">
-                <strong>This is the first item's accordion body.</strong> It is
-                shown by default, until the collapse plugin adds the appropriate
-                classes that we use to style each element. These classes control
-                the overall appearance, as well as the showing and hiding via
-                CSS transitions. You can modify any of this with custom CSS or
-                overriding our default variables. It's also worth noting that
-                just about any HTML can go within the{" "}
-                <code>.accordion-body</code>, though the transition does limit
-                overflow.
-              </div>
-            </div>
-          </div>
-          <div className="accordion-item">
-            <h2 className="accordion-header">
-              <button
-                className="accordion-button collapsed"
-                data-bs-target="#collapseTwo"
-                aria-controls="collapseTwo"
-                data-bs-toggle="collapse"
-                aria-expanded="false"
-                type="button"
-              >
-                Accordion Item #2
-              </button>
-            </h2>
-            <div
-              className="accordion-collapse collapse"
-              data-bs-parent="#accordionExample"
-              id="collapseTwo"
-            >
-              <div className="accordion-body">
-                <strong>This is the second item's accordion body.</strong> It is
-                hidden by default, until the collapse plugin adds the
-                appropriate classes that we use to style each element. These
-                classes control the overall appearance, as well as the showing
-                and hiding via CSS transitions. You can modify any of this with
-                custom CSS or overriding our default variables. It's also worth
-                noting that just about any HTML can go within the{" "}
-                <code>.accordion-body</code>, though the transition does limit
-                overflow.
-              </div>
-            </div>
-          </div>
-          <div className="accordion-item">
-            <h2 className="accordion-header">
-              <button
-                className="accordion-button collapsed"
-                data-bs-target="#collapseThree"
-                aria-controls="collapseThree"
-                data-bs-toggle="collapse"
-                aria-expanded="false"
-                type="button"
-              >
-                Accordion Item #3
-              </button>
-            </h2>
-            <div
-              className="accordion-collapse collapse"
-              data-bs-parent="#accordionExample"
-              id="collapseThree"
-            >
-              <div className="accordion-body">
-                <strong>This is the third item's accordion body.</strong> It is
-                hidden by default, until the collapse plugin adds the
-                appropriate classes that we use to style each element. These
-                classes control the overall appearance, as well as the showing
-                and hiding via CSS transitions. You can modify any of this with
-                custom CSS or overriding our default variables. It's also worth
-                noting that just about any HTML can go within the{" "}
-                <code>.accordion-body</code>, though the transition does limit
-                overflow.
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </>
   );
 };
 
-const Accordion = ({ children }) => {
-  return <div className="accordion">{children}</div>;
-};
-
-const AccordionItem = ({ buttonChildren, children }) => {
-  const ref = useRef();
-
-  useEffect(() => {
-    const bsCollapse = new Collapse(ref.current, { toggle: false });
-
-    return () => {
-      bsCollapse.dispose();
-    };
-  }, []);
-
-  const toggle = () => Collapse.getInstance(ref.current).toggle();
-
+export const Dashboard = () => {
   return (
-    <div className="accordion-item">
-      <h2 className="accordion-header">
-        <button
-          className="accordion-button collapsed gap-2"
-          onClick={toggle}
-          type="button"
-        >
-          {buttonChildren}
-        </button>
-      </h2>
-      <div className="accordion-collapse collapse" ref={ref}>
-        <div className="accordion-body">{children}</div>
-      </div>
+    <div className="d-flex flex-column gap-5">
+      <BsAccordion></BsAccordion>
+      <BsDropdown autoClose="outside"></BsDropdown>
     </div>
   );
 };
