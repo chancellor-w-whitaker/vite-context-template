@@ -1,8 +1,8 @@
 import {
-  useDeferredValue,
   startTransition,
   createContext,
   useCallback,
+  useEffect,
   useState,
   useMemo,
 } from "react";
@@ -13,6 +13,7 @@ import { standardizeKey } from "./functions/standardizeKey";
 import { useBsDropdowns } from "./hooks/useBsDropdowns";
 import { useData } from "./hooks/examples/useData";
 import { usePrevious } from "./hooks/usePrevious";
+import { pivotData } from "./functions/pivotData";
 
 export const AppContext = createContext(null);
 
@@ -24,14 +25,32 @@ export const AppContextProvider = ({ children }) => {
   );
 };
 
-const dataOptions = [
-  { displayName: "Fall Enrollment", id: "fall" },
-  { displayName: "Spring Enrollment", id: "spring" },
-  { displayName: "Summer Enrollment", id: "summer" },
-  { displayName: "Degrees Awarded", id: "degrees" },
-  { displayName: "Retention Rates", id: "retention" },
-  { displayName: "Graduation Rates", id: "graduation" },
-  { displayName: "Credit Hours", id: "hours" },
+const fileNames = [
+  { displayName: "Fall Enrollment", pivotField: "term", id: "fall" },
+  { displayName: "Spring Enrollment", pivotField: "term", id: "spring" },
+  { displayName: "Summer Enrollment", pivotField: "term", id: "summer" },
+  { displayName: "Degrees Awarded", pivotField: "year", id: "degrees" },
+  {
+    displayName: "Retention Rates",
+    pivotField: "retentionYear",
+    id: "retention",
+  },
+  {
+    displayName: "Graduation Rates",
+    pivotField: "cohortTerm",
+    id: "graduation",
+  },
+  { displayName: "Credit Hours", pivotField: "year", id: "hours" },
+];
+
+const pivotFields = new Set(fileNames.map(({ pivotField }) => pivotField));
+
+const regressionTypes = [
+  "linear",
+  "exponential",
+  "logarithmic",
+  "power",
+  "polynomial",
 ];
 
 const useMainMethod = () => {
@@ -39,29 +58,54 @@ const useMainMethod = () => {
 
   const { isDropdownWithIdOpen, storeDropdownById } = useBsDropdowns();
 
-  const [selectedData, setSelectedData] = useState(dataOptions[0].id);
+  const [fileName, setFileName] = useState(fileNames[0].id);
 
-  const deferredSelectedData = useDeferredValue(selectedData);
+  const [measure, setMeasure] = useResponsiveState();
 
-  const dataIsLoading = selectedData !== deferredSelectedData;
+  const [groupBy, setGroupBy, delayedGroupBy, groupByIsLoading] =
+    useResponsiveState([]);
 
-  const onSelectedDataChange = useCallback(
-    ({ target: { value } }) => setSelectedData(value),
+  const [regressionType, setRegressionType] = useResponsiveState(
+    regressionTypes[0]
+  );
+
+  const onFileNameChange = useCallback(
+    ({ target: { value } }) => setFileName(value),
     []
   );
 
-  const data = useData(`data/${deferredSelectedData}.json`);
-
-  const [dropdowns, dropdownsSetter] = useState({});
-
-  const setDropdowns = useCallback(
-    (param) => startTransition(() => dropdownsSetter(param)),
-    []
+  const onMeasureChange = useCallback(
+    ({ target: { value } }) => setMeasure(value),
+    [setMeasure]
   );
 
-  const delayedDropdowns = useDelayedValue(dropdowns, 200);
+  const onGroupByChange = useCallback(
+    ({ target: { value } }) =>
+      setGroupBy((previousGroupBy) => {
+        const nextGroupBy = previousGroupBy.filter(
+          (anyField) => anyField !== value
+        );
 
-  const filteredRowsIsLoading = dropdowns !== delayedDropdowns;
+        return previousGroupBy.length !== nextGroupBy.length
+          ? nextGroupBy
+          : [...nextGroupBy, value];
+      }),
+    [setGroupBy]
+  );
+
+  const onRegressionTypeChange = useCallback(
+    ({ target: { value } }) => setRegressionType(value),
+    [setRegressionType]
+  );
+
+  const data = useData(`data/${fileName}.json`);
+
+  const dataIsLoading = false;
+
+  const [dropdowns, setDropdowns, delayedDropdowns, dropdownsIsLoading] =
+    useResponsiveState({});
+
+  const filteredRowsIsLoading = dropdownsIsLoading;
 
   const onDropdownItemChange = useCallback(
     ({ target: { value, name } }) =>
@@ -391,7 +435,7 @@ const useMainMethod = () => {
     [onDropdownSubListChange]
   );
 
-  const handleDataChangeInDropdowns = useCallback(() => {
+  const handleDataChange = useCallback(() => {
     const nextDropdowns = Object.fromEntries(
       Object.entries(columns)
         .filter((entry) => entry[1].type === "string")
@@ -457,30 +501,130 @@ const useMainMethod = () => {
       // after being manipulated by previous dropdowns
       return nextDropdowns;
     });
-  }, [columns, setDropdowns]);
 
-  usePrevious(columns, handleDataChangeInDropdowns);
+    setMeasure((previousMeasure) => {
+      const nextRelevantOptions = Object.entries(columns)
+        .filter((array) => array[1].type === "number")
+        .map(([field]) => field);
+
+      return !nextRelevantOptions.includes(previousMeasure)
+        ? nextRelevantOptions[0]
+        : previousMeasure;
+    });
+
+    setGroupBy((previousGroupBy) => {
+      const nextRelevantOptions = Object.entries(columns)
+        .filter(
+          ([field, { type }]) => type === "string" && !pivotFields.has(field)
+        )
+        .map(([field]) => field);
+
+      const relevantOptionsSet = new Set(nextRelevantOptions);
+
+      const filteredGroupBy = previousGroupBy.filter((option) =>
+        relevantOptionsSet.has(option)
+      );
+
+      return filteredGroupBy.length === 0
+        ? [...previousGroupBy, nextRelevantOptions[0]]
+        : previousGroupBy;
+    });
+  }, [columns, setDropdowns, setMeasure, setGroupBy]);
+
+  usePrevious(columns, handleDataChange);
+
+  const measures = useMemo(
+    () =>
+      Object.entries(columns)
+        .filter((entry) => entry[1].type === "number")
+        .map(([field]) => field),
+    [columns]
+  );
+
+  const groupBys = useMemo(
+    () =>
+      Object.entries(columns)
+        .filter(
+          ([field, { type }]) => type === "string" && !pivotFields.has(field)
+        )
+        .map(([field]) => field),
+    [columns]
+  );
+
+  const relevantGroupBys = useMemo(
+    () => delayedGroupBy.filter((field) => field in columns),
+    [columns, delayedGroupBy]
+  );
+
+  const { pivotField } = fileNames.find(({ id }) => id === fileName);
+
+  const { rowData: pivotedData, topRowData: totalRow } = useMemo(
+    () =>
+      pivotData({
+        groupBy: relevantGroupBys,
+        data: filteredRows,
+        pivotField,
+        measures,
+      }),
+    [measures, relevantGroupBys, filteredRows, pivotField]
+  );
+
+  useEffect(() => {
+    console.log(pivotedData);
+  }, [pivotedData]);
+
+  useEffect(() => {
+    console.log(totalRow);
+  }, [totalRow]);
+
+  const pivotedDataIsLoading = filteredRowsIsLoading || groupByIsLoading;
 
   // ! less padding between dropdown items (list group items)
 
   return {
-    onDropdownAllUnavailableChange,
-    onDropdownAllIrrelevantChange,
-    onDropdownAllRelevantChange,
-    onDropdownAllItemsChange,
-    onDropdownSearchChange,
-    filteredRowsIsLoading,
-    isDropdownWithIdOpen,
-    onDropdownItemChange,
-    onSelectedDataChange,
-    storeDropdownById,
-    dropdownItems,
-    dataIsLoading,
-    selectedData,
-    filteredRows,
-    dataOptions,
-    dropdowns,
-    columns,
-    rows,
+    onChange: {
+      dropdowns: {
+        unavailableItems: onDropdownAllUnavailableChange,
+        irrelevantItems: onDropdownAllIrrelevantChange,
+        relevantItems: onDropdownAllRelevantChange,
+        allItems: onDropdownAllItemsChange,
+        singleItem: onDropdownItemChange,
+        search: onDropdownSearchChange,
+      },
+      regressionType: onRegressionTypeChange,
+      fileName: onFileNameChange,
+      groupBy: onGroupByChange,
+      measure: onMeasureChange,
+    },
+    state: {
+      loading: {
+        filteredRows: filteredRowsIsLoading,
+        pivotedData: pivotedDataIsLoading,
+        data: dataIsLoading,
+      },
+      regressionType,
+      dropdowns,
+      fileName,
+      measure,
+      groupBy,
+    },
+    lists: { regressionTypes, dropdownItems, fileNames, measures, groupBys },
+    initializers: { isDropdownWithIdOpen, storeDropdownById },
+    data: { filteredRows, pivotedData, rows },
   };
+};
+
+const useResponsiveState = (initialValue) => {
+  const [value, valueSetter] = useState(initialValue);
+
+  const setValue = useCallback(
+    (param) => startTransition(() => valueSetter(param)),
+    []
+  );
+
+  const delayedValue = useDelayedValue(value);
+
+  const isLoading = value !== delayedValue;
+
+  return [value, setValue, delayedValue, isLoading];
 };

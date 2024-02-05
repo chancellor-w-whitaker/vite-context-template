@@ -8,119 +8,88 @@ export const Dashboard = () => {
   const context = useConsumeAppContext();
 
   const {
-    onDropdownAllUnavailableChange,
-    onDropdownAllIrrelevantChange,
-    onDropdownAllRelevantChange,
-    onDropdownAllItemsChange,
-    onDropdownSearchChange,
-    filteredRowsIsLoading,
-    isDropdownWithIdOpen,
-    onDropdownItemChange,
-    onSelectedDataChange,
-    storeDropdownById,
-    dropdownItems,
-    dataIsLoading,
-    selectedData,
-    filteredRows,
-    dataOptions,
-    dropdowns,
-    rows,
+    onChange: {
+      regressionType: onRegressionTypeChange,
+      dropdowns: onDropdownsChange,
+      fileName: onFileNameChange,
+      measure: onMeasureChange,
+      groupBy: onGroupByChange,
+    },
+    state: { regressionType, dropdowns, fileName, groupBy, measure, loading },
+    lists: { regressionTypes, dropdownItems, fileNames, groupBys, measures },
+    initializers: { isDropdownWithIdOpen, storeDropdownById },
+    data: { pivotedData },
   } = context;
 
-  const numberOfFilteredRows = `${filteredRows.length.toLocaleString()} / ${rows.length.toLocaleString()}`;
+  // const numberOfFilteredRows = `${filteredRows.length.toLocaleString()} / ${rows.length.toLocaleString()}`;
 
-  const loading = dataIsLoading || filteredRowsIsLoading;
+  const numberOfPivotedRows = `${pivotedData.length.toLocaleString()}`;
 
-  const getFractionData = (numerator, denominator) => ({
-    string: `${numerator} / ${denominator}`,
-    condition: numerator === denominator,
-  });
-
-  const getDropdownData = ({ field, items }) => {
-    const {
-      unavailable = [],
-      irrelevant = [],
-      relevant = [],
-    } = dropdownItems[field] ?? {};
-
-    const checked = Object.entries(items)
-      .filter((entry) => entry[1].checked)
-      .map(([value]) => value);
-
-    const checkedSet = new Set(checked);
-
-    const irrelevantChecked = irrelevant.filter((value) =>
-      checkedSet.has(value)
-    );
-
-    const relevantChecked = relevant.filter((value) => checkedSet.has(value));
-
-    const unavailableChecked = unavailable.filter((value) =>
-      checkedSet.has(value)
-    );
-
-    const fractions = {
-      unavailable: getFractionData(
-        unavailableChecked.length,
-        unavailable.length
-      ),
-      irrelevant: getFractionData(irrelevantChecked.length, irrelevant.length),
-      relevant: getFractionData(relevantChecked.length, relevant.length),
-      all: getFractionData(checked.length, Object.keys(items).length),
-    };
-
-    return { values: { unavailable, irrelevant, relevant }, fractions };
-  };
-
-  const findSingleItemLabel = ({ search, value }) => {
-    const indexOfQuery = value.toLowerCase().indexOf(search.toLowerCase());
-
-    const queryFound = indexOfQuery !== -1;
-
-    const queryValid = search.trim().length > 0;
-
-    const shouldHighlight = queryFound && queryValid;
-
-    return !shouldHighlight
-      ? value
-      : [
-          {
-            text: value.substring(0, indexOfQuery),
-            highlight: false,
-          },
-          {
-            text: value.substring(indexOfQuery, indexOfQuery + search.length),
-            highlight: true,
-          },
-          {
-            text: value.substring(indexOfQuery + search.length),
-            highlight: false,
-          },
-        ].map(({ highlight, text }, index) => (
-          <Fragment key={index}>
-            {!highlight ? <span>{text}</span> : <mark>{text}</mark>}
-          </Fragment>
-        ));
-  };
+  const isLoading = loading.data || loading.filteredRows || loading.pivotedData;
 
   return (
     <>
       <div className="d-flex flex-column gap-4">
         {/* select file */}
-        <ListGroup className="shadow-sm">
-          {dataOptions.map(({ displayName, id }) => (
-            <ListGroupItem
-              onChange={onSelectedDataChange}
-              checked={id === selectedData}
-              name="selected-data"
-              type="radio"
-              value={id}
-              key={id}
-            >
-              {displayName}
-            </ListGroupItem>
+        <div className="list-group shadow-sm">
+          {fileNames.map(({ displayName, id }) => (
+            <MyDropdownLabel className="border-0" key={id}>
+              <MyDropdownInput
+                onChange={onFileNameChange}
+                checked={id === fileName}
+                name="file-name"
+                type="radio"
+                value={id}
+              ></MyDropdownInput>
+              <span>{displayName}</span>
+            </MyDropdownLabel>
           ))}
-        </ListGroup>
+        </div>
+        {/* select measure */}
+        <div className="list-group shadow-sm">
+          {measures.map((field) => (
+            <MyDropdownLabel className="border-0" key={field}>
+              <MyDropdownInput
+                checked={field === measure}
+                onChange={onMeasureChange}
+                name="measure"
+                value={field}
+                type="radio"
+              ></MyDropdownInput>
+              <span>{toTitleCase(field)}</span>
+            </MyDropdownLabel>
+          ))}
+        </div>
+        {/* select regression type */}
+        <div className="list-group shadow-sm">
+          {regressionTypes.map((type) => (
+            <MyDropdownLabel className="border-0" key={type}>
+              <MyDropdownInput
+                checked={type === regressionType}
+                onChange={onRegressionTypeChange}
+                name="regression-type"
+                value={type}
+                type="radio"
+              ></MyDropdownInput>
+              <span>{toTitleCase(type)}</span>
+            </MyDropdownLabel>
+          ))}
+        </div>
+        {/* select group by */}
+        <div className="list-group shadow-sm">
+          {groupBys.map((field) => (
+            <MyDropdownLabel className="border-0" key={field}>
+              <MyDropdownInput
+                checked={groupBy.includes(field)}
+                onChange={onGroupByChange}
+                name="group-by"
+                type="checkbox"
+                value={field}
+              ></MyDropdownInput>
+              <span>{toTitleCase(field)}</span>
+            </MyDropdownLabel>
+          ))}
+        </div>
         <div className="d-flex flex-wrap gap-3">
           {/* column filters */}
           {Object.entries(dropdowns).map(
@@ -128,7 +97,7 @@ export const Dashboard = () => {
               const {
                 values: { unavailable, irrelevant, relevant },
                 fractions,
-              } = getDropdownData({ items, field });
+              } = getDropdownData({ valueData: dropdownItems[field], items });
 
               return (
                 dataRelevance && (
@@ -158,7 +127,7 @@ export const Dashboard = () => {
                             onSubmit={(e) => e.preventDefault()}
                           >
                             <input
-                              onChange={onDropdownSearchChange}
+                              onChange={onDropdownsChange.search}
                               placeholder="Type to search..."
                               className="form-control"
                               name={`${field}-search`}
@@ -175,7 +144,7 @@ export const Dashboard = () => {
                               (array) => array.length > 0
                             ).length > 1 && (
                               <MyDropdownItem
-                                onChange={onDropdownAllItemsChange}
+                                onChange={onDropdownsChange.allItems}
                                 checked={fractions.all.condition}
                                 fraction={fractions.all.string}
                                 name={`${field}-items`}
@@ -186,7 +155,7 @@ export const Dashboard = () => {
                             )}
                             {relevant.length > 0 && (
                               <MyDropdownItem
-                                onChange={onDropdownAllRelevantChange}
+                                onChange={onDropdownsChange.relevantItems}
                                 checked={fractions.relevant.condition}
                                 fraction={fractions.relevant.string}
                                 name={`${field}-items`}
@@ -197,7 +166,7 @@ export const Dashboard = () => {
                             )}
                             {relevant.map((value) => (
                               <MyDropdownItem
-                                onChange={onDropdownItemChange}
+                                onChange={onDropdownsChange.singleItem}
                                 checked={items[value].checked}
                                 name={`${field}-items`}
                                 relevance="relevant"
@@ -210,7 +179,7 @@ export const Dashboard = () => {
                             ))}
                             {irrelevant.length > 0 && (
                               <MyDropdownItem
-                                onChange={onDropdownAllIrrelevantChange}
+                                onChange={onDropdownsChange.irrelevantItems}
                                 checked={fractions.irrelevant.condition}
                                 fraction={fractions.irrelevant.string}
                                 name={`${field}-items`}
@@ -233,7 +202,7 @@ export const Dashboard = () => {
                             ))}
                             {unavailable.length > 0 && (
                               <MyDropdownItem
-                                onChange={onDropdownAllUnavailableChange}
+                                onChange={onDropdownsChange.unavailableItems}
                                 checked={fractions.unavailable.condition}
                                 fraction={fractions.unavailable.string}
                                 name={`${field}-items`}
@@ -264,9 +233,7 @@ export const Dashboard = () => {
             }
           )}
         </div>
-        <div>
-          {loading ? "Loading..." : `${numberOfFilteredRows} filtered rows`}
-        </div>
+        <div>{isLoading ? "Loading..." : `${numberOfPivotedRows} rows`}</div>
       </div>
     </>
   );
@@ -373,51 +340,6 @@ const MyDropdownBadge = ({
   );
 };
 
-// export const Dashboard = () => {
-//   return (
-//     <div className="d-flex flex-column gap-5">
-//       <Accordion></Accordion>
-//       <Dropdown
-//         button={({ header, ref }) => (
-//           <DropdownButton variant="primary" ref={ref}>
-//             {header}
-//           </DropdownButton>
-//         )}
-//         menu={({ content, isOpen }) => (
-//           <DropdownMenu>{isOpen && content}</DropdownMenu>
-//         )}
-//         autoClose="outside"
-//       ></Dropdown>
-//     </div>
-//   );
-// };
-
-const ListGroupItem = memo(({ className = "", children, ...restOfProps }) => {
-  return (
-    <>
-      <label
-        className={`list-group-item border-0 d-flex gap-2 ${className}`.trimEnd()}
-      >
-        <input className="form-check-input flex-shrink-0" {...restOfProps} />
-        <span>{children}</span>
-      </label>
-    </>
-  );
-});
-
-ListGroupItem.displayName = "ListGroupItem";
-
-const ListGroup = ({ className = "", ...restOfProps }) => {
-  return (
-    <>
-      <div
-        className={`list-group ${className}`.trimEnd()}
-        {...restOfProps}
-      ></div>
-    </>
-  );
-};
-
 const OldDropdown = forwardRef(
   ({ className = "", children, title, style }, ref) => {
     return (
@@ -442,3 +364,66 @@ const OldDropdown = forwardRef(
 );
 
 OldDropdown.displayName = "Dropdown";
+
+const getDropdownData = ({ valueData, items }) => {
+  const { unavailable = [], irrelevant = [], relevant = [] } = valueData ?? {};
+
+  const checked = Object.entries(items)
+    .filter((entry) => entry[1].checked)
+    .map(([value]) => value);
+
+  const checkedSet = new Set(checked);
+
+  const irrelevantChecked = irrelevant.filter((value) => checkedSet.has(value));
+
+  const relevantChecked = relevant.filter((value) => checkedSet.has(value));
+
+  const unavailableChecked = unavailable.filter((value) =>
+    checkedSet.has(value)
+  );
+
+  const fractions = {
+    unavailable: getFractionData(unavailableChecked.length, unavailable.length),
+    irrelevant: getFractionData(irrelevantChecked.length, irrelevant.length),
+    relevant: getFractionData(relevantChecked.length, relevant.length),
+    all: getFractionData(checked.length, Object.keys(items).length),
+  };
+
+  return { values: { unavailable, irrelevant, relevant }, fractions };
+};
+
+const getFractionData = (numerator, denominator) => ({
+  string: `${numerator} / ${denominator}`,
+  condition: numerator === denominator,
+});
+
+const findSingleItemLabel = ({ search, value }) => {
+  const indexOfQuery = value.toLowerCase().indexOf(search.toLowerCase());
+
+  const queryFound = indexOfQuery !== -1;
+
+  const queryValid = search.trim().length > 0;
+
+  const shouldHighlight = queryFound && queryValid;
+
+  return !shouldHighlight
+    ? value
+    : [
+        {
+          text: value.substring(0, indexOfQuery),
+          highlight: false,
+        },
+        {
+          text: value.substring(indexOfQuery, indexOfQuery + search.length),
+          highlight: true,
+        },
+        {
+          text: value.substring(indexOfQuery + search.length),
+          highlight: false,
+        },
+      ].map(({ highlight, text }, index) => (
+        <Fragment key={index}>
+          {!highlight ? <span>{text}</span> : <mark>{text}</mark>}
+        </Fragment>
+      ));
+};

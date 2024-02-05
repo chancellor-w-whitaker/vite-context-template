@@ -1,17 +1,17 @@
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 
 export function useDelayedValue(value, delay = 100) {
-  const [delayedValue, setDelayedValue] = useState(value);
+  const deferredValue = useDeferredValue(value);
+
+  const [delayedValue, setDelayedValue] = useState(deferredValue);
 
   useEffect(() => {
     const id = setTimeout(() => {
-      setDelayedValue(value);
+      setDelayedValue(deferredValue);
     }, delay);
 
-    return () => {
-      clearTimeout(id);
-    };
-  }, [value, delay]);
+    return () => clearTimeout(id);
+  }, [deferredValue, delay]);
 
   return delayedValue;
 }
