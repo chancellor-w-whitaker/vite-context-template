@@ -2,9 +2,9 @@ import {
   startTransition,
   createContext,
   useCallback,
-  useEffect,
   useState,
   useMemo,
+  useRef,
 } from "react";
 
 import { useSetBsBgVariantOfBody } from "./hooks/useSetBsBgVariantOfBody";
@@ -53,14 +53,19 @@ const regressionTypes = [
   "polynomial",
 ];
 
+// ! filter out rows where selected rate is 0
+// ! yr grad numbers are not percentages
+
 const useMainMethod = () => {
+  const gridRef = useRef();
+
   useSetBsBgVariantOfBody("primary-subtle");
 
   const { isDropdownWithIdOpen, storeDropdownById } = useBsDropdowns();
 
   const [fileName, setFileName] = useState(fileNames[0].id);
 
-  const [measure, setMeasure] = useResponsiveState();
+  const [measure, setMeasure, delayedMeasure] = useResponsiveState();
 
   const [groupBy, setGroupBy, delayedGroupBy, groupByIsLoading] =
     useResponsiveState([]);
@@ -243,6 +248,8 @@ const useMainMethod = () => {
 
     return { columns, rows };
   }, [data]);
+
+  console.log(rows);
 
   // ! get filtered data and derived dropdown information here
   // ! dropdown state & rows should be enough to get you what you need
@@ -569,17 +576,42 @@ const useMainMethod = () => {
     [measures, relevantGroupBys, filteredRows, pivotField]
   );
 
-  useEffect(() => {
-    console.log(pivotedData);
-  }, [pivotedData]);
+  const columnDefs = useMemo(
+    () =>
+      !(Array.isArray(pivotedData) && pivotedData.length > 0)
+        ? []
+        : [
+            {
+              valueGetter: (e) =>
+                !("rowPinned" in e.node) ? e.node.rowIndex + 1 : "Total",
+              headerName: "Row",
+            },
+            ...Object.entries(pivotedData[0]).map(([field, stringOrObject]) =>
+              typeof stringOrObject === "string"
+                ? { field }
+                : {
+                    valueGetter: ({ colDef: { field }, data }) =>
+                      data[field]?.[delayedMeasure],
+                    valueFormatter: ({ value }) =>
+                      Math.round(value).toLocaleString(),
+                    type: "numericColumn",
+                    field,
+                  }
+            ),
+          ],
+    [pivotedData, delayedMeasure]
+  );
 
-  useEffect(() => {
-    console.log(totalRow);
-  }, [totalRow]);
+  const defaultColDef = useMemo(() => ({ suppressMovable: true }), []);
 
   const pivotedDataIsLoading = filteredRowsIsLoading || groupByIsLoading;
 
-  // ! less padding between dropdown items (list group items)
+  const onSortChanged = useCallback((e) => e.api.refreshCells(), []);
+
+  const exportDataAsCsv = useCallback(
+    () => gridRef.current.api.exportDataAsCsv(),
+    []
+  );
 
   return {
     onChange: {
@@ -608,9 +640,17 @@ const useMainMethod = () => {
       measure,
       groupBy,
     },
+    grid: {
+      pinnedTopRowData: totalRow,
+      columnDefs: columnDefs,
+      rowData: pivotedData,
+      exportDataAsCsv,
+      defaultColDef,
+      onSortChanged,
+      ref: gridRef,
+    },
     lists: { regressionTypes, dropdownItems, fileNames, measures, groupBys },
     initializers: { isDropdownWithIdOpen, storeDropdownById },
-    data: { filteredRows, pivotedData, rows },
   };
 };
 

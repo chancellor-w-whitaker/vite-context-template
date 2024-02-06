@@ -3,6 +3,7 @@ import { forwardRef, Fragment, memo } from "react";
 import { useConsumeAppContext } from "../hooks/useConsumeAppContext";
 import { combineClassNames } from "../functions/combineClassNames";
 import { toTitleCase } from "../functions/toTitleCase";
+import { GridContainer, Grid } from "./Grid";
 
 export const Dashboard = () => {
   const context = useConsumeAppContext();
@@ -15,17 +16,11 @@ export const Dashboard = () => {
       measure: onMeasureChange,
       groupBy: onGroupByChange,
     },
-    state: { regressionType, dropdowns, fileName, groupBy, measure, loading },
     lists: { regressionTypes, dropdownItems, fileNames, groupBys, measures },
+    state: { regressionType, dropdowns, fileName, groupBy, measure },
     initializers: { isDropdownWithIdOpen, storeDropdownById },
-    data: { pivotedData },
+    grid: { exportDataAsCsv, ...gridProps },
   } = context;
-
-  // const numberOfFilteredRows = `${filteredRows.length.toLocaleString()} / ${rows.length.toLocaleString()}`;
-
-  const numberOfPivotedRows = `${pivotedData.length.toLocaleString()}`;
-
-  const isLoading = loading.data || loading.filteredRows || loading.pivotedData;
 
   return (
     <>
@@ -233,7 +228,16 @@ export const Dashboard = () => {
             }
           )}
         </div>
-        <div>{isLoading ? "Loading..." : `${numberOfPivotedRows} rows`}</div>
+        <button
+          className="btn btn-success shadow-sm bg-gradient"
+          onClick={exportDataAsCsv}
+          type="button"
+        >
+          Export Data as Csv
+        </button>
+        <GridContainer>
+          <Grid {...gridProps}></Grid>
+        </GridContainer>
       </div>
     </>
   );

@@ -341,3 +341,11 @@ mark {
   padding: 0;
   background-color: var(--bs-warning);
 }
+
+[class*="ag-theme-"] {
+  font-family: var(--bs-body-font-family);
+}
+
+.ag-root-wrapper {
+  box-shadow: var(--bs-box-shadow-sm);
+}
