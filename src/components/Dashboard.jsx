@@ -2,6 +2,7 @@ import { forwardRef, Fragment, memo } from "react";
 
 import { useConsumeAppContext } from "../hooks/useConsumeAppContext";
 import { combineClassNames } from "../functions/combineClassNames";
+import { useElementSize } from "../hooks/useElementSize";
 import { toTitleCase } from "../functions/toTitleCase";
 import { GridContainer, Grid } from "./Grid";
 
@@ -22,9 +23,17 @@ export const Dashboard = () => {
     grid: { exportDataAsCsv, ...gridProps },
   } = context;
 
+  const relevantDropdownEntries = Object.entries(dropdowns).filter(
+    (entry) => entry[1].dataRelevance
+  );
+
+  const [squareRef, { height = 0, width = 0 }] = useElementSize();
+
+  // console.log(width, height);
+
   return (
     <>
-      <div className="d-flex flex-column gap-4">
+      <div className="d-flex flex-column gap-4" ref={squareRef}>
         {/* select file */}
         <div className="list-group shadow-sm">
           {fileNames.map(({ displayName, id }) => (
@@ -85,148 +94,179 @@ export const Dashboard = () => {
             </MyDropdownLabel>
           ))}
         </div>
-        <div className="d-flex flex-wrap gap-3">
+        <div className="d-flex flex-wrap justify-content-evenly">
           {/* column filters */}
-          {Object.entries(dropdowns).map(
-            ([field, { dataRelevance, search, items }]) => {
-              const {
-                values: { unavailable, irrelevant, relevant },
-                fractions,
-              } = getDropdownData({ valueData: dropdownItems[field], items });
+          {relevantDropdownEntries.map(([field, { search, items }]) => {
+            const {
+              values: { unavailable, irrelevant, relevant },
+              fractions,
+            } = getDropdownData({ valueData: dropdownItems[field], items });
 
-              return (
-                dataRelevance && (
-                  <OldDropdown
-                    ref={(buttonNode) => {
-                      storeDropdownById(field, buttonNode);
-                      if (buttonNode) {
-                        buttonNode.classList.remove("btn-secondary");
-                        buttonNode.classList.remove("btn-warning");
-                        if (fractions.all.condition) {
-                          buttonNode.classList.add("btn-secondary");
-                        } else {
-                          buttonNode.classList.add("btn-warning");
-                        }
+            const size = relevantDropdownEntries.length;
+
+            // why 12?
+            // sort zeros first
+            // compare width of zeros to width of greatest remainder
+
+            const mods = initArrayOfSize(12).map((col) => ({
+              mod: size % col,
+              col,
+            }));
+
+            const zeros = mods.filter(({ mod }) => mod === 0);
+
+            const nonZeros = mods.filter(({ mod }) => mod !== 0);
+
+            const something = mods
+              .sort((a, b) => b.mod - a.mod)
+              .filter(({ col }) => width / col > 125);
+
+            const col = something[0]?.col;
+
+            // console.log(width / col);
+
+            return (
+              <div
+                style={{
+                  width: `${(1 / col).toLocaleString("en", {
+                    style: "percent",
+                  })}`,
+                }}
+                className={`dropdown flex-fill pe-2 pb-2`}
+                key={field}
+              >
+                <button
+                  ref={(buttonNode) => {
+                    storeDropdownById(field, buttonNode);
+                    if (buttonNode) {
+                      buttonNode.classList.remove("btn-secondary");
+                      buttonNode.classList.remove("btn-warning");
+                      if (fractions.all.condition) {
+                        buttonNode.classList.add("btn-secondary");
+                      } else {
+                        buttonNode.classList.add("btn-warning");
                       }
-                    }}
-                    className={`shadow-sm opacity-${dataRelevance ? 100 : 25}`}
-                    style={{ minWidth: 250, width: 250 }}
-                    title={toTitleCase(field)}
-                    key={field}
-                  >
-                    <div className="dropdown-menu py-0 mx-0 rounded-3 shadow-sm overflow-hidden">
-                      {isDropdownWithIdOpen(field) && (
-                        <>
-                          <form
-                            className="p-2 bg-body-tertiary border-bottom"
-                            onSubmit={(e) => e.preventDefault()}
+                    }
+                  }}
+                  className={`align-items-center justify-content-center w-100 d-flex btn bg-gradient dropdown-toggle shadow-sm`}
+                  data-bs-auto-close="outside"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                  type="button"
+                >
+                  <div className="text-truncate">{toTitleCase(field)}</div>
+                </button>
+                <div className="dropdown-menu py-0 mx-0 rounded-3 shadow-sm overflow-hidden">
+                  {isDropdownWithIdOpen(field) && (
+                    <>
+                      <form
+                        className="p-2 bg-body-tertiary border-bottom"
+                        onSubmit={(e) => e.preventDefault()}
+                      >
+                        <input
+                          onChange={onDropdownsChange.search}
+                          placeholder="Type to search..."
+                          className="form-control"
+                          name={`${field}-search`}
+                          autoComplete="false"
+                          value={search}
+                          type="search"
+                        />
+                      </form>
+                      <div
+                        className="list-group list-group-flush text-nowrap overflow-y-scroll"
+                        style={{ maxHeight: 300 }}
+                      >
+                        {[irrelevant, relevant, unavailable].filter(
+                          (array) => array.length > 0
+                        ).length > 1 && (
+                          <MyDropdownItem
+                            onChange={onDropdownsChange.allItems}
+                            checked={fractions.all.condition}
+                            fraction={fractions.all.string}
+                            name={`${field}-items`}
+                            relevance="all"
                           >
-                            <input
-                              onChange={onDropdownsChange.search}
-                              placeholder="Type to search..."
-                              className="form-control"
-                              name={`${field}-search`}
-                              autoComplete="false"
-                              value={search}
-                              type="search"
-                            />
-                          </form>
-                          <div
-                            className="list-group list-group-flush text-nowrap overflow-y-scroll"
-                            style={{ maxHeight: 300 }}
+                            All
+                          </MyDropdownItem>
+                        )}
+                        {relevant.length > 0 && (
+                          <MyDropdownItem
+                            onChange={onDropdownsChange.relevantItems}
+                            checked={fractions.relevant.condition}
+                            fraction={fractions.relevant.string}
+                            name={`${field}-items`}
+                            relevance="relevant"
                           >
-                            {[irrelevant, relevant, unavailable].filter(
-                              (array) => array.length > 0
-                            ).length > 1 && (
-                              <MyDropdownItem
-                                onChange={onDropdownsChange.allItems}
-                                checked={fractions.all.condition}
-                                fraction={fractions.all.string}
-                                name={`${field}-items`}
-                                relevance="all"
-                              >
-                                All
-                              </MyDropdownItem>
-                            )}
-                            {relevant.length > 0 && (
-                              <MyDropdownItem
-                                onChange={onDropdownsChange.relevantItems}
-                                checked={fractions.relevant.condition}
-                                fraction={fractions.relevant.string}
-                                name={`${field}-items`}
-                                relevance="relevant"
-                              >
-                                Relevant
-                              </MyDropdownItem>
-                            )}
-                            {relevant.map((value) => (
-                              <MyDropdownItem
-                                onChange={onDropdownsChange.singleItem}
-                                checked={items[value].checked}
-                                name={`${field}-items`}
-                                relevance="relevant"
-                                value={value}
-                                key={value}
-                                singleItem
-                              >
-                                {findSingleItemLabel({ search, value })}
-                              </MyDropdownItem>
-                            ))}
-                            {irrelevant.length > 0 && (
-                              <MyDropdownItem
-                                onChange={onDropdownsChange.irrelevantItems}
-                                checked={fractions.irrelevant.condition}
-                                fraction={fractions.irrelevant.string}
-                                name={`${field}-items`}
-                                relevance="irrelevant"
-                              >
-                                Irrelevant
-                              </MyDropdownItem>
-                            )}
-                            {irrelevant.map((value) => (
-                              <MyDropdownItem
-                                checked={items[value].checked}
-                                name={`${field}-items`}
-                                relevance="irrelevant"
-                                value={value}
-                                key={value}
-                                singleItem
-                              >
-                                {findSingleItemLabel({ search, value })}
-                              </MyDropdownItem>
-                            ))}
-                            {unavailable.length > 0 && (
-                              <MyDropdownItem
-                                onChange={onDropdownsChange.unavailableItems}
-                                checked={fractions.unavailable.condition}
-                                fraction={fractions.unavailable.string}
-                                name={`${field}-items`}
-                                relevance="unavailable"
-                              >
-                                Unavailable
-                              </MyDropdownItem>
-                            )}
-                            {unavailable.map((value) => (
-                              <MyDropdownItem
-                                checked={items[value].checked}
-                                name={`${field}-items`}
-                                relevance="unavailable"
-                                value={value}
-                                key={value}
-                                singleItem
-                              >
-                                {findSingleItemLabel({ search, value })}
-                              </MyDropdownItem>
-                            ))}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </OldDropdown>
-                )
-              );
-            }
-          )}
+                            Relevant
+                          </MyDropdownItem>
+                        )}
+                        {relevant.map((value) => (
+                          <MyDropdownItem
+                            onChange={onDropdownsChange.singleItem}
+                            checked={items[value].checked}
+                            name={`${field}-items`}
+                            relevance="relevant"
+                            value={value}
+                            key={value}
+                            singleItem
+                          >
+                            {findSingleItemLabel({ search, value })}
+                          </MyDropdownItem>
+                        ))}
+                        {irrelevant.length > 0 && (
+                          <MyDropdownItem
+                            onChange={onDropdownsChange.irrelevantItems}
+                            checked={fractions.irrelevant.condition}
+                            fraction={fractions.irrelevant.string}
+                            name={`${field}-items`}
+                            relevance="irrelevant"
+                          >
+                            Irrelevant
+                          </MyDropdownItem>
+                        )}
+                        {irrelevant.map((value) => (
+                          <MyDropdownItem
+                            checked={items[value].checked}
+                            name={`${field}-items`}
+                            relevance="irrelevant"
+                            value={value}
+                            key={value}
+                            singleItem
+                          >
+                            {findSingleItemLabel({ search, value })}
+                          </MyDropdownItem>
+                        ))}
+                        {unavailable.length > 0 && (
+                          <MyDropdownItem
+                            onChange={onDropdownsChange.unavailableItems}
+                            checked={fractions.unavailable.condition}
+                            fraction={fractions.unavailable.string}
+                            name={`${field}-items`}
+                            relevance="unavailable"
+                          >
+                            Unavailable
+                          </MyDropdownItem>
+                        )}
+                        {unavailable.map((value) => (
+                          <MyDropdownItem
+                            checked={items[value].checked}
+                            name={`${field}-items`}
+                            relevance="unavailable"
+                            value={value}
+                            key={value}
+                            singleItem
+                          >
+                            {findSingleItemLabel({ search, value })}
+                          </MyDropdownItem>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
         <button
           className="btn btn-success shadow-sm bg-gradient"
@@ -241,6 +281,9 @@ export const Dashboard = () => {
       </div>
     </>
   );
+};
+const initArrayOfSize = (length = 5) => {
+  return Array.from({ length }, (x, i) => i + 1);
 };
 
 const MyDropdownItem = memo(
