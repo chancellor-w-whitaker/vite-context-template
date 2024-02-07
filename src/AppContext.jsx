@@ -1,14 +1,7 @@
-import {
-  startTransition,
-  createContext,
-  useCallback,
-  useState,
-  useMemo,
-  useRef,
-} from "react";
+import { createContext, useCallback, useState, useMemo, useRef } from "react";
 
 import { useSetBsBgVariantOfBody } from "./hooks/useSetBsBgVariantOfBody";
-import { useDelayedValue } from "./hooks/examples/useDelayedValue";
+import { useResponsiveState } from "./hooks/useResponsiveState";
 import { standardizeKey } from "./functions/standardizeKey";
 import { useBsDropdowns } from "./hooks/useBsDropdowns";
 import { useData } from "./hooks/examples/useData";
@@ -25,6 +18,16 @@ export const AppContextProvider = ({ children }) => {
   );
 };
 
+const toPercentage = (num) => num.toLocaleString("en", { style: "percent" });
+
+const rateValueGetter =
+  (measure1, measure2) =>
+  ({ colDef: { field }, data }) => {
+    const result = data[field]?.[measure1] / data[field]?.[measure2];
+
+    return !result ? 0 : result;
+  };
+
 const fileNames = [
   { displayName: "Fall Enrollment", pivotField: "term", id: "fall" },
   { displayName: "Spring Enrollment", pivotField: "term", id: "spring" },
@@ -36,6 +39,19 @@ const fileNames = [
     id: "retention",
   },
   {
+    valueFormatters: {
+      "4YrRate": ({ colDef: { field }, value, data }) =>
+        `${toPercentage(value)} (${
+          data?.[field]?.["4YrGraduate"].toLocaleString() ?? 0
+        } / ${data?.[field]?.["total"].toLocaleString() ?? 0})`,
+      "5YrRate": ({ value }) => toPercentage(value),
+      "6YrRate": ({ value }) => toPercentage(value),
+    },
+    valueGetters: {
+      "4YrRate": rateValueGetter("4YrGraduate", "total"),
+      "5YrRate": rateValueGetter("5YrGraduate", "total"),
+      "6YrRate": rateValueGetter("6YrGraduate", "total"),
+    },
     displayName: "Graduation Rates",
     pivotField: "cohortTerm",
     id: "graduation",
@@ -249,7 +265,7 @@ const useMainMethod = () => {
     return { columns, rows };
   }, [data]);
 
-  console.log(rows);
+  // console.log(rows);
 
   // ! get filtered data and derived dropdown information here
   // ! dropdown state & rows should be enough to get you what you need
@@ -563,18 +579,20 @@ const useMainMethod = () => {
     [columns, delayedGroupBy]
   );
 
-  const { pivotField } = fileNames.find(({ id }) => id === fileName);
+  const selectedFile = fileNames.find(({ id }) => id === fileName);
 
   const { rowData: pivotedData, topRowData: totalRow } = useMemo(
     () =>
       pivotData({
+        pivotField: selectedFile.pivotField,
         groupBy: relevantGroupBys,
         data: filteredRows,
-        pivotField,
         measures,
       }),
-    [measures, relevantGroupBys, filteredRows, pivotField]
+    [measures, relevantGroupBys, filteredRows, selectedFile]
   );
+
+  console.log(pivotedData);
 
   const columnDefs = useMemo(
     () =>
@@ -590,16 +608,19 @@ const useMainMethod = () => {
               typeof stringOrObject === "string"
                 ? { field }
                 : {
-                    valueGetter: ({ colDef: { field }, data }) =>
-                      data[field]?.[delayedMeasure],
-                    valueFormatter: ({ value }) =>
-                      Math.round(value).toLocaleString(),
+                    valueGetter:
+                      selectedFile?.valueGetters?.[delayedMeasure] ??
+                      (({ colDef: { field }, data }) =>
+                        data[field]?.[delayedMeasure]),
+                    valueFormatter:
+                      selectedFile?.valueFormatters?.[delayedMeasure] ??
+                      (({ value }) => value?.toLocaleString()),
                     type: "numericColumn",
                     field,
                   }
             ),
           ],
-    [pivotedData, delayedMeasure]
+    [pivotedData, delayedMeasure, selectedFile]
   );
 
   const defaultColDef = useMemo(() => ({ suppressMovable: true }), []);
@@ -652,19 +673,4 @@ const useMainMethod = () => {
     lists: { regressionTypes, dropdownItems, fileNames, measures, groupBys },
     initializers: { isDropdownWithIdOpen, storeDropdownById },
   };
-};
-
-const useResponsiveState = (initialValue) => {
-  const [value, valueSetter] = useState(initialValue);
-
-  const setValue = useCallback(
-    (param) => startTransition(() => valueSetter(param)),
-    []
-  );
-
-  const delayedValue = useDelayedValue(value);
-
-  const isLoading = value !== delayedValue;
-
-  return [value, setValue, delayedValue, isLoading];
 };

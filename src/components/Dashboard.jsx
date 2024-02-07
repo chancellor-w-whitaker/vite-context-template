@@ -1,7 +1,8 @@
-import { forwardRef, Fragment, memo } from "react";
-
+import { MyDropdownInput, MyDropdownLabel, MyDropdownItem } from "./MyDropdown";
+import { findSingleItemLabel } from "../functions/findSingleItemLabel";
 import { useConsumeAppContext } from "../hooks/useConsumeAppContext";
-import { combineClassNames } from "../functions/combineClassNames";
+import { getDropdownData } from "../functions/getDropdownData";
+import { getBestRowCols } from "../functions/getBestRowCols";
 import { useElementSize } from "../hooks/useElementSize";
 import { toTitleCase } from "../functions/toTitleCase";
 import { GridContainer, Grid } from "./Grid";
@@ -94,7 +95,10 @@ export const Dashboard = () => {
             </MyDropdownLabel>
           ))}
         </div>
-        <div className="d-flex flex-wrap justify-content-evenly">
+        <div
+          className="d-flex flex-wrap justify-content-evenly"
+          style={{ marginBottom: -8, marginRight: -8 }}
+        >
           {/* column filters */}
           {relevantDropdownEntries.map(([field, { search, items }]) => {
             const {
@@ -102,17 +106,15 @@ export const Dashboard = () => {
               fractions,
             } = getDropdownData({ valueData: dropdownItems[field], items });
 
-            const rowCols = getBestRowCols({
+            const rowColumns = getBestRowCols({
               count: relevantDropdownEntries.length,
               width,
-            });
+            })?.rowColumns;
 
             return (
               <div
                 style={{
-                  width: `${(1 / rowCols).toLocaleString("en", {
-                    style: "percent",
-                  })}`,
+                  width: `${Math.floor(100 / rowColumns)}%`,
                 }}
                 className={`dropdown flex-fill pe-2 pb-2`}
                 key={field}
@@ -132,6 +134,7 @@ export const Dashboard = () => {
                   }}
                   className={`align-items-center justify-content-center w-100 d-flex btn bg-gradient dropdown-toggle shadow-sm`}
                   data-bs-auto-close="outside"
+                  title={toTitleCase(field)}
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
                   type="button"
@@ -263,218 +266,4 @@ export const Dashboard = () => {
       </div>
     </>
   );
-};
-const initArrayOfSize = (length = 5) => {
-  return Array.from({ length }, (x, i) => i + 1);
-};
-
-const MyDropdownItem = memo(
-  ({
-    relevance = "relevant",
-    singleItem = false,
-    fraction = false,
-    value = "value",
-    checked = true,
-    name = "name",
-    onChange,
-    children,
-  }) => {
-    const labelClassList = [];
-
-    const inputClassList = [];
-
-    let opacity = 100;
-
-    const readOnly =
-      singleItem && ["unavailable", "irrelevant"].includes(relevance);
-
-    if (singleItem) {
-      inputClassList.push("ms-4");
-
-      labelClassList.push(...["border-0", "small"]);
-
-      if (readOnly) {
-        labelClassList.push("pe-none");
-      }
-
-      if (relevance === "irrelevant") {
-        opacity = 50;
-      }
-
-      if (relevance === "unavailable") {
-        opacity = 25;
-      }
-    } else {
-      labelClassList.push("scroll-sticky-0");
-    }
-
-    inputClassList.push(`opacity-${opacity}`);
-
-    return (
-      <MyDropdownLabel className={labelClassList.join(" ")}>
-        <MyDropdownInput
-          className={inputClassList.join(" ")}
-          onChange={onChange}
-          readOnly={readOnly}
-          checked={checked}
-          value={value}
-          name={name}
-        ></MyDropdownInput>
-        <span className={`opacity-${opacity}`}>{children}</span>
-        {fraction && (
-          <MyDropdownBadge checked={checked}>{fraction}</MyDropdownBadge>
-        )}
-      </MyDropdownLabel>
-    );
-  }
-);
-
-MyDropdownItem.displayName = "MyDropdownItem";
-
-const MyDropdownLabel = ({ className = "", children }) => {
-  return (
-    <label
-      className={combineClassNames("list-group-item d-flex gap-2", className)}
-    >
-      {children}
-    </label>
-  );
-};
-
-const MyDropdownInput = ({ type = "checkbox", className = "", ...rest }) => {
-  return (
-    <input
-      {...rest}
-      className={combineClassNames("form-check-input flex-shrink-0", className)}
-      type={type}
-    />
-  );
-};
-
-const MyDropdownBadge = ({
-  checkedVariant = "primary",
-  uncheckedVariant = "light",
-  className = "",
-  children,
-  checked,
-}) => {
-  const origClassName = `ms-auto badge transition-all shadow-sm text-bg-${
-    checked ? checkedVariant : uncheckedVariant
-  } rounded-pill d-flex align-items-center`;
-
-  return (
-    <span className={combineClassNames(origClassName, className)}>
-      {children}
-    </span>
-  );
-};
-
-const OldDropdown = forwardRef(
-  ({ className = "", children, title, style }, ref) => {
-    return (
-      <>
-        <div className="dropdown">
-          <button
-            className={`btn bg-gradient dropdown-toggle w-100 ${className}`.trimEnd()}
-            data-bs-auto-close="outside"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            style={style}
-            type="button"
-            ref={ref}
-          >
-            {title}
-          </button>
-          {children}
-        </div>
-      </>
-    );
-  }
-);
-
-OldDropdown.displayName = "Dropdown";
-
-const getDropdownData = ({ valueData, items }) => {
-  const { unavailable = [], irrelevant = [], relevant = [] } = valueData ?? {};
-
-  const checked = Object.entries(items)
-    .filter((entry) => entry[1].checked)
-    .map(([value]) => value);
-
-  const checkedSet = new Set(checked);
-
-  const irrelevantChecked = irrelevant.filter((value) => checkedSet.has(value));
-
-  const relevantChecked = relevant.filter((value) => checkedSet.has(value));
-
-  const unavailableChecked = unavailable.filter((value) =>
-    checkedSet.has(value)
-  );
-
-  const fractions = {
-    unavailable: getFractionData(unavailableChecked.length, unavailable.length),
-    irrelevant: getFractionData(irrelevantChecked.length, irrelevant.length),
-    relevant: getFractionData(relevantChecked.length, relevant.length),
-    all: getFractionData(checked.length, Object.keys(items).length),
-  };
-
-  return { values: { unavailable, irrelevant, relevant }, fractions };
-};
-
-const getFractionData = (numerator, denominator) => ({
-  string: `${numerator} / ${denominator}`,
-  condition: numerator === denominator,
-});
-
-const findSingleItemLabel = ({ search, value }) => {
-  const indexOfQuery = value.toLowerCase().indexOf(search.toLowerCase());
-
-  const queryFound = indexOfQuery !== -1;
-
-  const queryValid = search.trim().length > 0;
-
-  const shouldHighlight = queryFound && queryValid;
-
-  return !shouldHighlight
-    ? value
-    : [
-        {
-          text: value.substring(0, indexOfQuery),
-          highlight: false,
-        },
-        {
-          text: value.substring(indexOfQuery, indexOfQuery + search.length),
-          highlight: true,
-        },
-        {
-          text: value.substring(indexOfQuery + search.length),
-          highlight: false,
-        },
-      ].map(({ highlight, text }, index) => (
-        <Fragment key={index}>
-          {!highlight ? <span>{text}</span> : <mark>{text}</mark>}
-        </Fragment>
-      ));
-};
-
-const getBestRowCols = ({ minColWidth = 125, count, width }) => {
-  const mods = initArrayOfSize(count)
-    .map((rowColumns) => ({
-      columnSize: width / rowColumns,
-      mod: count % rowColumns,
-      rowColumns,
-    }))
-    .filter(({ columnSize }) => columnSize >= minColWidth)
-    .sort((a, b) => b.rowColumns - a.rowColumns)
-    .sort((a, b) => b.mod - a.mod);
-
-  const best = mods[0];
-
-  const zeros = mods.filter(
-    ({ columnSize, mod }) => mod === 0 && columnSize <= best.columnSize
-  );
-
-  const collection = [...zeros, ...mods.filter(({ mod }) => mod !== 0)];
-
-  return collection[0]?.rowColumns;
 };
