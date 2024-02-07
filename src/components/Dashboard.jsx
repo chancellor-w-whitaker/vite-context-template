@@ -27,7 +27,7 @@ export const Dashboard = () => {
     (entry) => entry[1].dataRelevance
   );
 
-  const [squareRef, { height = 0, width = 0 }] = useElementSize();
+  const [squareRef, { width = 0 }] = useElementSize();
 
   // console.log(width, height);
 
@@ -102,33 +102,15 @@ export const Dashboard = () => {
               fractions,
             } = getDropdownData({ valueData: dropdownItems[field], items });
 
-            const size = relevantDropdownEntries.length;
-
-            // why 12?
-            // sort zeros first
-            // compare width of zeros to width of greatest remainder
-
-            const mods = initArrayOfSize(12).map((col) => ({
-              mod: size % col,
-              col,
-            }));
-
-            const zeros = mods.filter(({ mod }) => mod === 0);
-
-            const nonZeros = mods.filter(({ mod }) => mod !== 0);
-
-            const something = mods
-              .sort((a, b) => b.mod - a.mod)
-              .filter(({ col }) => width / col > 125);
-
-            const col = something[0]?.col;
-
-            // console.log(width / col);
+            const rowCols = getBestRowCols({
+              count: relevantDropdownEntries.length,
+              width,
+            });
 
             return (
               <div
                 style={{
-                  width: `${(1 / col).toLocaleString("en", {
+                  width: `${(1 / rowCols).toLocaleString("en", {
                     style: "percent",
                   })}`,
                 }}
@@ -473,4 +455,26 @@ const findSingleItemLabel = ({ search, value }) => {
           {!highlight ? <span>{text}</span> : <mark>{text}</mark>}
         </Fragment>
       ));
+};
+
+const getBestRowCols = ({ minColWidth = 125, count, width }) => {
+  const mods = initArrayOfSize(count)
+    .map((rowColumns) => ({
+      columnSize: width / rowColumns,
+      mod: count % rowColumns,
+      rowColumns,
+    }))
+    .filter(({ columnSize }) => columnSize >= minColWidth)
+    .sort((a, b) => b.rowColumns - a.rowColumns)
+    .sort((a, b) => b.mod - a.mod);
+
+  const best = mods[0];
+
+  const zeros = mods.filter(
+    ({ columnSize, mod }) => mod === 0 && columnSize <= best.columnSize
+  );
+
+  const collection = [...zeros, ...mods.filter(({ mod }) => mod !== 0)];
+
+  return collection[0]?.rowColumns;
 };
