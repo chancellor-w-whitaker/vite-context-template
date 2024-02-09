@@ -18,8 +18,8 @@ export const Dashboard = () => {
       measure: onMeasureChange,
       groupBy: onGroupByChange,
     },
+    state: { regressionType, dropdowns, fileName, groupBy, measure, loading },
     lists: { regressionTypes, dropdownItems, fileNames, groupBys, measures },
-    state: { regressionType, dropdowns, fileName, groupBy, measure },
     initializers: { isDropdownWithIdOpen, storeDropdownById },
     grid: { exportDataAsCsv, ...gridProps },
   } = context;
@@ -260,10 +260,15 @@ export const Dashboard = () => {
         >
           Export Data as Csv
         </button>
-        <GridContainer>
+        <GridContainer
+          className={loading.autoSize ? "auto-sizing" : ""}
+          style={defaultGridContainerStyle}
+        >
           <Grid {...gridProps}></Grid>
         </GridContainer>
       </div>
     </>
   );
 };
+
+const defaultGridContainerStyle = { height: 500 };

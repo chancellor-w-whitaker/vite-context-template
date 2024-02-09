@@ -349,3 +349,11 @@ mark {
 .ag-root-wrapper {
   box-shadow: var(--bs-box-shadow-sm);
 }
+
+.ag-theme-quartz {
+  --ag-grid-size: 5px;
+  --ag-list-item-height: 20px;
+}
+.auto-sizing .ag-root-wrapper-body {
+  opacity: 0;
+}

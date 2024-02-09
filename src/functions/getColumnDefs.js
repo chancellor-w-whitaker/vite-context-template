@@ -1,3 +1,5 @@
+import { isNumber } from "./isNumber";
+
 export const getColumnDefs = ({
   valueFormatters,
   valueGetters,
@@ -34,8 +36,8 @@ export const getColumnDefs = ({
           measure in valueFormatters
             ? valueFormatters[measure]
             : ({ value }) => {
-                if (value) {
-                  return value.toLocaleString();
+                if (isNumber(value)) {
+                  return Math.round(value).toLocaleString();
                 }
               };
 

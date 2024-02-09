@@ -4,6 +4,7 @@ import { handleAllDropdownItemsChange } from "./functions/handleAllDropdownItems
 import { handleDropdownSubListChange } from "./functions/handleDropdownSubListChange";
 import { handleDropdownSearchChange } from "./functions/handleDropdownSearchChange";
 import { handleDropdownStateChanges } from "./functions/handleDropdownStateChanges";
+import { useAutoSizeOnRowDataUpdated } from "./hooks/useAutoSizeOnRowDataUpdated";
 import { handleDropdownItemChange } from "./functions/handleDropdownItemChange";
 import { useSetBsBgVariantOfBody } from "./hooks/useSetBsBgVariantOfBody";
 import { findRelevantMeasures } from "./functions/findRelevantMeasures";
@@ -222,6 +223,11 @@ const useMainMethod = () => {
     [measures, relevantGroupBys, filteredRows, pivotField]
   );
 
+  const waiting = useAutoSizeOnRowDataUpdated({
+    rowData: pivotedData,
+    ref: gridRef,
+  });
+
   const columnDefs = useMemo(
     () =>
       getColumnDefs({
@@ -238,6 +244,8 @@ const useMainMethod = () => {
   const pivotedDataIsLoading = filteredRowsIsLoading || groupByIsLoading;
 
   const onSortChanged = useCallback((e) => e.api.refreshCells(), []);
+
+  const onBodyScrollEnd = useCallback((e) => e.api.autoSizeAllColumns(), []);
 
   const exportDataAsCsv = useCallback(
     () => gridRef.current.api.exportDataAsCsv(),
@@ -264,6 +272,7 @@ const useMainMethod = () => {
         filteredRows: filteredRowsIsLoading,
         pivotedData: pivotedDataIsLoading,
         data: dataIsLoading,
+        autoSize: waiting,
       },
       regressionType,
       dropdowns,
@@ -275,6 +284,7 @@ const useMainMethod = () => {
       pinnedTopRowData: totalRow,
       columnDefs: columnDefs,
       rowData: pivotedData,
+      onBodyScrollEnd,
       exportDataAsCsv,
       defaultColDef,
       onSortChanged,
