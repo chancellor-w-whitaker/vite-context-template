@@ -7,6 +7,7 @@ import { handleDropdownStateChanges } from "./functions/handleDropdownStateChang
 import { useAutoSizeOnRowDataUpdated } from "./hooks/useAutoSizeOnRowDataUpdated";
 import { handleDropdownItemChange } from "./functions/handleDropdownItemChange";
 import { useSetBsBgVariantOfBody } from "./hooks/useSetBsBgVariantOfBody";
+import { performPivotOperation } from "./functions/performPivotOperation";
 import { findRelevantMeasures } from "./functions/findRelevantMeasures";
 import { handleGroupByChange } from "./functions/handleGroupByChange";
 import { getRowsAndColumns } from "./functions/getRowsAndColumns";
@@ -20,7 +21,6 @@ import { adjustGroupBy } from "./functions/adjustGroupBy";
 import { useBsDropdowns } from "./hooks/useBsDropdowns";
 import { useData } from "./hooks/examples/useData";
 import { usePrevious } from "./hooks/usePrevious";
-import { pivotData } from "./functions/pivotData";
 import { fileNames } from "./constants/fileNames";
 
 export const AppContext = createContext(null);
@@ -41,8 +41,11 @@ const fileDefaults = {
   valueGetters: {},
 };
 
-// ! filter out rows where selected rate is 0
-// ! yr grad numbers are not percentages
+// download un-pivoted data (just including selected measure & rate data handle differently)
+// all values are downloading as strings (fix)
+// rates should download as numerical (value getter result not value formatter result)
+
+// check bethany email about data page addition
 
 const useMainMethod = () => {
   const gridRef = useRef();
@@ -214,7 +217,7 @@ const useMainMethod = () => {
 
   const { rowData: pivotedData, topRowData: totalRow } = useMemo(
     () =>
-      pivotData({
+      performPivotOperation({
         groupBy: relevantGroupBys,
         pivotField: pivotField,
         data: filteredRows,
