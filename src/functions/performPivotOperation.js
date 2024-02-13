@@ -125,8 +125,6 @@ export const performPivotOperation = ({
     });
   });
 
-  console.log(tree);
-
   // ! rowData is pseudonym for rows displayed in grid,
   // ! so rowData's value should be pivoted data array
   const rowData = magicArray;

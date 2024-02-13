@@ -1,11 +1,6 @@
 import { isNumber } from "./isNumber";
 
-export const getColumnDefs = ({
-  valueFormatters,
-  valueGetters,
-  measure,
-  data,
-}) => {
+export const getColumnDefs = ({ colDefs, measure, data }) => {
   if (!(Array.isArray(data) && data.length > 0)) {
     return [];
   }
@@ -23,25 +18,28 @@ export const getColumnDefs = ({
       } else {
         const type = "numericColumn";
 
-        const valueGetter =
-          measure in valueGetters
-            ? valueGetters[measure]
-            : ({ colDef: { field }, data }) => {
-                if (field in data) {
-                  return data[field][measure];
-                }
-              };
+        const defaultValueGetter = ({ colDef: { field }, data }) => {
+          if (field in data) {
+            return data[field][measure];
+          }
+        };
 
-        const valueFormatter =
-          measure in valueFormatters
-            ? valueFormatters[measure]
-            : ({ value }) => {
-                if (isNumber(value)) {
-                  return Math.round(value).toLocaleString();
-                }
-              };
+        const defaultValueFormatter = ({ value }) => {
+          if (isNumber(value)) {
+            return Math.round(value).toLocaleString();
+          }
+        };
 
-        return { valueFormatter, valueGetter, field, type };
+        const object = {
+          valueFormatter: defaultValueFormatter,
+          valueGetter: defaultValueGetter,
+          field,
+          type,
+        };
+
+        return !(measure in colDefs)
+          ? object
+          : { ...object, ...colDefs[measure] };
       }
     }
   );

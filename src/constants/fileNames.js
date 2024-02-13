@@ -35,20 +35,44 @@ const rateValueFormatter =
 // grid specs
 
 export const fileNames = [
-  { displayName: "Fall Enrollment", pivotField: "term", id: "fall" },
-  { displayName: "Spring Enrollment", pivotField: "term", id: "spring" },
-  { displayName: "Summer Enrollment", pivotField: "term", id: "summer" },
-  { displayName: "Degrees Awarded", pivotField: "year", id: "degrees" },
   {
-    valueFormatters: {
-      numGraduated: rateValueFormatter("numGraduated", "total"),
-      numRetained: rateValueFormatter("numRetained", "total"),
-      numNotRet: rateValueFormatter("numNotRet", "total"),
-    },
-    valueGetters: {
-      numGraduated: rateValueGetter("numGraduated", "total"),
-      numRetained: rateValueGetter("numRetained", "total"),
-      numNotRet: rateValueGetter("numNotRet", "total"),
+    displayName: "Fall Enrollment",
+    pivotField: "term",
+    colDefs: {},
+    id: "fall",
+  },
+  {
+    displayName: "Spring Enrollment",
+    pivotField: "term",
+    id: "spring",
+    colDefs: {},
+  },
+  {
+    displayName: "Summer Enrollment",
+    pivotField: "term",
+    id: "summer",
+    colDefs: {},
+  },
+  {
+    displayName: "Degrees Awarded",
+    pivotField: "year",
+    id: "degrees",
+    colDefs: {},
+  },
+  {
+    colDefs: {
+      numGraduated: {
+        valueFormatter: rateValueFormatter("numGraduated", "total"),
+        valueGetter: rateValueGetter("numGraduated", "total"),
+      },
+      numRetained: {
+        valueFormatter: rateValueFormatter("numRetained", "total"),
+        valueGetter: rateValueGetter("numRetained", "total"),
+      },
+      numNotRet: {
+        valueFormatter: rateValueFormatter("numNotRet", "total"),
+        valueGetter: rateValueGetter("numNotRet", "total"),
+      },
     },
     displayName: "Retention Rates",
     pivotField: "retentionYear",
@@ -56,20 +80,24 @@ export const fileNames = [
     id: "retention",
   },
   {
-    valueFormatters: {
-      "4YrGraduate": rateValueFormatter("4YrGraduate", "total"),
-      "5YrGraduate": rateValueFormatter("5YrGraduate", "total"),
-      "6YrGraduate": rateValueFormatter("6YrGraduate", "total"),
-    },
-    valueGetters: {
-      "4YrGraduate": rateValueGetter("4YrGraduate", "total"),
-      "5YrGraduate": rateValueGetter("5YrGraduate", "total"),
-      "6YrGraduate": rateValueGetter("6YrGraduate", "total"),
+    colDefs: {
+      "4YrGraduate": {
+        valueFormatter: rateValueFormatter("4YrGraduate", "total"),
+        valueGetter: rateValueGetter("4YrGraduate", "total"),
+      },
+      "5YrGraduate": {
+        valueFormatter: rateValueFormatter("5YrGraduate", "total"),
+        valueGetter: rateValueGetter("5YrGraduate", "total"),
+      },
+      "6YrGraduate": {
+        valueFormatter: rateValueFormatter("6YrGraduate", "total"),
+        valueGetter: rateValueGetter("6YrGraduate", "total"),
+      },
     },
     measuresToOmit: ["total", "4YrRate", "5YrRate", "6YrRate"],
     displayName: "Graduation Rates",
     pivotField: "cohortTerm",
     id: "graduation",
   },
-  { displayName: "Credit Hours", pivotField: "year", id: "hours" },
+  { displayName: "Credit Hours", pivotField: "year", id: "hours", colDefs: {} },
 ];

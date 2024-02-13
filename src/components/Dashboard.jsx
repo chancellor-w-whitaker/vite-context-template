@@ -1,3 +1,5 @@
+import { CSVLink } from "react-csv";
+
 import { MyDropdownInput, MyDropdownLabel, MyDropdownItem } from "./MyDropdown";
 import { findSingleItemLabel } from "../functions/findSingleItemLabel";
 import { useConsumeAppContext } from "../hooks/useConsumeAppContext";
@@ -21,7 +23,8 @@ export const Dashboard = () => {
     state: { regressionType, dropdowns, fileName, groupBy, measure, loading },
     lists: { regressionTypes, dropdownItems, fileNames, groupBys, measures },
     initializers: { isDropdownWithIdOpen, storeDropdownById },
-    grid: { exportDataAsCsv, ...gridProps },
+    grid: gridProps,
+    csvData,
   } = context;
 
   const relevantDropdownEntries = Object.entries(dropdowns).filter(
@@ -253,13 +256,13 @@ export const Dashboard = () => {
             );
           })}
         </div>
-        <button
+        <CSVLink
           className="btn btn-success shadow-sm bg-gradient"
-          onClick={exportDataAsCsv}
-          type="button"
+          data={csvData}
+          role="button"
         >
-          Export Data as Csv
-        </button>
+          Download me
+        </CSVLink>
         <GridContainer
           className={loading.autoSize ? "auto-sizing" : ""}
           style={defaultGridContainerStyle}

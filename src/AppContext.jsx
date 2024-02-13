@@ -39,6 +39,7 @@ const fileDefaults = {
   valueFormatters: {},
   measuresToOmit: [],
   valueGetters: {},
+  colDefs: {},
 };
 
 // download un-pivoted data (just including selected measure & rate data handle differently)
@@ -57,10 +58,9 @@ const useMainMethod = () => {
   const [fileName, setFileName] = useState(fileNames[0].id);
 
   const {
-    valueFormatters = fileDefaults.valueFormatters,
     measuresToOmit = fileDefaults.measuresToOmit,
-    valueGetters = fileDefaults.valueGetters,
     pivotField,
+    colDefs,
   } = fileNames.find(({ id }) => id === fileName);
 
   const [measure, setMeasure, delayedMeasure] = useResponsiveState();
@@ -226,6 +226,16 @@ const useMainMethod = () => {
     [measures, relevantGroupBys, filteredRows, pivotField]
   );
 
+  const csvData = useMemo(
+    () =>
+      pivotedData
+        .map((row) =>
+          Object.values(row).filter((value) => typeof value === "object")
+        )
+        .flat(),
+    [pivotedData]
+  );
+
   const waiting = useAutoSizeOnRowDataUpdated({
     rowData: pivotedData,
     ref: gridRef,
@@ -236,10 +246,9 @@ const useMainMethod = () => {
       getColumnDefs({
         measure: delayedMeasure,
         data: pivotedData,
-        valueFormatters,
-        valueGetters,
+        colDefs,
       }),
-    [pivotedData, delayedMeasure, valueGetters, valueFormatters]
+    [pivotedData, delayedMeasure, colDefs]
   );
 
   const defaultColDef = useMemo(() => ({ suppressMovable: true }), []);
@@ -249,11 +258,6 @@ const useMainMethod = () => {
   const onSortChanged = useCallback((e) => e.api.refreshCells(), []);
 
   const onBodyScrollEnd = useCallback((e) => e.api.autoSizeAllColumns(), []);
-
-  const exportDataAsCsv = useCallback(
-    () => gridRef.current.api.exportDataAsCsv(),
-    []
-  );
 
   return {
     onChange: {
@@ -288,7 +292,6 @@ const useMainMethod = () => {
       columnDefs: columnDefs,
       rowData: pivotedData,
       onBodyScrollEnd,
-      exportDataAsCsv,
       defaultColDef,
       onSortChanged,
       ref: gridRef,
@@ -301,5 +304,6 @@ const useMainMethod = () => {
       groupBys,
     },
     initializers: { isDropdownWithIdOpen, storeDropdownById },
+    csvData,
   };
 };
