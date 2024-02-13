@@ -9,6 +9,7 @@ export const getColumnDefs = ({ colDefs, measure, data }) => {
     valueGetter: (e) =>
       !("rowPinned" in e.node) ? e.node.rowIndex + 1 : "Total",
     headerName: "Row",
+    pinned: "left",
   };
 
   const restOfColumnDefs = Object.entries(data[0]).map(
