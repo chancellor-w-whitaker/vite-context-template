@@ -3,11 +3,12 @@ import { CSVLink } from "react-csv";
 import { MyDropdownInput, MyDropdownLabel, MyDropdownItem } from "./MyDropdown";
 import { findSingleItemLabel } from "../functions/findSingleItemLabel";
 import { useConsumeAppContext } from "../hooks/useConsumeAppContext";
+import { toTitleCase } from "../functions/formatters/toTitleCase";
 import { getDropdownData } from "../functions/getDropdownData";
 import { getBestRowCols } from "../functions/getBestRowCols";
 import { useElementSize } from "../hooks/useElementSize";
-import { toTitleCase } from "../functions/toTitleCase";
 import { GridContainer, Grid } from "./Grid";
+import { Chart } from "./Chart";
 
 export const Dashboard = () => {
   const context = useConsumeAppContext();
@@ -25,6 +26,7 @@ export const Dashboard = () => {
     initializers: { isDropdownWithIdOpen, storeDropdownById },
     grid: gridProps,
     csvData,
+    chart,
   } = context;
 
   const relevantDropdownEntries = Object.entries(dropdowns).filter(
@@ -269,6 +271,7 @@ export const Dashboard = () => {
         >
           <Grid {...gridProps}></Grid>
         </GridContainer>
+        <Chart {...chart}></Chart>
       </div>
     </>
   );

@@ -1,49 +1,80 @@
+import { RateCellRenderer } from "../components/RateCellRenderer";
+import { rowIdColumnDef } from "../constants/rowIdColumnDef";
+import { formatMeasureValue } from "./formatMeasureValue";
+import { getMeasureFraction } from "./getMeasureFraction";
+import { formatMeasureRate } from "./formatMeasureRate";
+import { getMeasureValue } from "./getMeasureValue";
+import { isLengthyArray } from "./isLengthyArray";
+import { getMeasureRate } from "./getMeasureRate";
 import { isNumber } from "./isNumber";
 
-export const getColumnDefs = ({ colDefs, measure, data }) => {
-  if (!(Array.isArray(data) && data.length > 0)) {
-    return [];
-  }
-
-  const rowIdDef = {
-    valueGetter: (e) =>
-      !("rowPinned" in e.node) ? e.node.rowIndex + 1 : "Total",
-    headerName: "Row",
-    pinned: "left",
+const getStandardValueGetter =
+  (measure) =>
+  ({ colDef: { field }, data }) => {
+    if (field in data) {
+      return getMeasureValue(data[field], measure);
+    }
   };
 
-  const restOfColumnDefs = Object.entries(data[0]).map(
-    ([field, stringOrObject]) => {
-      if (typeof stringOrObject === "string") {
-        return { field };
-      } else {
-        const type = "numericColumn";
+const standardValueFormatter = ({ value }) => {
+  if (isNumber(value)) {
+    return formatMeasureValue(value);
+  }
+};
 
-        const defaultValueGetter = ({ colDef: { field }, data }) => {
-          if (field in data) {
-            return data[field][measure];
-          }
-        };
+const validateFraction = ({ denominator = "total", numerator, field, data }) =>
+  field in data && numerator in data[field] && denominator in data[field];
 
-        const defaultValueFormatter = ({ value }) => {
-          if (isNumber(value)) {
-            return Math.round(value).toLocaleString();
-          }
-        };
+const getRateValueGetter =
+  (numerator, denominator = "total") =>
+  ({ colDef: { field }, data }) => {
+    if (validateFraction({ denominator, numerator, field, data })) {
+      const quotient = getMeasureRate(data[field], numerator);
 
-        const object = {
-          valueFormatter: defaultValueFormatter,
-          valueGetter: defaultValueGetter,
-          field,
-          type,
-        };
-
-        return !(measure in colDefs)
-          ? object
-          : { ...object, ...colDefs[measure] };
-      }
+      return quotient;
     }
-  );
+  };
 
-  return [rowIdDef, ...restOfColumnDefs];
+const getRateValueFormatter =
+  (numerator, denominator = "total") =>
+  ({ colDef: { field }, value, data }) => {
+    if (isNumber(value)) {
+      const percentage = formatMeasureRate(value);
+
+      if (validateFraction({ denominator, numerator, field, data })) {
+        const fraction = getMeasureFraction(data[field], numerator);
+
+        return [percentage, fraction];
+      }
+
+      return [percentage];
+    }
+  };
+
+export const getColumnDefs = ({ shouldFindRates, measure, data }) => {
+  if (!isLengthyArray(data)) return [];
+
+  const defs = Object.entries(data[0]).map(([field, stringOrObject]) => {
+    if (typeof stringOrObject === "string") {
+      return { field };
+    } else {
+      const [type, valueGetter, valueFormatter] = [
+        "numericColumn",
+        !shouldFindRates
+          ? getStandardValueGetter(measure)
+          : getRateValueGetter(measure),
+        !shouldFindRates
+          ? standardValueFormatter
+          : getRateValueFormatter(measure),
+      ];
+
+      const def = { valueFormatter, valueGetter, field, type };
+
+      if (shouldFindRates) def.cellRenderer = RateCellRenderer;
+
+      return def;
+    }
+  });
+
+  return [{ ...rowIdColumnDef }, ...defs];
 };

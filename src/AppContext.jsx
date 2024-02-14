@@ -10,11 +10,15 @@ import { useSetBsBgVariantOfBody } from "./hooks/useSetBsBgVariantOfBody";
 import { performPivotOperation } from "./functions/performPivotOperation";
 import { findRelevantMeasures } from "./functions/findRelevantMeasures";
 import { handleGroupByChange } from "./functions/handleGroupByChange";
+import { formatMeasureValue } from "./functions/formatMeasureValue";
 import { getRowsAndColumns } from "./functions/getRowsAndColumns";
 import { findNextDropdowns } from "./functions/findNextDropdowns";
+import { formatMeasureRate } from "./functions/formatMeasureRate";
 import { useResponsiveState } from "./hooks/useResponsiveState";
 import { regressionTypes } from "./constants/regressionTypes";
 import { adjustDropdowns } from "./functions/adjustDropdowns";
+import { getMeasureValue } from "./functions/getMeasureValue";
+import { getMeasureRate } from "./functions/getMeasureRate";
 import { getColumnDefs } from "./functions/getColumnDefs";
 import { adjustMeasure } from "./functions/adjustMeasure";
 import { adjustGroupBy } from "./functions/adjustGroupBy";
@@ -35,12 +39,7 @@ export const AppContextProvider = ({ children }) => {
 
 const pivotFields = new Set(fileNames.map(({ pivotField }) => pivotField));
 
-const fileDefaults = {
-  valueFormatters: {},
-  measuresToOmit: [],
-  valueGetters: {},
-  colDefs: {},
-};
+const fileDefaults = { shouldFindRates: false, measuresToOmit: [] };
 
 // download un-pivoted data (just including selected measure & rate data handle differently)
 // all values are downloading as strings (fix)
@@ -59,8 +58,8 @@ const useMainMethod = () => {
 
   const {
     measuresToOmit = fileDefaults.measuresToOmit,
+    shouldFindRates,
     pivotField,
-    colDefs,
   } = fileNames.find(({ id }) => id === fileName);
 
   const [measure, setMeasure, delayedMeasure] = useResponsiveState();
@@ -226,6 +225,21 @@ const useMainMethod = () => {
     [measures, relevantGroupBys, filteredRows, pivotField]
   );
 
+  const chartData = useMemo(
+    () =>
+      Object.entries(totalRow[0]).map(([pivotValue, measuresObject]) => {
+        const object = {
+          [delayedMeasure]: !shouldFindRates
+            ? getMeasureValue(measuresObject, delayedMeasure)
+            : getMeasureRate(measuresObject, delayedMeasure),
+          [pivotField]: pivotValue,
+        };
+
+        return object;
+      }),
+    [totalRow, delayedMeasure, pivotField, shouldFindRates]
+  );
+
   const csvData = useMemo(
     () =>
       pivotedData
@@ -246,9 +260,9 @@ const useMainMethod = () => {
       getColumnDefs({
         measure: delayedMeasure,
         data: pivotedData,
-        colDefs,
+        shouldFindRates,
       }),
-    [pivotedData, delayedMeasure, colDefs]
+    [pivotedData, delayedMeasure, shouldFindRates]
   );
 
   const defaultColDef = useMemo(() => ({ suppressMovable: true }), []);
@@ -295,6 +309,12 @@ const useMainMethod = () => {
       defaultColDef,
       onSortChanged,
       ref: gridRef,
+    },
+    chart: {
+      valueFormatter: !shouldFindRates ? formatMeasureValue : formatMeasureRate,
+      barDataKey: delayedMeasure,
+      xAxisDataKey: pivotField,
+      data: chartData,
     },
     lists: {
       measures: nonOmittedMeasures,

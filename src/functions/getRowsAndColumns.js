@@ -1,4 +1,4 @@
-import { standardizeKey } from "./standardizeKey";
+import { toStandardizedKey } from "./formatters/toStandardizedKey";
 
 export const getRowsAndColumns = (data) => {
   if (!(Array.isArray(data) && data.length > 0)) {
@@ -15,7 +15,7 @@ export const getRowsAndColumns = (data) => {
     Object.keys(object).forEach((key) => {
       if (!(key in columns)) {
         columns[key] = {
-          field: standardizeKey(key),
+          field: toStandardizedKey(key),
           values: new Set(),
           types: {},
         };

@@ -1,6 +1,6 @@
 import { Str } from "@supercharge/strings";
 
-export const standardizeKey = (key) =>
+export const toStandardizedKey = (key) =>
   Str(key)
     .camel()
     .words()
