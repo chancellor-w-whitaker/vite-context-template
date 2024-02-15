@@ -11,6 +11,7 @@ import { performPivotOperation } from "./functions/performPivotOperation";
 import { findRelevantMeasures } from "./functions/findRelevantMeasures";
 import { handleGroupByChange } from "./functions/handleGroupByChange";
 import { formatMeasureValue } from "./functions/formatMeasureValue";
+import { findRegressionData } from "./functions/findRegressionData";
 import { getRowsAndColumns } from "./functions/getRowsAndColumns";
 import { findNextDropdowns } from "./functions/findNextDropdowns";
 import { formatMeasureRate } from "./functions/formatMeasureRate";
@@ -41,6 +42,8 @@ const pivotFields = new Set(fileNames.map(({ pivotField }) => pivotField));
 
 const fileDefaults = { shouldFindRates: false, measuresToOmit: [] };
 
+// what about a js linter?
+
 // download un-pivoted data (just including selected measure & rate data handle differently)
 // all values are downloading as strings (fix)
 // rates should download as numerical (value getter result not value formatter result)
@@ -67,9 +70,8 @@ const useMainMethod = () => {
   const [groupBy, setGroupBy, delayedGroupBy, groupByIsLoading] =
     useResponsiveState([]);
 
-  const [regressionType, setRegressionType] = useResponsiveState(
-    regressionTypes[0]
-  );
+  const [regressionType, setRegressionType, delayedRegressionType] =
+    useResponsiveState(regressionTypes[0]);
 
   const onFileNameChange = useCallback(
     ({ target: { value } }) => setFileName(value),
@@ -225,9 +227,9 @@ const useMainMethod = () => {
     [measures, relevantGroupBys, filteredRows, pivotField]
   );
 
-  const chartData = useMemo(
-    () =>
-      Object.entries(totalRow[0]).map(([pivotValue, measuresObject]) => {
+  const chartData = useMemo(() => {
+    const chartData = Object.entries(totalRow[0]).map(
+      ([pivotValue, measuresObject]) => {
         const object = {
           [delayedMeasure]: !shouldFindRates
             ? getMeasureValue(measuresObject, delayedMeasure)
@@ -236,9 +238,28 @@ const useMainMethod = () => {
         };
 
         return object;
-      }),
-    [totalRow, delayedMeasure, pivotField, shouldFindRates]
-  );
+      }
+    );
+
+    const regressionData = findRegressionData({
+      type: delayedRegressionType,
+      keyName: delayedMeasure,
+      data: chartData,
+    });
+
+    console.log(regressionData);
+
+    return chartData.map((object, index) => ({
+      ...object,
+      predicted: regressionData.outputPoints[index][1],
+    }));
+  }, [
+    totalRow,
+    delayedMeasure,
+    pivotField,
+    shouldFindRates,
+    delayedRegressionType,
+  ]);
 
   const csvData = useMemo(
     () =>

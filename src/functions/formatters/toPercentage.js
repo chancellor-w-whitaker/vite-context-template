@@ -1,5 +1,5 @@
 export const toPercentage = (value) =>
   value.toLocaleString("en", {
-    minimumFractionDigits: 1,
+    minimumFractionDigits: 2,
     style: "percent",
   });
