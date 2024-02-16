@@ -353,15 +353,7 @@ const useMainMethod = () => {
 
   const onBodyScrollEnd = useCallback((e) => e.api.autoSizeAllColumns(), []);
 
-  rows.filter((row) => {
-    if (delayedMeasure in rowRemovalLogic) {
-      const { value, key } = rowRemovalLogic[delayedMeasure];
-
-      if (row[key] === value) return false;
-    }
-
-    return true;
-  });
+  console.log(allRows);
 
   return {
     onChange: {

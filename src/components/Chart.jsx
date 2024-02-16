@@ -109,9 +109,10 @@ const CustomTooltip = (props) => {
         }}
         className="recharts-default-tooltip"
       >
-        <p className="recharts-tooltip-label" style={{ margin: 0 }}>
-          {label}
+        <p className="recharts-tooltip-label text-center" style={{ margin: 0 }}>
+          <span className="fw-bold">{label}</span>
         </p>
+        <hr className="my-1"></hr>
         <ul
           className="recharts-tooltip-item-list"
           style={{ padding: 0, margin: 0 }}
