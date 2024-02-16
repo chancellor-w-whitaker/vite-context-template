@@ -357,3 +357,7 @@ mark {
 .auto-sizing .ag-root-wrapper-body {
   opacity: 0;
 }
+
+.recharts-surface {
+  overflow: visible;
+}

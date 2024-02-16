@@ -1,4 +1,11 @@
-import { createContext, useCallback, useState, useMemo, useRef } from "react";
+import {
+  createContext,
+  useTransition,
+  useCallback,
+  useState,
+  useMemo,
+  useRef,
+} from "react";
 
 import { handleAllDropdownItemsChange } from "./functions/handleAllDropdownItemsChange";
 import { handleDropdownSubListChange } from "./functions/handleDropdownSubListChange";
@@ -12,6 +19,7 @@ import { findRelevantMeasures } from "./functions/findRelevantMeasures";
 import { handleGroupByChange } from "./functions/handleGroupByChange";
 import { formatMeasureValue } from "./functions/formatMeasureValue";
 import { findRegressionData } from "./functions/findRegressionData";
+import { getMeasureFraction } from "./functions/getMeasureFraction";
 import { getRowsAndColumns } from "./functions/getRowsAndColumns";
 import { findNextDropdowns } from "./functions/findNextDropdowns";
 import { formatMeasureRate } from "./functions/formatMeasureRate";
@@ -24,6 +32,7 @@ import { getColumnDefs } from "./functions/getColumnDefs";
 import { adjustMeasure } from "./functions/adjustMeasure";
 import { adjustGroupBy } from "./functions/adjustGroupBy";
 import { useBsDropdowns } from "./hooks/useBsDropdowns";
+import { brandColors } from "./constants/brandColors";
 import { useData } from "./hooks/examples/useData";
 import { usePrevious } from "./hooks/usePrevious";
 import { fileNames } from "./constants/fileNames";
@@ -40,7 +49,7 @@ export const AppContextProvider = ({ children }) => {
 
 const pivotFields = new Set(fileNames.map(({ pivotField }) => pivotField));
 
-const fileDefaults = { shouldFindRates: false, measuresToOmit: [] };
+const fileDefaults = { rowRemovalLogic: {}, measuresToOmit: [] };
 
 // what about a js linter?
 
@@ -50,6 +59,19 @@ const fileDefaults = { shouldFindRates: false, measuresToOmit: [] };
 
 // check bethany email about data page addition
 
+function useNonBlockingState(initialState) {
+  const [state, setState] = useState(initialState);
+
+  const [isPending, startTransition] = useTransition();
+
+  const updateState = useCallback(
+    (argument) => startTransition(() => setState(argument)),
+    []
+  );
+
+  return [state, updateState, isPending];
+}
+
 const useMainMethod = () => {
   const gridRef = useRef();
 
@@ -57,9 +79,10 @@ const useMainMethod = () => {
 
   const { isDropdownWithIdOpen, storeDropdownById } = useBsDropdowns();
 
-  const [fileName, setFileName] = useState(fileNames[0].id);
+  const [fileName, setFileName] = useNonBlockingState(fileNames[0].id);
 
   const {
+    rowRemovalLogic = fileDefaults.rowRemovalLogic,
     measuresToOmit = fileDefaults.measuresToOmit,
     shouldFindRates,
     pivotField,
@@ -75,7 +98,7 @@ const useMainMethod = () => {
 
   const onFileNameChange = useCallback(
     ({ target: { value } }) => setFileName(value),
-    []
+    [setFileName]
   );
 
   const onMeasureChange = useCallback(
@@ -126,7 +149,24 @@ const useMainMethod = () => {
     [setDropdowns]
   );
 
-  const { columns, rows } = useMemo(() => getRowsAndColumns(data), [data]);
+  const { rows: allRows, columns } = useMemo(
+    () => getRowsAndColumns(data),
+    [data]
+  );
+
+  const rows = useMemo(
+    () =>
+      allRows.filter((row) => {
+        if (delayedMeasure in rowRemovalLogic) {
+          const { value, key } = rowRemovalLogic[delayedMeasure];
+
+          if (row[key] === value) return false;
+        }
+
+        return true;
+      }),
+    [allRows, delayedMeasure, rowRemovalLogic]
+  );
 
   // ! get filtered data and derived dropdown information here
   // ! dropdown state & rows should be enough to get you what you need
@@ -227,7 +267,7 @@ const useMainMethod = () => {
     [measures, relevantGroupBys, filteredRows, pivotField]
   );
 
-  const chartData = useMemo(() => {
+  const { tooltipItems, chartData } = useMemo(() => {
     const chartData = Object.entries(totalRow[0]).map(
       ([pivotValue, measuresObject]) => {
         const object = {
@@ -236,6 +276,13 @@ const useMainMethod = () => {
             : getMeasureRate(measuresObject, delayedMeasure),
           [pivotField]: pivotValue,
         };
+
+        if (shouldFindRates) {
+          object.fraction = {
+            value: getMeasureFraction(measuresObject, delayedMeasure),
+            key: delayedMeasure,
+          };
+        }
 
         return object;
       }
@@ -247,12 +294,24 @@ const useMainMethod = () => {
       data: chartData,
     });
 
-    console.log(regressionData);
+    const tooltipItems = [
+      { color: brandColors.kentuckyBluegrass, value: regressionData.string },
+      {
+        value: (
+          <>
+            R<sup>2</sup> = {regressionData.r2.toLocaleString()}
+          </>
+        ),
+        color: brandColors.kentuckyBluegrass,
+      },
+    ];
 
-    return chartData.map((object, index) => ({
+    const finalChartData = chartData.map((object, index) => ({
       ...object,
       predicted: regressionData.outputPoints[index][1],
     }));
+
+    return { chartData: finalChartData, tooltipItems };
   }, [
     totalRow,
     delayedMeasure,
@@ -294,6 +353,16 @@ const useMainMethod = () => {
 
   const onBodyScrollEnd = useCallback((e) => e.api.autoSizeAllColumns(), []);
 
+  rows.filter((row) => {
+    if (delayedMeasure in rowRemovalLogic) {
+      const { value, key } = rowRemovalLogic[delayedMeasure];
+
+      if (row[key] === value) return false;
+    }
+
+    return true;
+  });
+
   return {
     onChange: {
       dropdowns: {
@@ -322,6 +391,13 @@ const useMainMethod = () => {
       measure,
       groupBy,
     },
+    chart: {
+      valueFormatter: !shouldFindRates ? formatMeasureValue : formatMeasureRate,
+      barDataKey: delayedMeasure,
+      xAxisDataKey: pivotField,
+      data: chartData,
+      tooltipItems,
+    },
     grid: {
       pinnedTopRowData: totalRow,
       columnDefs: columnDefs,
@@ -330,12 +406,6 @@ const useMainMethod = () => {
       defaultColDef,
       onSortChanged,
       ref: gridRef,
-    },
-    chart: {
-      valueFormatter: !shouldFindRates ? formatMeasureValue : formatMeasureRate,
-      barDataKey: delayedMeasure,
-      xAxisDataKey: pivotField,
-      data: chartData,
     },
     lists: {
       measures: nonOmittedMeasures,
