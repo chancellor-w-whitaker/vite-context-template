@@ -10,7 +10,7 @@ import {
   Line,
   Bar,
 } from "recharts";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 
 import { toTitleCase } from "../functions/formatters/toTitleCase";
 import { brandColors } from "../constants/brandColors";
@@ -46,15 +46,37 @@ export const Chart = ({
   barDataKey,
   data,
 }) => {
+  const [returnedWidth, setReturnedWidth] = useState(0);
+
+  const layout = returnedWidth > 576 ? "horizontal" : "vertical";
+
+  const [xAxis, yAxis] = [
+    {
+      tickFormatter: layout === "vertical" ? valueFormatter : null,
+      dataKey: layout === "horizontal" ? xAxisDataKey : null,
+      type: layout === "horizontal" ? "category" : "number",
+    },
+    {
+      tickFormatter: layout === "horizontal" ? valueFormatter : null,
+      type: layout === "horizontal" ? "number" : "category",
+      dataKey: layout === "vertical" ? xAxisDataKey : null,
+    },
+  ];
+
   return (
-    <ResponsiveContainer height={500} width="100%">
+    <ResponsiveContainer
+      onResize={(width) => setReturnedWidth(width)}
+      height={500}
+      width="100%"
+    >
       <ComposedChart
         margin={{ bottom: 0, right: 0, left: 0, top: 0 }}
+        layout={layout}
         data={data}
       >
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey={xAxisDataKey} />
-        <YAxis tickFormatter={valueFormatter} />
+        <XAxis {...xAxis} />
+        <YAxis {...yAxis} />
         <Tooltip
           formatter={(value, name) => [
             valueFormatter(value),
@@ -67,7 +89,6 @@ export const Chart = ({
           label={{
             fill: brandColors.goldenrodYellow,
             formatter: valueFormatter,
-            // position: "top",
             fontSize: 20,
           }}
           activeBar={<Rectangle fill="#AF2955" />}

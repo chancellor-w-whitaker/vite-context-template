@@ -353,8 +353,6 @@ const useMainMethod = () => {
 
   const onBodyScrollEnd = useCallback((e) => e.api.autoSizeAllColumns(), []);
 
-  console.log(allRows);
-
   return {
     onChange: {
       dropdowns: {
