@@ -23,6 +23,7 @@ import { getMeasureFraction } from "./functions/getMeasureFraction";
 import { getRowsAndColumns } from "./functions/getRowsAndColumns";
 import { findNextDropdowns } from "./functions/findNextDropdowns";
 import { formatMeasureRate } from "./functions/formatMeasureRate";
+import { toTitleCase } from "./functions/formatters/toTitleCase";
 import { useResponsiveState } from "./hooks/useResponsiveState";
 import { regressionTypes } from "./constants/regressionTypes";
 import { adjustDropdowns } from "./functions/adjustDropdowns";
@@ -311,14 +312,42 @@ const useMainMethod = () => {
       predicted: regressionData.outputPoints[index][1],
     }));
 
+    finalChartData.push(
+      ...regressionData.nextOutputPoints.slice(0, 1).map((entry) => ({
+        [pivotField]: `Next ${toTitleCase(pivotField)}`,
+        [delayedMeasure]: entry[1],
+        predicted: entry[1],
+        makeDim: true,
+      }))
+    );
+
+    console.log(finalChartData);
+
+    console.log(regressionData);
+
     return { chartData: finalChartData, tooltipItems };
   }, [
     totalRow,
-    delayedMeasure,
     pivotField,
+    delayedMeasure,
     shouldFindRates,
     delayedRegressionType,
   ]);
+
+  const domain = useMemo(() => {
+    // const factor = 1000000;
+
+    const values = [
+      ...chartData.map(({ [delayedMeasure]: value }) => value),
+      ...chartData.map(({ predicted }) => predicted),
+    ];
+
+    const [min, max] = [Math.min(...values), Math.max(...values)];
+
+    const difference = max - min;
+
+    return [min - difference, max + difference / 8];
+  }, [chartData, delayedMeasure]);
 
   const csvData = useMemo(
     () =>
@@ -387,6 +416,7 @@ const useMainMethod = () => {
       xAxisDataKey: pivotField,
       data: chartData,
       tooltipItems,
+      domain,
     },
     grid: {
       pinnedTopRowData: totalRow,

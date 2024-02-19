@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
   Line,
+  Cell,
   Bar,
 } from "recharts";
 import { Fragment, useState } from "react";
@@ -44,67 +45,101 @@ export const Chart = ({
   tooltipItems,
   xAxisDataKey,
   barDataKey,
+  domain,
   data,
 }) => {
   const [returnedWidth, setReturnedWidth] = useState(0);
 
   const layout = returnedWidth > 576 ? "horizontal" : "vertical";
 
-  const [xAxis, yAxis] = [
-    {
-      tickFormatter: layout === "vertical" ? valueFormatter : null,
+  const {
+    responsiveContainer,
+    composedChart,
+    cartesianGrid,
+    tooltip,
+    legend,
+    xAxis,
+    yAxis,
+    line,
+    bar,
+  } = {
+    xAxis: {
+      tickFormatter: layout === "horizontal" ? null : valueFormatter,
       dataKey: layout === "horizontal" ? xAxisDataKey : null,
       type: layout === "horizontal" ? "category" : "number",
+      domain: layout === "horizontal" ? null : domain,
     },
-    {
+    yAxis: {
       tickFormatter: layout === "horizontal" ? valueFormatter : null,
+      dataKey: layout === "horizontal" ? null : xAxisDataKey,
       type: layout === "horizontal" ? "number" : "category",
-      dataKey: layout === "vertical" ? xAxisDataKey : null,
+      domain: layout === "horizontal" ? domain : null,
     },
-  ];
+    bar: {
+      label: {
+        fill: brandColors.goldenrodYellow,
+        formatter: valueFormatter,
+        fontSize: 20,
+      },
+      // activeBar: <Rectangle fill="#AF2955" />,
+      fill: brandColors.ekuMaroon,
+      dataKey: barDataKey,
+    },
+    line: {
+      stroke: brandColors.kentuckyBluegrass,
+      strokeLinecap: "round",
+      dataKey: "predicted",
+      type: "monotone",
+      strokeWidth: 3,
+      dot: false,
+    },
+    tooltip: {
+      formatter: (value, name) => [valueFormatter(value), toTitleCase(name)],
+      content: <CustomTooltip moreItems={tooltipItems}></CustomTooltip>,
+    },
+    responsiveContainer: {
+      onResize: (width) => setReturnedWidth(width),
+      width: "100%",
+      height: 500,
+    },
+    composedChart: {
+      margin: { bottom: 0, right: 0, left: 0, top: 0 },
+      layout,
+      data,
+    },
+    cartesianGrid: { strokeDasharray: "3 3" },
+    legend: { formatter: toTitleCase },
+  };
 
   return (
-    <ResponsiveContainer
-      onResize={(width) => setReturnedWidth(width)}
-      height={500}
-      width="100%"
-    >
-      <ComposedChart
-        margin={{ bottom: 0, right: 0, left: 0, top: 0 }}
-        layout={layout}
-        data={data}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis {...xAxis} />
-        <YAxis {...yAxis} />
-        <Tooltip
-          formatter={(value, name) => [
-            valueFormatter(value),
-            toTitleCase(name),
-          ]}
-          content={<CustomTooltip moreItems={tooltipItems}></CustomTooltip>}
-        />
-        <Legend formatter={toTitleCase} />
-        <Bar
-          label={{
-            fill: brandColors.goldenrodYellow,
-            formatter: valueFormatter,
-            fontSize: 20,
-          }}
-          activeBar={<Rectangle fill="#AF2955" />}
-          fill={brandColors.ekuMaroon}
-          dataKey={barDataKey}
-        />
-        <Line
-          stroke={brandColors.kentuckyBluegrass}
-          strokeLinecap="round"
-          dataKey="predicted"
-          type="monotone"
-          strokeWidth={3}
-          dot={false}
-        />
-      </ComposedChart>
-    </ResponsiveContainer>
+    <>
+      <p className="mb-0">
+        * Chart is zoomed to increase difference between bars
+      </p>
+      <ResponsiveContainer {...responsiveContainer}>
+        <ComposedChart {...composedChart}>
+          <CartesianGrid {...cartesianGrid} />
+          <XAxis {...xAxis} />
+          <YAxis {...yAxis} />
+          <Tooltip {...tooltip} />
+          <Legend {...legend} />
+          <Bar {...bar}>
+            {data.map((entry, index) => (
+              <Cell
+                fill={
+                  "makeDim" in entry
+                    ? brandColors.kentuckyBluegrass
+                    : brandColors.ekuMaroon
+                }
+                fillOpacity={"makeDim" in entry ? "75%" : "100%"}
+                key={`cell-${index}`}
+              />
+            ))}
+          </Bar>
+          <Line {...line} />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </>
   );
 };
 
@@ -130,7 +165,10 @@ const CustomTooltip = (props) => {
         }}
         className="recharts-default-tooltip"
       >
-        <p className="recharts-tooltip-label text-center" style={{ margin: 0 }}>
+        <p
+          className="recharts-tooltip-label text-center pb-1"
+          style={{ margin: 0 }}
+        >
           <span className="fw-bold">{label}</span>
         </p>
         <hr className="my-1"></hr>
