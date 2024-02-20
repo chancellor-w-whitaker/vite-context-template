@@ -67,9 +67,11 @@ export const Chart = memo(
     } = {
       bar: {
         label: {
-          fillOpacity: returnedWidth > breakpoints.small ? "100%" : "0%",
+          // position: returnedWidth > breakpoints.small ? null : "insideBottom",
+          angle: returnedWidth > breakpoints.small ? 0 : -90,
           fill: brandColors.goldenrodYellow,
           formatter: valueFormatter,
+          fillOpacity: "100%",
           fontSize: 20,
         },
         // activeBar: <Rectangle fill="#AF2955" />,
