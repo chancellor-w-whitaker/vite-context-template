@@ -296,10 +296,29 @@ const useMainMethod = () => {
       data: chartData,
     });
 
+    const splitOnExponent = regressionData.string.split("^");
+
+    if (splitOnExponent.length > 1) {
+      splitOnExponent.push(splitOnExponent[1].split(" "));
+
+      splitOnExponent[1] = splitOnExponent[2].shift();
+    } else {
+      splitOnExponent[1] = "";
+
+      splitOnExponent[2] = [];
+    }
+
+    const [firstPart, exponent, theRest] = splitOnExponent;
+
     const tooltipItems = [
       {
+        value: (
+          <>
+            {firstPart}
+            <sup>{exponent}</sup> {theRest.join(" ")}
+          </>
+        ),
         color: brandColors.kentuckyBluegrass,
-        value: regressionData.string,
         className: "fst-italic",
       },
       {

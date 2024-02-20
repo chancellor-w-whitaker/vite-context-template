@@ -52,7 +52,7 @@ export const Chart = memo(
 
     const [zoomed, setZoomed] = useState(true);
 
-    const smallBreakpoint = 576;
+    const breakpoints = { medium: 768, small: 576 };
 
     const {
       responsiveContainer,
@@ -67,7 +67,7 @@ export const Chart = memo(
     } = {
       bar: {
         label: {
-          fillOpacity: returnedWidth > smallBreakpoint ? "100%" : "0%",
+          fillOpacity: returnedWidth > breakpoints.small ? "100%" : "0%",
           fill: brandColors.goldenrodYellow,
           formatter: valueFormatter,
           fontSize: 20,
