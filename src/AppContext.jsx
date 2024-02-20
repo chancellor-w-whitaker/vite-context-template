@@ -316,14 +316,11 @@ const useMainMethod = () => {
       ...regressionData.nextOutputPoints.slice(0, 1).map((entry) => ({
         [pivotField]: `Next ${toTitleCase(pivotField)}`,
         [delayedMeasure]: entry[1],
+        hide: delayedMeasure,
         predicted: entry[1],
-        makeDim: true,
+        future: true,
       }))
     );
-
-    console.log(finalChartData);
-
-    console.log(regressionData);
 
     return { chartData: finalChartData, tooltipItems };
   }, [

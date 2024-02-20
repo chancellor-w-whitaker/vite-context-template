@@ -129,11 +129,11 @@ export const Chart = memo(
               {data.map((entry, index) => (
                 <Cell
                   fill={
-                    "makeDim" in entry
+                    "future" in entry
                       ? brandColors.kentuckyBluegrass
                       : brandColors.ekuMaroon
                   }
-                  fillOpacity={"makeDim" in entry ? "75%" : "100%"}
+                  fillOpacity={"future" in entry ? "75%" : "100%"}
                   key={`cell-${index}`}
                 />
               ))}
@@ -184,23 +184,27 @@ const CustomTooltip = (props) => {
           {payload.map(({ payload, value, color, name, unit }) => {
             const [formattedValue, formattedName] = formatter(value, name);
 
+            const shouldHide = "hide" in payload && payload.hide === name;
+
             return (
-              <Fragment key={name}>
-                <TooltipItem
-                  value={formattedValue}
-                  separator={separator}
-                  name={formattedName}
-                  className="fw-bold"
-                  color={color}
-                  unit={unit}
-                ></TooltipItem>
-                {"fraction" in payload && payload.fraction.key === name && (
+              !shouldHide && (
+                <Fragment key={name}>
                   <TooltipItem
-                    value={payload.fraction.value}
+                    value={formattedValue}
+                    separator={separator}
+                    name={formattedName}
+                    className="fw-bold"
                     color={color}
+                    unit={unit}
                   ></TooltipItem>
-                )}
-              </Fragment>
+                  {"fraction" in payload && payload.fraction.key === name && (
+                    <TooltipItem
+                      value={payload.fraction.value}
+                      color={color}
+                    ></TooltipItem>
+                  )}
+                </Fragment>
+              )
             );
           })}
           {moreItems.map(({ separator, value, color, name, unit }, index) => {
