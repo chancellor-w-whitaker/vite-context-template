@@ -346,7 +346,7 @@ const useMainMethod = () => {
 
     const difference = max - min;
 
-    return [min - difference, max + difference / 8];
+    return [min - difference, max + difference / 4];
   }, [chartData, delayedMeasure]);
 
   const csvData = useMemo(

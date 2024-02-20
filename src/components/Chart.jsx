@@ -2,7 +2,6 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   ComposedChart,
-  Rectangle,
   Tooltip,
   Legend,
   XAxis,
@@ -11,7 +10,7 @@ import {
   Cell,
   Bar,
 } from "recharts";
-import { Fragment, useState } from "react";
+import { Fragment, useState, memo } from "react";
 
 import { toTitleCase } from "../functions/formatters/toTitleCase";
 import { brandColors } from "../constants/brandColors";
@@ -40,108 +39,114 @@ import { brandColors } from "../constants/brandColors";
 // ! figure out simplest frontend & backend solution for our projects (python, node, etc.)
 // ! test out python api w react front end
 
-export const Chart = ({
-  valueFormatter,
-  tooltipItems,
-  xAxisDataKey,
-  barDataKey,
-  domain,
-  data,
-}) => {
-  const [returnedWidth, setReturnedWidth] = useState(0);
+export const Chart = memo(
+  ({
+    valueFormatter,
+    tooltipItems,
+    xAxisDataKey,
+    barDataKey,
+    domain,
+    data,
+  }) => {
+    const [returnedWidth, setReturnedWidth] = useState(0);
 
-  const layout = returnedWidth > 576 ? "horizontal" : "vertical";
+    const [zoomed, setZoomed] = useState(true);
 
-  const {
-    responsiveContainer,
-    composedChart,
-    cartesianGrid,
-    tooltip,
-    legend,
-    xAxis,
-    yAxis,
-    line,
-    bar,
-  } = {
-    xAxis: {
-      tickFormatter: layout === "horizontal" ? null : valueFormatter,
-      dataKey: layout === "horizontal" ? xAxisDataKey : null,
-      type: layout === "horizontal" ? "category" : "number",
-      domain: layout === "horizontal" ? null : domain,
-    },
-    yAxis: {
-      tickFormatter: layout === "horizontal" ? valueFormatter : null,
-      dataKey: layout === "horizontal" ? null : xAxisDataKey,
-      type: layout === "horizontal" ? "number" : "category",
-      domain: layout === "horizontal" ? domain : null,
-    },
-    bar: {
-      label: {
-        fill: brandColors.goldenrodYellow,
-        formatter: valueFormatter,
-        fontSize: 20,
+    const smallBreakpoint = 576;
+
+    const {
+      responsiveContainer,
+      composedChart,
+      cartesianGrid,
+      tooltip,
+      legend,
+      xAxis,
+      yAxis,
+      line,
+      bar,
+    } = {
+      bar: {
+        label: {
+          fillOpacity: returnedWidth > smallBreakpoint ? "100%" : "0%",
+          fill: brandColors.goldenrodYellow,
+          formatter: valueFormatter,
+          fontSize: 20,
+        },
+        // activeBar: <Rectangle fill="#AF2955" />,
+        fill: brandColors.ekuMaroon,
+        dataKey: barDataKey,
       },
-      // activeBar: <Rectangle fill="#AF2955" />,
-      fill: brandColors.ekuMaroon,
-      dataKey: barDataKey,
-    },
-    line: {
-      stroke: brandColors.kentuckyBluegrass,
-      strokeLinecap: "round",
-      dataKey: "predicted",
-      type: "monotone",
-      strokeWidth: 3,
-      dot: false,
-    },
-    tooltip: {
-      formatter: (value, name) => [valueFormatter(value), toTitleCase(name)],
-      content: <CustomTooltip moreItems={tooltipItems}></CustomTooltip>,
-    },
-    responsiveContainer: {
-      onResize: (width) => setReturnedWidth(width),
-      width: "100%",
-      height: 500,
-    },
-    composedChart: {
-      margin: { bottom: 0, right: 0, left: 0, top: 0 },
-      layout,
-      data,
-    },
-    cartesianGrid: { strokeDasharray: "3 3" },
-    legend: { formatter: toTitleCase },
-  };
+      line: {
+        stroke: brandColors.kentuckyBluegrass,
+        strokeLinecap: "round",
+        dataKey: "predicted",
+        type: "monotone",
+        strokeWidth: 3,
+        dot: false,
+      },
+      tooltip: {
+        formatter: (value, name) => [valueFormatter(value), toTitleCase(name)],
+        content: <CustomTooltip moreItems={tooltipItems}></CustomTooltip>,
+      },
+      responsiveContainer: {
+        onResize: (width) => setReturnedWidth(width),
+        width: "100%",
+        height: 500,
+      },
+      yAxis: {
+        domain: zoomed ? domain : null,
+        tickFormatter: valueFormatter,
+        type: "number",
+      },
+      composedChart: {
+        margin: { bottom: 0, right: 0, left: 0, top: 0 },
+        data: [...data],
+      },
+      xAxis: { dataKey: xAxisDataKey, type: "category" },
+      cartesianGrid: { strokeDasharray: "3 3" },
+      legend: { formatter: toTitleCase },
+    };
 
-  return (
-    <>
-      <p className="mb-0">
-        * Chart is zoomed to increase difference between bars
-      </p>
-      <ResponsiveContainer {...responsiveContainer}>
-        <ComposedChart {...composedChart}>
-          <CartesianGrid {...cartesianGrid} />
-          <XAxis {...xAxis} />
-          <YAxis {...yAxis} />
-          <Tooltip {...tooltip} />
-          <Legend {...legend} />
-          <Bar {...bar}>
-            {data.map((entry, index) => (
-              <Cell
-                fill={
-                  "makeDim" in entry
-                    ? brandColors.kentuckyBluegrass
-                    : brandColors.ekuMaroon
-                }
-                fillOpacity={"makeDim" in entry ? "75%" : "100%"}
-                key={`cell-${index}`}
-              />
-            ))}
-          </Bar>
-          <Line {...line} />
-        </ComposedChart>
-      </ResponsiveContainer>
-    </>
-  );
-};
+    return (
+      <>
+        <label className="d-flex gap-2">
+          <input
+            onChange={(e) => setZoomed(e.target.checked)}
+            className="form-check-input flex-shrink-0"
+            checked={zoomed}
+            type="checkbox"
+          />
+          <span>Zoomed</span>
+        </label>
+        <ResponsiveContainer {...responsiveContainer}>
+          <ComposedChart {...composedChart}>
+            <CartesianGrid {...cartesianGrid} />
+            <XAxis {...xAxis} />
+            <YAxis {...yAxis} />
+            <Tooltip {...tooltip} />
+            <Legend {...legend} />
+            <Bar {...bar}>
+              {data.map((entry, index) => (
+                <Cell
+                  fill={
+                    "makeDim" in entry
+                      ? brandColors.kentuckyBluegrass
+                      : brandColors.ekuMaroon
+                  }
+                  fillOpacity={"makeDim" in entry ? "75%" : "100%"}
+                  key={`cell-${index}`}
+                />
+              ))}
+            </Bar>
+            <Line {...line} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </>
+    );
+  }
+);
+
+Chart.displayName = "Chart";
 
 const CustomTooltip = (props) => {
   const {
