@@ -207,19 +207,25 @@ const CustomTooltip = (props) => {
               )
             );
           })}
-          {moreItems.map(({ separator, value, color, name, unit }, index) => {
-            return (
-              <Fragment key={index}>
-                <TooltipItem
-                  separator={separator}
-                  value={value}
-                  color={color}
-                  name={name}
-                  unit={unit}
-                ></TooltipItem>
-              </Fragment>
-            );
-          })}
+          {moreItems.map(
+            (
+              { className = "", separator, value, color, name, unit },
+              index
+            ) => {
+              return (
+                <Fragment key={index}>
+                  <TooltipItem
+                    separator={separator}
+                    className={className}
+                    value={value}
+                    color={color}
+                    name={name}
+                    unit={unit}
+                  ></TooltipItem>
+                </Fragment>
+              );
+            }
+          )}
         </ul>
       </div>
 

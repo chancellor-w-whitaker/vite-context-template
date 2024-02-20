@@ -1,5 +1,7 @@
+import { totalField } from "../constants/totalField";
+
 export const getMeasureRate = (
   measures,
   numeratorMeasure,
-  denominatorMeasure = "total"
+  denominatorMeasure = totalField
 ) => measures[numeratorMeasure] / measures[denominatorMeasure];

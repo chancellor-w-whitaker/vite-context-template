@@ -34,6 +34,7 @@ import { adjustMeasure } from "./functions/adjustMeasure";
 import { adjustGroupBy } from "./functions/adjustGroupBy";
 import { useBsDropdowns } from "./hooks/useBsDropdowns";
 import { brandColors } from "./constants/brandColors";
+import { totalField } from "./constants/totalField";
 import { useData } from "./hooks/examples/useData";
 import { usePrevious } from "./hooks/usePrevious";
 import { fileNames } from "./constants/fileNames";
@@ -296,7 +297,11 @@ const useMainMethod = () => {
     });
 
     const tooltipItems = [
-      { color: brandColors.kentuckyBluegrass, value: regressionData.string },
+      {
+        color: brandColors.kentuckyBluegrass,
+        value: regressionData.string,
+        className: "fst-italic",
+      },
       {
         value: (
           <>
@@ -304,6 +309,7 @@ const useMainMethod = () => {
           </>
         ),
         color: brandColors.kentuckyBluegrass,
+        className: "fst-italic",
       },
     ];
 
@@ -346,15 +352,31 @@ const useMainMethod = () => {
     return [min - difference, max + difference / 4];
   }, [chartData, delayedMeasure]);
 
-  const csvData = useMemo(
-    () =>
-      pivotedData
-        .map((row) =>
-          Object.values(row).filter((value) => typeof value === "object")
-        )
-        .flat(),
-    [pivotedData]
-  );
+  const nonSelectedMeasures = useMemo(() => {
+    const active = new Set([delayedMeasure]);
+
+    if (shouldFindRates) active.add(totalField);
+
+    return measures.filter((string) => !active.has(string));
+  }, [measures, delayedMeasure, shouldFindRates]);
+
+  const csvData = useMemo(() => {
+    const flattenedRows = pivotedData
+      .map((row) =>
+        Object.values(row).filter((value) => typeof value === "object")
+      )
+      .flat();
+
+    return flattenedRows.map((object) => {
+      const newObject = { ...object };
+
+      for (const key of nonSelectedMeasures) {
+        delete newObject[key];
+      }
+
+      return newObject;
+    });
+  }, [pivotedData, nonSelectedMeasures]);
 
   const waiting = useAutoSizeOnRowDataUpdated({
     rowData: pivotedData,
