@@ -25,8 +25,8 @@ export const Dashboard = () => {
     lists: { regressionTypes, dropdownItems, fileNames, groupBys, measures },
     initializers: { isDropdownWithIdOpen, storeDropdownById },
     grid: gridProps,
-    csvData,
     chart,
+    csv,
   } = context;
 
   const relevantDropdownEntries = Object.entries(dropdowns).filter(
@@ -258,13 +258,7 @@ export const Dashboard = () => {
             );
           })}
         </div>
-        <CSVLink
-          className="btn btn-success shadow-sm bg-gradient"
-          data={csvData}
-          role="button"
-        >
-          Download me
-        </CSVLink>
+        <CSVLink {...csv}></CSVLink>
         <GridContainer
           className={loading.autoSize ? "auto-sizing" : ""}
           style={defaultGridContainerStyle}

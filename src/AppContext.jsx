@@ -24,6 +24,7 @@ import { getRowsAndColumns } from "./functions/getRowsAndColumns";
 import { findNextDropdowns } from "./functions/findNextDropdowns";
 import { formatMeasureRate } from "./functions/formatMeasureRate";
 import { toTitleCase } from "./functions/formatters/toTitleCase";
+import { toKebabCase } from "./functions/formatters/toKebabCase";
 import { useResponsiveState } from "./hooks/useResponsiveState";
 import { regressionTypes } from "./constants/regressionTypes";
 import { adjustDropdowns } from "./functions/adjustDropdowns";
@@ -87,6 +88,7 @@ const useMainMethod = () => {
     rowRemovalLogic = fileDefaults.rowRemovalLogic,
     measuresToOmit = fileDefaults.measuresToOmit,
     shouldFindRates,
+    displayName,
     pivotField,
   } = fileNames.find(({ id }) => id === fileName);
 
@@ -393,9 +395,14 @@ const useMainMethod = () => {
         delete newObject[key];
       }
 
+      if (shouldFindRates) {
+        newObject[`${delayedMeasure} / ${totalField}`] =
+          newObject[delayedMeasure] / newObject[totalField];
+      }
+
       return newObject;
     });
-  }, [pivotedData, nonSelectedMeasures]);
+  }, [pivotedData, nonSelectedMeasures, delayedMeasure, shouldFindRates]);
 
   const waiting = useAutoSizeOnRowDataUpdated({
     rowData: pivotedData,
@@ -448,6 +455,15 @@ const useMainMethod = () => {
       measure,
       groupBy,
     },
+    csv: {
+      filename: `${toKebabCase(displayName)}-${toKebabCase(
+        toTitleCase(delayedMeasure)
+      )}`,
+      className: "btn btn-success shadow-sm bg-gradient",
+      children: "Download me",
+      role: "button",
+      data: csvData,
+    },
     chart: {
       valueFormatter: !shouldFindRates ? formatMeasureValue : formatMeasureRate,
       barDataKey: delayedMeasure,
@@ -473,6 +489,5 @@ const useMainMethod = () => {
       groupBys,
     },
     initializers: { isDropdownWithIdOpen, storeDropdownById },
-    csvData,
   };
 };
