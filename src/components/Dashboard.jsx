@@ -1,6 +1,7 @@
 import { CSVLink } from "react-csv";
 
 import { MyDropdownInput, MyDropdownLabel, MyDropdownItem } from "./MyDropdown";
+import { FloatingLabelSelect, SelectOption } from "./FloatingLabelSelect";
 import { findSingleItemLabel } from "../functions/findSingleItemLabel";
 import { useConsumeAppContext } from "../hooks/useConsumeAppContext";
 import { toTitleCase } from "../functions/formatters/toTitleCase";
@@ -40,66 +41,54 @@ export const Dashboard = () => {
   return (
     <>
       <div className="d-flex flex-column gap-4" ref={squareRef}>
-        {/* select file */}
-        <div className="list-group shadow-sm">
-          {fileNames.map(({ displayName, id }) => (
-            <MyDropdownLabel className="border-0" key={id}>
-              <MyDropdownInput
-                onChange={onFileNameChange}
-                checked={id === fileName}
-                name="file-name"
-                type="radio"
-                value={id}
-              ></MyDropdownInput>
-              <span>{displayName}</span>
-            </MyDropdownLabel>
-          ))}
+        <div className="text-center">
+          <h1 className="display-3 mb-1">Factbook</h1>
+          <h3 className="fw-normal text-muted mb-0">
+            {fileNames.find(({ id }) => id === fileName).displayName}
+          </h3>
         </div>
-        {/* select measure */}
-        <div className="list-group shadow-sm">
-          {measures.map((field) => (
-            <MyDropdownLabel className="border-0" key={field}>
-              <MyDropdownInput
-                checked={field === measure}
-                onChange={onMeasureChange}
-                name="measure"
-                value={field}
-                type="radio"
-              ></MyDropdownInput>
-              <span>{toTitleCase(field)}</span>
-            </MyDropdownLabel>
-          ))}
+        <div className="d-flex flex-row gap-2 flex-wrap">
+          {/* select data */}
+          <FloatingLabelSelect
+            className="col col-max-md-12"
+            onChange={onFileNameChange}
+            value={fileName}
+            label="Data"
+          >
+            {fileNames.map(({ displayName, id }) => (
+              <SelectOption value={id} key={id}>
+                {displayName}
+              </SelectOption>
+            ))}
+          </FloatingLabelSelect>
+          {/* select measure */}
+          <FloatingLabelSelect
+            className="col col-max-md-12"
+            onChange={onMeasureChange}
+            value={measure}
+            label="Measure"
+          >
+            {measures.map((field) => (
+              <SelectOption value={field} key={field}>
+                {toTitleCase(field)}
+              </SelectOption>
+            ))}
+          </FloatingLabelSelect>
+          {/* select regression */}
+          <FloatingLabelSelect
+            onChange={onRegressionTypeChange}
+            className="col col-max-md-12"
+            value={regressionType}
+            label="Regression"
+          >
+            {regressionTypes.map((type) => (
+              <SelectOption value={type} key={type}>
+                {toTitleCase(type)}
+              </SelectOption>
+            ))}
+          </FloatingLabelSelect>
         </div>
-        {/* select regression type */}
-        <div className="list-group shadow-sm">
-          {regressionTypes.map((type) => (
-            <MyDropdownLabel className="border-0" key={type}>
-              <MyDropdownInput
-                checked={type === regressionType}
-                onChange={onRegressionTypeChange}
-                name="regression-type"
-                value={type}
-                type="radio"
-              ></MyDropdownInput>
-              <span>{toTitleCase(type)}</span>
-            </MyDropdownLabel>
-          ))}
-        </div>
-        {/* select group by */}
-        <div className="list-group shadow-sm">
-          {groupBys.map((field) => (
-            <MyDropdownLabel className="border-0" key={field}>
-              <MyDropdownInput
-                checked={groupBy.includes(field)}
-                onChange={onGroupByChange}
-                name="group-by"
-                type="checkbox"
-                value={field}
-              ></MyDropdownInput>
-              <span>{toTitleCase(field)}</span>
-            </MyDropdownLabel>
-          ))}
-        </div>
+        {/* filters */}
         <div
           className="d-flex flex-wrap justify-content-evenly"
           style={{ marginBottom: -8, marginRight: -8 }}
@@ -258,14 +247,47 @@ export const Dashboard = () => {
             );
           })}
         </div>
-        <CSVLink {...csv}></CSVLink>
+        {/* chart */}
+        <Chart {...chart}></Chart>
+        <div className="d-flex flex-row gap-2 flex-wrap">
+          <FloatingLabelSelect>
+            {/* {regressionTypes.map((type) => (
+              <SelectOption value={type} key={type}>
+                {toTitleCase(type)}
+              </SelectOption>
+            ))} */}
+          </FloatingLabelSelect>
+          {/* download */}
+          <CSVLink
+            className="btn btn-success shadow-sm bg-gradient d-flex align-items-center justify-content-center"
+            role="button"
+            {...csv}
+          >
+            Download me
+          </CSVLink>
+        </div>
+        {/* select group by */}
+        {/* <div className="list-group shadow-sm">
+          {groupBys.map((field) => (
+            <MyDropdownLabel className="border-0" key={field}>
+              <MyDropdownInput
+                checked={groupBy.includes(field)}
+                onChange={onGroupByChange}
+                name="group-by"
+                type="checkbox"
+                value={field}
+              ></MyDropdownInput>
+              <span>{toTitleCase(field)}</span>
+            </MyDropdownLabel>
+          ))}
+        </div> */}
+        {/* grid */}
         <GridContainer
           className={loading.autoSize ? "auto-sizing" : ""}
           style={defaultGridContainerStyle}
         >
           <Grid {...gridProps}></Grid>
         </GridContainer>
-        <Chart {...chart}></Chart>
       </div>
     </>
   );

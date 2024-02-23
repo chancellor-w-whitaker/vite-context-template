@@ -455,15 +455,6 @@ const useMainMethod = () => {
       measure,
       groupBy,
     },
-    csv: {
-      filename: `${toKebabCase(displayName)}-${toKebabCase(
-        toTitleCase(delayedMeasure)
-      )}`,
-      className: "btn btn-success shadow-sm bg-gradient",
-      children: "Download me",
-      role: "button",
-      data: csvData,
-    },
     chart: {
       valueFormatter: !shouldFindRates ? formatMeasureValue : formatMeasureRate,
       barDataKey: delayedMeasure,
@@ -480,6 +471,13 @@ const useMainMethod = () => {
       defaultColDef,
       onSortChanged,
       ref: gridRef,
+    },
+    csv: {
+      filename: `${toKebabCase(displayName)}-${toKebabCase(
+        toTitleCase(delayedMeasure)
+      )}`,
+
+      data: csvData,
     },
     lists: {
       measures: nonOmittedMeasures,
