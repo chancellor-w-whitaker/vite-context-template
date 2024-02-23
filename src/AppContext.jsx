@@ -370,7 +370,7 @@ const useMainMethod = () => {
 
     const difference = max - min;
 
-    return [min - difference, max + difference / 4];
+    return [min - difference, max + difference / 8];
   }, [chartData, delayedMeasure]);
 
   const nonSelectedMeasures = useMemo(() => {
