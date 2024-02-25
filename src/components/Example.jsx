@@ -1,63 +1,144 @@
-import { useEffect } from "react";
-import { useState } from "react";
-import { useRef } from "react";
-
-const classLookup = {
-  top: "start-0 bottom-100",
-  bottom: "start-0 top-100",
-  start: "top-0 end-100",
-  end: "top-0 start-100",
-};
-
-export const Example = () => {
-  const ref = useRef(null);
-
-  const [placement, setPlacement] = useState("top");
-
-  const entry = useIntersectionObserver(ref);
-
-  const { intersectionRatio } = entry;
-
-  if (intersectionRatio === undefined) {
-    console.log();
-  } else {
-    if (intersectionRatio !== 1 && placement === "top") setPlacement("bottom");
-  }
-
-  console.log(entry);
-
-  const placementClasses = classLookup[placement];
-
-  return (
-    <div className="position-relative d-inline-block">
-      <button className="btn btn-primary" type="button">
-        Primary
-      </button>
-      <div className={`position-absolute z-3 ${placementClasses}`} ref={ref}>
-        <button className="btn btn-primary" type="button">
-          Secondary
-        </button>
-      </div>
-    </div>
-  );
-};
+import { useEffect, useState, useRef } from "react";
 
 function useIntersectionObserver(ref) {
-  const [entry, setEntry] = useState(false);
+  const [isIntersecting, setIsIntersecting] = useState(false);
 
   useEffect(() => {
     const div = ref.current;
-
-    const observer = new IntersectionObserver((entries) =>
-      setEntry(entries[0])
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        setIsIntersecting(entry.isIntersecting);
+      },
+      {
+        threshold: 1.0,
+      }
     );
-
     observer.observe(div);
-
     return () => {
       observer.disconnect();
     };
   }, [ref]);
 
-  return entry;
+  return isIntersecting;
+}
+
+const PopoverContainer = ({ className = "", ...rest }) => {
+  return (
+    <div
+      className={`d-inline-block position-relative ${className}`.trim()}
+      {...rest}
+    ></div>
+  );
+};
+
+const Button = ({ variant = "primary", className = "", ...rest }) => {
+  return (
+    <button
+      className={`btn btn-${variant} ${className}`.trim()}
+      type="button"
+      {...rest}
+    ></button>
+  );
+};
+
+const PopoverContentBox = ({
+  className = "",
+  style = {},
+  children,
+  state,
+  ...rest
+}) => {
+  const [placement, setPlacement] = useState("top");
+
+  const positionLookup = {
+    top: "start-0 bottom-100",
+    bottom: "start-0 top-100",
+    start: "top-0 end-100",
+    end: "top-0 start-100",
+  };
+
+  const { transition, position, opacity, content, padding } = {
+    opacity: state === "show" || state === "shown" ? 1 : 0,
+    content: state !== "hidden" && children,
+    position: positionLookup[placement],
+    padding: state !== "hidden" ? 2 : 0,
+    transition: "opacity 0.15s",
+  };
+
+  return (
+    <div
+      className={`shadow-sm p-${padding} rounded border bg-white position-absolute ${position} ${className}`.trim()}
+      style={{ transition, opacity, ...style }}
+      {...rest}
+    >
+      {content}
+    </div>
+  );
+};
+
+const Popover = ({ trigger, content }) => {
+  const [state, setState] = useState("hidden");
+
+  const { onTransitionEnd, onMouseEnter, onMouseLeave } = {
+    onTransitionEnd: (e) => {
+      if (e.target.style.opacity === "1") setState("shown");
+
+      if (e.target.style.opacity === "0") setState("hidden");
+    },
+    onMouseEnter: () => setState("show"),
+    onMouseLeave: () => setState("hide"),
+  };
+
+  return (
+    <PopoverContainer onMouseLeave={onMouseLeave} onMouseEnter={onMouseEnter}>
+      {trigger}
+      <PopoverContentBox onTransitionEnd={onTransitionEnd} state={state}>
+        {content}
+      </PopoverContentBox>
+    </PopoverContainer>
+  );
+};
+
+export function Example() {
+  return (
+    <div
+      className="d-flex flex-column align-items-center"
+      style={{ height: 1000 }}
+    >
+      <Button>Chance</Button>
+      <Popover
+        content={<Button variant="secondary">Chancellor</Button>}
+        trigger={<Button>Chance</Button>}
+      ></Popover>
+    </div>
+  );
+}
+
+function Box() {
+  const ref = useRef(null);
+  const isIntersecting = useIntersectionObserver(ref);
+
+  useEffect(() => {
+    if (isIntersecting) {
+      document.body.style.backgroundColor = "black";
+      document.body.style.color = "white";
+    } else {
+      document.body.style.backgroundColor = "white";
+      document.body.style.color = "black";
+    }
+  }, [isIntersecting]);
+
+  return (
+    <div
+      style={{
+        border: "2px solid black",
+        backgroundColor: "blue",
+        height: 100,
+        margin: 20,
+        width: 100,
+      }}
+      ref={ref}
+    />
+  );
 }
