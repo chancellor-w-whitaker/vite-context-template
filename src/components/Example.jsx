@@ -1,28 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 
-function useIntersectionObserver(ref) {
-  const [isIntersecting, setIsIntersecting] = useState(false);
-
-  useEffect(() => {
-    const div = ref.current;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        setIsIntersecting(entry.isIntersecting);
-      },
-      {
-        threshold: 1.0,
-      }
-    );
-    observer.observe(div);
-    return () => {
-      observer.disconnect();
-    };
-  }, [ref]);
-
-  return isIntersecting;
-}
-
 const PopoverContainer = ({ className = "", ...rest }) => {
   return (
     <div
@@ -32,18 +9,15 @@ const PopoverContainer = ({ className = "", ...rest }) => {
   );
 };
 
-const Button = ({ variant = "primary", className = "", ...rest }) => {
-  return (
-    <button
-      className={`btn btn-${variant} ${className}`.trim()}
-      type="button"
-      {...rest}
-    ></button>
-  );
-};
-
 const PopoverContentBox = ({
+  borderVariant = "secondary-subtle",
+  transitionDuration = 0.15,
+  shadowVariant = "sm",
+  bgVariant = "white",
+  paddingSize = 2,
+  roundedSize = 2,
   className = "",
+  borderSize = 1,
   style = {},
   children,
   state,
@@ -58,17 +32,18 @@ const PopoverContentBox = ({
     end: "top-0 start-100",
   };
 
-  const { transition, position, opacity, content, padding } = {
+  const { borderWidth, transition, position, opacity, content, padding } = {
     opacity: state === "show" || state === "shown" ? 1 : 0,
+    borderWidth: state !== "hidden" ? borderSize : 0,
+    padding: state !== "hidden" ? paddingSize : 0,
+    transition: `opacity ${transitionDuration}s`,
     content: state !== "hidden" && children,
     position: positionLookup[placement],
-    padding: state !== "hidden" ? 2 : 0,
-    transition: "opacity 0.15s",
   };
 
   return (
     <div
-      className={`shadow-sm p-${padding} rounded border bg-white position-absolute ${position} ${className}`.trim()}
+      className={`shadow-${shadowVariant} p-${padding} rounded-${roundedSize} border border-${borderVariant} border-${borderWidth} bg-${bgVariant} position-absolute ${position} ${className}`.trim()}
       style={{ transition, opacity, ...style }}
       {...rest}
     >
@@ -100,7 +75,7 @@ const Popover = ({ trigger, content }) => {
   );
 };
 
-export function Example() {
+export const Example = () => {
   return (
     <div
       className="d-flex flex-column align-items-center"
@@ -113,7 +88,17 @@ export function Example() {
       ></Popover>
     </div>
   );
-}
+};
+
+const Button = ({ variant = "primary", className = "", ...rest }) => {
+  return (
+    <button
+      className={`btn btn-${variant} ${className}`.trim()}
+      type="button"
+      {...rest}
+    ></button>
+  );
+};
 
 function Box() {
   const ref = useRef(null);
@@ -141,4 +126,27 @@ function Box() {
       ref={ref}
     />
   );
+}
+
+function useIntersectionObserver(ref) {
+  const [isIntersecting, setIsIntersecting] = useState(false);
+
+  useEffect(() => {
+    const div = ref.current;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        setIsIntersecting(entry.isIntersecting);
+      },
+      {
+        threshold: 1.0,
+      }
+    );
+    observer.observe(div);
+    return () => {
+      observer.disconnect();
+    };
+  }, [ref]);
+
+  return isIntersecting;
 }
