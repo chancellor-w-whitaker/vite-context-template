@@ -122,6 +122,20 @@ export const Chart = memo(
         </label>
         <ResponsiveContainer {...responsiveContainer}>
           <ComposedChart {...composedChart}>
+            <defs>
+              <linearGradient
+                gradientUnits="userSpaceOnUse"
+                id="colorUv"
+                y2="100%"
+                x1="0"
+                y1="0"
+                x2="0"
+              >
+                <stop stopColor="red" offset="0" />
+                <stop stopColor="yellow" offset=".5" />
+                <stop stopColor="green" offset="1" />
+              </linearGradient>
+            </defs>
             <CartesianGrid {...cartesianGrid} />
             <XAxis {...xAxis} />
             <YAxis {...yAxis} />

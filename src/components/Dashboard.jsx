@@ -5,14 +5,15 @@ import {
   SelectOption,
   FormSelect,
 } from "./FormFloatingSelect";
-import { MyDropdownInput, MyDropdownLabel, MyDropdownItem } from "./MyDropdown";
 import { findSingleItemLabel } from "../functions/findSingleItemLabel";
 import { useConsumeAppContext } from "../hooks/useConsumeAppContext";
 import { toTitleCase } from "../functions/formatters/toTitleCase";
 import { getDropdownData } from "../functions/getDropdownData";
 import { getBestRowCols } from "../functions/getBestRowCols";
 import { useElementSize } from "../hooks/useElementSize";
+import { MyDropdownItem } from "./MyDropdown";
 import { GridContainer, Grid } from "./Grid";
+import { Picker } from "./Picker";
 import { Chart } from "./Chart";
 
 export const Dashboard = () => {
@@ -26,17 +27,20 @@ export const Dashboard = () => {
       measure: onMeasureChange,
       groupBy: onGroupByChange,
     },
-    state: { regressionType, dropdowns, fileName, groupBy, measure, loading },
+    state: {
+      dropdowns: { relevantEntries },
+      regressionType,
+      fileName,
+      groupBy,
+      measure,
+      loading,
+    },
     lists: { regressionTypes, dropdownItems, fileNames, groupBys, measures },
     initializers: { isDropdownWithIdOpen, storeDropdownById },
     grid: gridProps,
     chart,
     csv,
   } = context;
-
-  const relevantDropdownEntries = Object.entries(dropdowns).filter(
-    (entry) => entry[1].dataRelevance
-  );
 
   const [squareRef, { width = 0 }] = useElementSize();
 
@@ -82,8 +86,8 @@ export const Dashboard = () => {
           <FormFloatingSelect
             onChange={onRegressionTypeChange}
             className="col col-max-md-12"
+            label="Regression Type"
             value={regressionType}
-            label="Regression"
           >
             {regressionTypes.map((type) => (
               <SelectOption value={type} key={type}>
@@ -98,14 +102,14 @@ export const Dashboard = () => {
           style={{ marginBottom: -8, marginRight: -8 }}
         >
           {/* column filters */}
-          {relevantDropdownEntries.map(([field, { search, items }]) => {
+          {relevantEntries.map(([field, { search, items }]) => {
             const {
               values: { unavailable, irrelevant, relevant },
               fractions,
             } = getDropdownData({ valueData: dropdownItems[field], items });
 
             const rowColumns = getBestRowCols({
-              count: relevantDropdownEntries.length,
+              count: relevantEntries.length,
               width,
             })?.rowColumns;
 
@@ -262,26 +266,53 @@ export const Dashboard = () => {
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="bi bi-filetype-csv"
+              viewBox="0 0 512 512"
               fill="currentColor"
-              viewBox="0 0 16 16"
               height={16}
               width={16}
             >
-              <path
-                d="M14 4.5V14a2 2 0 0 1-2 2h-1v-1h1a1 1 0 0 0 1-1V4.5h-2A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v9H2V2a2 2 0 0 1 2-2h5.5zM3.517 14.841a1.13 1.13 0 0 0 .401.823q.195.162.478.252.284.091.665.091.507 0 .859-.158.354-.158.539-.44.187-.284.187-.656 0-.336-.134-.56a1 1 0 0 0-.375-.357 2 2 0 0 0-.566-.21l-.621-.144a1 1 0 0 1-.404-.176.37.37 0 0 1-.144-.299q0-.234.185-.384.188-.152.512-.152.214 0 .37.068a.6.6 0 0 1 .246.181.56.56 0 0 1 .12.258h.75a1.1 1.1 0 0 0-.2-.566 1.2 1.2 0 0 0-.5-.41 1.8 1.8 0 0 0-.78-.152q-.439 0-.776.15-.337.149-.527.421-.19.273-.19.639 0 .302.122.524.124.223.352.367.228.143.539.213l.618.144q.31.073.463.193a.39.39 0 0 1 .152.326.5.5 0 0 1-.085.29.56.56 0 0 1-.255.193q-.167.07-.413.07-.175 0-.32-.04a.8.8 0 0 1-.248-.115.58.58 0 0 1-.255-.384zM.806 13.693q0-.373.102-.633a.87.87 0 0 1 .302-.399.8.8 0 0 1 .475-.137q.225 0 .398.097a.7.7 0 0 1 .272.26.85.85 0 0 1 .12.381h.765v-.072a1.33 1.33 0 0 0-.466-.964 1.4 1.4 0 0 0-.489-.272 1.8 1.8 0 0 0-.606-.097q-.534 0-.911.223-.375.222-.572.632-.195.41-.196.979v.498q0 .568.193.976.197.407.572.626.375.217.914.217.439 0 .785-.164t.55-.454a1.27 1.27 0 0 0 .226-.674v-.076h-.764a.8.8 0 0 1-.118.363.7.7 0 0 1-.272.25.9.9 0 0 1-.401.087.85.85 0 0 1-.478-.132.83.83 0 0 1-.299-.392 1.7 1.7 0 0 1-.102-.627zm8.239 2.238h-.953l-1.338-3.999h.917l.896 3.138h.038l.888-3.138h.879z"
-                fillRule="evenodd"
-              />
+              {/*!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.*/}
+              <path d="M0 64C0 28.7 28.7 0 64 0H224V128c0 17.7 14.3 32 32 32H384V304H176c-35.3 0-64 28.7-64 64V512H64c-35.3 0-64-28.7-64-64V64zm384 64H256V0L384 128zM200 352h16c22.1 0 40 17.9 40 40v8c0 8.8-7.2 16-16 16s-16-7.2-16-16v-8c0-4.4-3.6-8-8-8H200c-4.4 0-8 3.6-8 8v80c0 4.4 3.6 8 8 8h16c4.4 0 8-3.6 8-8v-8c0-8.8 7.2-16 16-16s16 7.2 16 16v8c0 22.1-17.9 40-40 40H200c-22.1 0-40-17.9-40-40V392c0-22.1 17.9-40 40-40zm133.1 0H368c8.8 0 16 7.2 16 16s-7.2 16-16 16H333.1c-7.2 0-13.1 5.9-13.1 13.1c0 5.2 3 9.9 7.8 12l37.4 16.6c16.3 7.2 26.8 23.4 26.8 41.2c0 24.9-20.2 45.1-45.1 45.1H304c-8.8 0-16-7.2-16-16s7.2-16 16-16h42.9c7.2 0 13.1-5.9 13.1-13.1c0-5.2-3-9.9-7.8-12l-37.4-16.6c-16.3-7.2-26.8-23.4-26.8-41.2c0-24.9 20.2-45.1 45.1-45.1zm98.9 0c8.8 0 16 7.2 16 16v31.6c0 23 5.5 45.6 16 66c10.5-20.3 16-42.9 16-66V368c0-8.8 7.2-16 16-16s16 7.2 16 16v31.6c0 34.7-10.3 68.7-29.6 97.6l-5.1 7.7c-3 4.5-8 7.1-13.3 7.1s-10.3-2.7-13.3-7.1l-5.1-7.7c-19.3-28.9-29.6-62.9-29.6-97.6V368c0-8.8 7.2-16 16-16z" />
             </svg>
           </CSVLink>
           {/* select group by */}
-          <FormSelect onChange={onGroupByChange} value={groupBy} multiple>
-            {groupBys.map((field) => (
-              <SelectOption value={field} key={field}>
-                {toTitleCase(field)}
-              </SelectOption>
-            ))}
-          </FormSelect>
+          <Picker
+            renderSwatch={({ isOpen, open }) => (
+              <button
+                className={`btn btn-secondary shadow-sm icon-link ${
+                  isOpen ? "active" : ""
+                }`.trim()}
+                onClick={open}
+                type="button"
+              >
+                Group By
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="bi bi-caret-down-fill"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                  height="16"
+                  width="16"
+                >
+                  <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z" />
+                </svg>
+              </button>
+            )}
+            popoverContent={
+              <FormSelect
+                onChange={onGroupByChange}
+                style={{ width: "auto" }}
+                value={groupBy}
+                multiple
+              >
+                {groupBys.map((field) => (
+                  <SelectOption value={field} key={field}>
+                    {toTitleCase(field)}
+                  </SelectOption>
+                ))}
+              </FormSelect>
+            }
+          />
         </div>
         {/* select group by */}
         {/* <div className="list-group shadow-sm">

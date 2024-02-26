@@ -2,7 +2,7 @@ import { useCallback, useState, useRef } from "react";
 
 import useClickOutside from "../hooks/useClickOutside";
 
-export const Picker = ({ children }) => {
+export const Picker = ({ popoverContent, renderSwatch }) => {
   const popover = useRef();
 
   const [isOpen, toggle] = useState(false);
@@ -15,10 +15,10 @@ export const Picker = ({ children }) => {
 
   return (
     <div className="picker">
-      <div className="swatch" onClick={open} />
+      {renderSwatch({ isOpen, open })}
       {isOpen && (
         <div className="popover" ref={popover}>
-          {children}
+          {popoverContent}
         </div>
       )}
     </div>

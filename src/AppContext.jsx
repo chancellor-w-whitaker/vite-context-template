@@ -370,7 +370,11 @@ const useMainMethod = () => {
 
     const difference = max - min;
 
-    return [min - difference, max + difference / 8];
+    const x = min - difference;
+
+    // const y = max + difference / 8;
+
+    return [Math.sign(x) === -1 ? 0 : x, "auto"];
   }, [chartData, delayedMeasure]);
 
   const nonSelectedMeasures = useMemo(() => {
@@ -443,6 +447,12 @@ const useMainMethod = () => {
       measure: onMeasureChange,
     },
     state: {
+      dropdowns: {
+        relevantEntries: Object.entries(dropdowns).filter(
+          ([key, value]) => value.dataRelevance && !pivotFields.has(key)
+        ),
+        dropdowns,
+      },
       loading: {
         filteredRows: filteredRowsIsLoading,
         pivotedData: pivotedDataIsLoading,
@@ -450,7 +460,6 @@ const useMainMethod = () => {
         autoSize: waiting,
       },
       regressionType,
-      dropdowns,
       fileName,
       measure,
       groupBy,
