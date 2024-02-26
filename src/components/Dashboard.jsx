@@ -1,7 +1,11 @@
 import { CSVLink } from "react-csv";
 
+import {
+  FormFloatingSelect,
+  SelectOption,
+  FormSelect,
+} from "./FormFloatingSelect";
 import { MyDropdownInput, MyDropdownLabel, MyDropdownItem } from "./MyDropdown";
-import { FloatingLabelSelect, SelectOption } from "./FloatingLabelSelect";
 import { findSingleItemLabel } from "../functions/findSingleItemLabel";
 import { useConsumeAppContext } from "../hooks/useConsumeAppContext";
 import { toTitleCase } from "../functions/formatters/toTitleCase";
@@ -49,7 +53,7 @@ export const Dashboard = () => {
         </div>
         <div className="d-flex flex-row gap-2 flex-wrap">
           {/* select data */}
-          <FloatingLabelSelect
+          <FormFloatingSelect
             className="col col-max-md-12"
             onChange={onFileNameChange}
             value={fileName}
@@ -60,9 +64,9 @@ export const Dashboard = () => {
                 {displayName}
               </SelectOption>
             ))}
-          </FloatingLabelSelect>
+          </FormFloatingSelect>
           {/* select measure */}
-          <FloatingLabelSelect
+          <FormFloatingSelect
             className="col col-max-md-12"
             onChange={onMeasureChange}
             value={measure}
@@ -73,9 +77,9 @@ export const Dashboard = () => {
                 {toTitleCase(field)}
               </SelectOption>
             ))}
-          </FloatingLabelSelect>
+          </FormFloatingSelect>
           {/* select regression */}
-          <FloatingLabelSelect
+          <FormFloatingSelect
             onChange={onRegressionTypeChange}
             className="col col-max-md-12"
             value={regressionType}
@@ -86,7 +90,7 @@ export const Dashboard = () => {
                 {toTitleCase(type)}
               </SelectOption>
             ))}
-          </FloatingLabelSelect>
+          </FormFloatingSelect>
         </div>
         {/* filters */}
         <div
@@ -270,13 +274,14 @@ export const Dashboard = () => {
               />
             </svg>
           </CSVLink>
-          <FloatingLabelSelect>
-            {/* {regressionTypes.map((type) => (
-              <SelectOption value={type} key={type}>
-                {toTitleCase(type)}
+          {/* select group by */}
+          <FormSelect onChange={onGroupByChange} value={groupBy} multiple>
+            {groupBys.map((field) => (
+              <SelectOption value={field} key={field}>
+                {toTitleCase(field)}
               </SelectOption>
-            ))} */}
-          </FloatingLabelSelect>
+            ))}
+          </FormSelect>
         </div>
         {/* select group by */}
         {/* <div className="list-group shadow-sm">

@@ -1,12 +1,12 @@
 import { MainContainer } from "./components/MainContainer";
 import { Dashboard } from "./components/Dashboard";
-import { Example } from "./components/Example";
+// import { Example } from "./components/Example";
 
 const App = () => {
   return (
     <>
       <MainContainer>
-        <Example></Example>
+        <Dashboard></Dashboard>
       </MainContainer>
     </>
   );

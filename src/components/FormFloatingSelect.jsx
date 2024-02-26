@@ -1,6 +1,6 @@
 import { useId } from "react";
 
-export const FloatingLabelSelect = ({
+export const FormFloatingSelect = ({
   className = "",
   onChange,
   children,
@@ -11,19 +11,23 @@ export const FloatingLabelSelect = ({
 
   return (
     <div className={`form-floating ${className}`.trimEnd()}>
-      <select
-        className="form-select shadow-sm"
+      <FormSelect
         id={`${id}-floatingSelect`}
+        className="shadow-sm"
         onChange={onChange}
         value={value}
       >
         {children}
-      </select>
+      </FormSelect>
       <label htmlFor={`${id}-floatingSelect`}>{label}</label>
     </div>
   );
 };
 
-export const SelectOption = ({ children, value }) => {
-  return <option value={value}>{children}</option>;
+export const FormSelect = ({ className = "", ...rest }) => {
+  return <select className={`form-select ${className}`.trim()} {...rest} />;
+};
+
+export const SelectOption = (props) => {
+  return <option {...props} />;
 };
