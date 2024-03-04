@@ -24,6 +24,24 @@ export const fileNames = [
     id: "degrees",
   },
   {
+    defaultDropdowns: {
+      grs: {
+        items: {
+          "Official GRS (Full-time Bachelors Seeking)": {
+            checked: true,
+          },
+          "GRS (Part-time Bachelors Seeking)": {
+            checked: false,
+          },
+          "GRS (Full-time Other Seeking)": {
+            checked: false,
+          },
+          "Non - GRS": {
+            checked: false,
+          },
+        },
+      },
+    },
     displayName: "Retention Rates",
     pivotField: "retentionYear",
     measuresToOmit: ["total"],
@@ -38,6 +56,7 @@ export const fileNames = [
     },
     measuresToOmit: ["total", "4YrRate", "5YrRate", "6YrRate"],
     displayName: "Graduation Rates",
+    defaultMeasure: "6YrGraduate",
     pivotField: "cohortTerm",
     shouldFindRates: true,
     id: "graduation",

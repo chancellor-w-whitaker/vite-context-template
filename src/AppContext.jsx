@@ -52,7 +52,11 @@ export const AppContextProvider = ({ children }) => {
 
 const pivotFields = new Set(fileNames.map(({ pivotField }) => pivotField));
 
-const fileDefaults = { rowRemovalLogic: {}, measuresToOmit: [] };
+const fileDefaults = {
+  defaultDropdowns: {},
+  rowRemovalLogic: {},
+  measuresToOmit: [],
+};
 
 // what about a js linter?
 
@@ -85,8 +89,10 @@ const useMainMethod = () => {
   const [fileName, setFileName] = useNonBlockingState(fileNames[0].id);
 
   const {
+    defaultDropdowns = fileDefaults.defaultDropdowns,
     rowRemovalLogic = fileDefaults.rowRemovalLogic,
     measuresToOmit = fileDefaults.measuresToOmit,
+    defaultMeasure = "",
     shouldFindRates,
     displayName,
     pivotField,
@@ -172,6 +178,14 @@ const useMainMethod = () => {
     [allRows, delayedMeasure, rowRemovalLogic]
   );
 
+  const pivotValues = useMemo(() => {
+    const set = new Set();
+
+    rows.forEach((row) => set.add(row[pivotField]));
+
+    return set;
+  }, [rows, pivotField]);
+
   // ! get filtered data and derived dropdown information here
   // ! dropdown state & rows should be enough to get you what you need
   // ! dropdown state tells you which options are data relevant--then you derive filtered data relevance
@@ -223,12 +237,51 @@ const useMainMethod = () => {
   const handleDataChange = useCallback(() => {
     const nextDropdowns = findNextDropdowns(columns);
 
+    Object.entries(defaultDropdowns).forEach(([key, object]) => {
+      const { items = {} } = object;
+      if (key in nextDropdowns) {
+        Object.entries(items).forEach(([itemKey, itemObject]) => {
+          if (itemKey in nextDropdowns[key].items) {
+            nextDropdowns[key].items[itemKey].checked = itemObject.checked;
+          } else {
+            nextDropdowns[key].items[itemKey] = {
+              checked: itemObject.checked,
+              dataRelevance: false,
+            };
+          }
+        });
+      } else {
+        nextDropdowns[key] = { ...object, dataRelevance: false, search: "" };
+
+        Object.entries(object.items).forEach(
+          ([itemKey, itemObject]) => (itemObject.dataRelevance = false)
+        );
+      }
+    });
+
+    console.log(nextDropdowns);
+
+    console.log(defaultDropdowns);
+
     adjustDropdowns({ setState: setDropdowns, nextDropdowns });
 
-    adjustMeasure({ setState: setMeasure, measuresToOmit, columns });
+    adjustMeasure({
+      setState: setMeasure,
+      measuresToOmit,
+      defaultMeasure,
+      columns,
+    });
 
     adjustGroupBy({ setState: setGroupBy, pivotFields, columns });
-  }, [columns, setDropdowns, setMeasure, setGroupBy, measuresToOmit]);
+  }, [
+    columns,
+    setMeasure,
+    setGroupBy,
+    setDropdowns,
+    measuresToOmit,
+    defaultMeasure,
+    defaultDropdowns,
+  ]);
 
   usePrevious(columns, handleDataChange);
 
@@ -339,7 +392,15 @@ const useMainMethod = () => {
       predicted: regressionData.outputPoints[index][1],
     }));
 
-    finalChartData.push(
+    const lookup = Object.fromEntries(
+      finalChartData.map((object) => [object[pivotField], object])
+    );
+
+    const d = [...pivotValues].map((value) =>
+      value in lookup ? lookup[value] : { [pivotField]: value }
+    );
+
+    d.push(
       ...regressionData.nextOutputPoints.slice(0, 1).map((entry) => ({
         [pivotField]: `Next ${toTitleCase(pivotField)}`,
         [delayedMeasure]: entry[1],
@@ -349,10 +410,11 @@ const useMainMethod = () => {
       }))
     );
 
-    return { chartData: finalChartData, tooltipItems };
+    return { chartData: d, tooltipItems };
   }, [
     totalRow,
     pivotField,
+    pivotValues,
     delayedMeasure,
     shouldFindRates,
     delayedRegressionType,

@@ -13,6 +13,7 @@
     "@supercharge/strings": "^2.0.0",
     "ag-grid-react": "^31.0.3",
     "bootstrap": "^5.3.2",
+    "html2canvas": "^1.4.1",
     "react": "^18.2.0",
     "react-colorful": "^5.6.1",
     "react-csv": "^2.2.2",

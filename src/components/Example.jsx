@@ -52,6 +52,44 @@ const PopoverContentBox = ({
   );
 };
 
+const useCssTransition = ({
+  transitionedState,
+  timingFunction,
+  defaultState,
+  property,
+  duration,
+  behavior,
+  delay,
+}) => {
+  // default, transitioning, transitioned, reverting
+  const [state, setState] = useState("default");
+
+  const setTransitionStarted = () => setState("started");
+
+  const setTransitionCompleted = () => setState("completed");
+
+  const setTransitionReverting = () => setState("reverting");
+
+  const setTransitionReverted = () => setState("default");
+
+  const onTransitionEnd = (e) => {
+    if (e.target.style[property] === `${defaultState}`) {
+      setTransitionReverted();
+    }
+
+    if (e.target.style[property] === `${transitionedState}`) {
+      setTransitionCompleted();
+    }
+  };
+
+  return {
+    setTransitionReverting,
+    setTransitionStarted,
+    onTransitionEnd,
+    state,
+  };
+};
+
 const Popover = ({ trigger, content }) => {
   const [state, setState] = useState("hidden");
 
