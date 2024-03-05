@@ -1,4 +1,8 @@
-export const adjustDropdowns = ({ nextDropdowns, setState }) =>
+export const adjustDropdowns = ({
+  defaultDropdowns,
+  nextDropdowns,
+  setState,
+}) =>
   setState((previousDropdowns) => {
     // next dropdowns gets manipulated based on previous dropdowns
     Object.entries(previousDropdowns).forEach(([field, { search, items }]) => {
@@ -38,6 +42,34 @@ export const adjustDropdowns = ({ nextDropdowns, setState }) =>
             // each item becomes a new obj in state
             (nextItems[value] = { ...item, dataRelevance: false })
         );
+      }
+    });
+
+    // merge with default dropdowns
+    Object.entries(defaultDropdowns).forEach(([key, { items = {} }]) => {
+      if (key in nextDropdowns) {
+        const { items: nextItems } = nextDropdowns[key];
+
+        Object.entries(items).forEach(([itemKey, { checked }]) => {
+          if (itemKey in nextItems) {
+            const nextItem = nextItems[itemKey];
+
+            nextItem.checked = checked;
+          } else {
+            nextItems[itemKey] = { dataRelevance: false, checked };
+          }
+        });
+      } else {
+        nextDropdowns[key] = {
+          items: Object.fromEntries(
+            Object.entries(items).map(([thisKey, { checked }]) => [
+              thisKey,
+              { dataRelevance: false, checked },
+            ])
+          ),
+          dataRelevance: false,
+          search: "",
+        };
       }
     });
 

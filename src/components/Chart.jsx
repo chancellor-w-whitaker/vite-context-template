@@ -164,43 +164,45 @@ export const Chart = memo(
             <span>Zoomed</span>
           </label>
         </div>
-        <ResponsiveContainer ref={printRef} {...responsiveContainer}>
-          <ComposedChart {...composedChart}>
-            <defs>
-              <linearGradient
-                gradientUnits="userSpaceOnUse"
-                id="colorUv"
-                y2="100%"
-                x1="0"
-                y1="0"
-                x2="0"
-              >
-                <stop stopColor="red" offset="0" />
-                <stop stopColor="yellow" offset=".5" />
-                <stop stopColor="green" offset="1" />
-              </linearGradient>
-            </defs>
-            <CartesianGrid {...cartesianGrid} />
-            <XAxis {...xAxis} />
-            <YAxis {...yAxis} />
-            <Tooltip {...tooltip} />
-            <Legend {...legend} />
-            <Bar {...bar}>
-              {data.map((entry, index) => (
-                <Cell
-                  fill={
-                    "future" in entry
-                      ? brandColors.kentuckyBluegrass
-                      : brandColors.ekuMaroon
-                  }
-                  fillOpacity={"future" in entry ? "75%" : "100%"}
-                  key={`cell-${index}`}
-                />
-              ))}
-            </Bar>
-            <Line {...line} />
-          </ComposedChart>
-        </ResponsiveContainer>
+        <div ref={printRef}>
+          <ResponsiveContainer {...responsiveContainer}>
+            <ComposedChart {...composedChart}>
+              <defs>
+                <linearGradient
+                  gradientUnits="userSpaceOnUse"
+                  id="colorUv"
+                  y2="100%"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                >
+                  <stop stopColor="red" offset="0" />
+                  <stop stopColor="yellow" offset=".5" />
+                  <stop stopColor="green" offset="1" />
+                </linearGradient>
+              </defs>
+              <CartesianGrid {...cartesianGrid} />
+              <XAxis {...xAxis} />
+              <YAxis {...yAxis} />
+              <Tooltip {...tooltip} />
+              <Legend {...legend} />
+              <Bar {...bar}>
+                {data.map((entry, index) => (
+                  <Cell
+                    fill={
+                      "future" in entry
+                        ? brandColors.kentuckyBluegrass
+                        : brandColors.ekuMaroon
+                    }
+                    fillOpacity={"future" in entry ? "75%" : "100%"}
+                    key={`cell-${index}`}
+                  />
+                ))}
+              </Bar>
+              <Line {...line} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
       </>
     );
   }

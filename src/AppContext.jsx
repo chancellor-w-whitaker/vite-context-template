@@ -237,33 +237,11 @@ const useMainMethod = () => {
   const handleDataChange = useCallback(() => {
     const nextDropdowns = findNextDropdowns(columns);
 
-    Object.entries(defaultDropdowns).forEach(([key, object]) => {
-      const { items = {} } = object;
-      if (key in nextDropdowns) {
-        Object.entries(items).forEach(([itemKey, itemObject]) => {
-          if (itemKey in nextDropdowns[key].items) {
-            nextDropdowns[key].items[itemKey].checked = itemObject.checked;
-          } else {
-            nextDropdowns[key].items[itemKey] = {
-              checked: itemObject.checked,
-              dataRelevance: false,
-            };
-          }
-        });
-      } else {
-        nextDropdowns[key] = { ...object, dataRelevance: false, search: "" };
-
-        Object.entries(object.items).forEach(
-          ([itemKey, itemObject]) => (itemObject.dataRelevance = false)
-        );
-      }
+    adjustDropdowns({
+      setState: setDropdowns,
+      defaultDropdowns,
+      nextDropdowns,
     });
-
-    console.log(nextDropdowns);
-
-    console.log(defaultDropdowns);
-
-    adjustDropdowns({ setState: setDropdowns, nextDropdowns });
 
     adjustMeasure({
       setState: setMeasure,
@@ -345,10 +323,20 @@ const useMainMethod = () => {
       }
     );
 
+    const lookup = Object.fromEntries(
+      chartData.map((object) => [object[pivotField], object])
+    );
+
+    const dataForRegression = [...pivotValues].map((value) =>
+      value in lookup
+        ? lookup[value]
+        : { [pivotField]: value, [delayedMeasure]: 0 }
+    );
+
     const regressionData = findRegressionData({
       type: delayedRegressionType,
       keyName: delayedMeasure,
-      data: chartData,
+      data: dataForRegression,
     });
 
     const splitOnExponent = regressionData.string.split("^");
@@ -387,20 +375,20 @@ const useMainMethod = () => {
       },
     ];
 
-    const finalChartData = chartData.map((object, index) => ({
-      ...object,
-      predicted: regressionData.outputPoints[index][1],
-    }));
+    const finalChartData = dataForRegression.map((object, index) => {
+      const point = {
+        ...object,
+        predicted: regressionData.outputPoints[index][1],
+      };
 
-    const lookup = Object.fromEntries(
-      finalChartData.map((object) => [object[pivotField], object])
-    );
+      const pivValue = point[pivotField];
 
-    const d = [...pivotValues].map((value) =>
-      value in lookup ? lookup[value] : { [pivotField]: value }
-    );
+      if (!(pivValue in lookup)) delete point[delayedMeasure];
 
-    d.push(
+      return point;
+    });
+
+    finalChartData.push(
       ...regressionData.nextOutputPoints.slice(0, 1).map((entry) => ({
         [pivotField]: `Next ${toTitleCase(pivotField)}`,
         [delayedMeasure]: entry[1],
@@ -410,7 +398,7 @@ const useMainMethod = () => {
       }))
     );
 
-    return { chartData: d, tooltipItems };
+    return { chartData: finalChartData, tooltipItems };
   }, [
     totalRow,
     pivotField,
@@ -434,9 +422,9 @@ const useMainMethod = () => {
 
     const x = min - difference;
 
-    // const y = max + difference / 8;
+    const y = max + difference / 8;
 
-    return [Math.sign(x) === -1 ? 0 : x, "auto"];
+    return [x, "auto"];
   }, [chartData, delayedMeasure]);
 
   const nonSelectedMeasures = useMemo(() => {
