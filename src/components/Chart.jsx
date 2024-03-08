@@ -124,7 +124,7 @@ export const Chart = memo(
         type: "number",
       },
       composedChart: {
-        margin: { bottom: 0, right: 0, left: 0, top: 0 },
+        // margin: { bottom: 0, right: 0, left: 0, top: 0 },
         data: [...data],
       },
       xAxis: { dataKey: xAxisDataKey, type: "category" },

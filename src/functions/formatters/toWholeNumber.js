@@ -1,2 +1,2 @@
 export const toWholeNumber = (value) =>
-  (value > 10 ? Math.round(value) : Number(value)).toLocaleString();
+  (Math.abs(value) < 10 ? Number(value) : Math.round(value)).toLocaleString();

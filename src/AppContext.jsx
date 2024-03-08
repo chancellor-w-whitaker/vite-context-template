@@ -422,7 +422,7 @@ const useMainMethod = () => {
 
     const x = min - difference;
 
-    const y = max + difference / 8;
+    console.log(x);
 
     return [x, "auto"];
   }, [chartData, delayedMeasure]);
