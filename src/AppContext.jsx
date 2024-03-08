@@ -327,11 +327,13 @@ const useMainMethod = () => {
       chartData.map((object) => [object[pivotField], object])
     );
 
-    const dataForRegression = [...pivotValues].map((value) =>
-      value in lookup
-        ? lookup[value]
-        : { [pivotField]: value, [delayedMeasure]: 0 }
-    );
+    const dataForRegression = shouldFindRates
+      ? chartData
+      : [...pivotValues].map((value) =>
+          value in lookup
+            ? lookup[value]
+            : { [pivotField]: value, [delayedMeasure]: 0 }
+        );
 
     const regressionData = findRegressionData({
       type: delayedRegressionType,
