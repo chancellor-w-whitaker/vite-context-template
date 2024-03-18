@@ -311,12 +311,23 @@ const useMainMethod = () => {
 
     // all available data points
     const availableData = Object.entries(totalRow[0]).map(
-      ([pivotValue, measuresObject]) => ({
-        [y]: !shouldFindRates
-          ? getMeasureValue(measuresObject, y)
-          : getMeasureRate(measuresObject, y),
-        [x]: pivotValue,
-      })
+      ([pivotValue, measuresObject]) => {
+        const object = {
+          [y]: !shouldFindRates
+            ? getMeasureValue(measuresObject, y)
+            : getMeasureRate(measuresObject, y),
+          [x]: pivotValue,
+        };
+
+        if (shouldFindRates) {
+          object.fraction = {
+            value: getMeasureFraction(measuresObject, delayedMeasure),
+            key: delayedMeasure,
+          };
+        }
+
+        return object;
+      }
     );
 
     // find data point by term
@@ -350,6 +361,8 @@ const useMainMethod = () => {
       ([xVal, yVal]) => yVal !== null
     );
 
+    console.log(regressionInput, predictWhereXEquals, actualRegressionInput);
+
     // regression result found using regression type and actual regression input
     const regressionResult = findOriginalRegressionResult(
       delayedRegressionType,
@@ -381,12 +394,10 @@ const useMainMethod = () => {
       return {
         ...point,
         [y]: isNull ? prediction : point[y],
+        prediction: prediction,
         hideInTooltip,
-        prediction,
       };
     });
-
-    console.log(chartData);
 
     // const chartData = Object.entries(totalRow[0]).map(
     //   ([pivotValue, measuresObject]) => {
@@ -488,7 +499,7 @@ const useMainMethod = () => {
     // );
 
     // return { chartData: finalChartData, tooltipItems };
-    return { chartData: chartData, tooltipItems };
+    return { tooltipItems, chartData };
   }, [
     totalRow,
     pivotField,
@@ -503,16 +514,54 @@ const useMainMethod = () => {
 
     const values = [
       ...chartData.map(({ [delayedMeasure]: value }) => value),
-      ...chartData.map(({ predicted }) => predicted),
+      ...chartData.map(({ prediction }) => prediction),
     ];
+
+    const mean = average(values);
 
     const [min, max] = [Math.min(...values), Math.max(...values)];
 
+    const [minFactor, maxFactor] = [
+      Math.pow(10, Math.floor(Math.log10(min))),
+      Math.pow(10, Math.floor(Math.log10(max))),
+    ];
+
     const difference = max - min;
 
-    const x = min - difference;
+    // find min & max
+    // find difference
+    // find log of difference
+    // convert log to factor of 10
+    // divide min & max by factor of 10
+    // floor min then * by factor of 10
+    // ceil max then * by factor of 10
 
-    return ["auto", "auto"];
+    /*
+    (min - max) / 4
+
+    add until reach max
+
+    12000, 13250, 14500, 15750, 17000
+
+    set ticks manually
+    */
+
+    const factor = Math.pow(10, Math.floor(Math.log10(difference)));
+
+    // 3000 -> 1000
+
+    // 15000 -> 10000
+
+    const domain = [
+      Math.floor(min / factor) * factor - factor,
+      Math.ceil(max / factor) * factor,
+    ];
+
+    // sometimes ticks still aren't correct
+
+    // could multiply top number by 1.1 & could multiply bottom number by 0.9
+
+    return domain;
   }, [chartData, delayedMeasure]);
 
   const nonSelectedMeasures = useMemo(() => {
@@ -674,3 +723,5 @@ const getRegressionTooltipItems = (string, r2) => {
     },
   ];
 };
+
+const average = (array) => array.reduce((a, b) => a + b) / array.length;
