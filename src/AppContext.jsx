@@ -7,6 +7,10 @@ import {
   useRef,
 } from "react";
 
+import {
+  findOriginalRegressionResult,
+  findNewEquation,
+} from "./functions/findRegressionData";
 import { handleAllDropdownItemsChange } from "./functions/handleAllDropdownItemsChange";
 import { handleDropdownSubListChange } from "./functions/handleDropdownSubListChange";
 import { handleDropdownSearchChange } from "./functions/handleDropdownSearchChange";
@@ -18,7 +22,6 @@ import { performPivotOperation } from "./functions/performPivotOperation";
 import { findRelevantMeasures } from "./functions/findRelevantMeasures";
 import { handleGroupByChange } from "./functions/handleGroupByChange";
 import { formatMeasureValue } from "./functions/formatMeasureValue";
-import { findRegressionData } from "./functions/findRegressionData";
 import { getMeasureFraction } from "./functions/getMeasureFraction";
 import { getRowsAndColumns } from "./functions/getRowsAndColumns";
 import { findNextDropdowns } from "./functions/findNextDropdowns";
@@ -303,104 +306,189 @@ const useMainMethod = () => {
   );
 
   const { tooltipItems, chartData } = useMemo(() => {
-    const chartData = Object.entries(totalRow[0]).map(
-      ([pivotValue, measuresObject]) => {
-        const object = {
-          [delayedMeasure]: !shouldFindRates
-            ? getMeasureValue(measuresObject, delayedMeasure)
-            : getMeasureRate(measuresObject, delayedMeasure),
-          [pivotField]: pivotValue,
-        };
+    // simpler usage
+    const [x, y] = [pivotField, delayedMeasure];
 
-        if (shouldFindRates) {
-          object.fraction = {
-            value: getMeasureFraction(measuresObject, delayedMeasure),
-            key: delayedMeasure,
-          };
-        }
-
-        return object;
-      }
+    // all available data points
+    const availableData = Object.entries(totalRow[0]).map(
+      ([pivotValue, measuresObject]) => ({
+        [y]: !shouldFindRates
+          ? getMeasureValue(measuresObject, y)
+          : getMeasureRate(measuresObject, y),
+        [x]: pivotValue,
+      })
     );
 
-    const lookup = Object.fromEntries(
-      chartData.map((object) => [object[pivotField], object])
+    // find data point by term
+    const termToDataElement = Object.fromEntries(
+      availableData.map((object) => [object[x], object])
     );
 
-    const dataForRegression = shouldFindRates
-      ? chartData
-      : [...pivotValues].map((value) =>
-          value in lookup
-            ? lookup[value]
-            : { [pivotField]: value, [delayedMeasure]: 0 }
-        );
-
-    const regressionData = findRegressionData({
-      type: delayedRegressionType,
-      keyName: delayedMeasure,
-      data: dataForRegression,
-    });
-
-    const splitOnExponent = regressionData.string.split("^");
-
-    if (splitOnExponent.length > 1) {
-      splitOnExponent.push(splitOnExponent[1].split(" "));
-
-      splitOnExponent[1] = splitOnExponent[2].shift();
-    } else {
-      splitOnExponent[1] = "";
-
-      splitOnExponent[2] = [];
-    }
-
-    const [firstPart, exponent, theRest] = splitOnExponent;
-
-    const tooltipItems = [
-      {
-        value: (
-          <>
-            {firstPart}
-            <sup>{exponent}</sup> {theRest.join(" ")}
-          </>
-        ),
-        color: brandColors.kentuckyBluegrass,
-        className: "fst-italic",
-      },
-      {
-        value: (
-          <>
-            R<sup>2</sup> = {regressionData.r2.toLocaleString()}
-          </>
-        ),
-        color: brandColors.kentuckyBluegrass,
-        className: "fst-italic",
-      },
+    // all data points (data point for every term; null for every y value to be predicted)
+    const finalData = [
+      ...[...pivotValues].map((term) =>
+        term in termToDataElement
+          ? termToDataElement[term]
+          : { [y]: shouldFindRates ? null : 0, [x]: term }
+      ),
+      { [x]: `Next ${toTitleCase(pivotField)}`, [y]: null },
     ];
 
-    const finalChartData = dataForRegression.map((object, index) => {
-      const point = {
-        ...object,
-        predicted: regressionData.outputPoints[index][1],
-      };
+    // data points converted to [x, y] regression input
+    const regressionInput = finalData.map((element, index) => [
+      index + 1,
+      element[y],
+    ]);
 
-      const pivValue = point[pivotField];
+    // extract all x values where y value should be predicted
+    const predictWhereXEquals = regressionInput
+      .filter(([xVal, yVal]) => yVal === null)
+      .map(([xVal]) => xVal);
 
-      if (!(pivValue in lookup)) delete point[delayedMeasure];
-
-      return point;
-    });
-
-    finalChartData.push(
-      ...regressionData.nextOutputPoints.slice(0, 1).map((entry) => ({
-        [pivotField]: `Next ${toTitleCase(pivotField)}`,
-        [delayedMeasure]: entry[1],
-        hide: delayedMeasure,
-        predicted: entry[1],
-        future: true,
-      }))
+    // regression input where null y values are removed
+    const actualRegressionInput = regressionInput.filter(
+      ([xVal, yVal]) => yVal !== null
     );
 
-    return { chartData: finalChartData, tooltipItems };
+    // regression result found using regression type and actual regression input
+    const regressionResult = findOriginalRegressionResult(
+      delayedRegressionType,
+      actualRegressionInput
+    );
+
+    // easier usage of regression properties
+    const { predict, points, r2 } = regressionResult;
+
+    const equation = findNewEquation(regressionResult, 1).string;
+
+    const tooltipItems = getRegressionTooltipItems(equation, r2);
+
+    // predicted points include
+    // - points in regression result
+    // - points calculated from passing each x value with missing a y value to the predict function
+    const predictedPoints = [
+      ...points,
+      ...predictWhereXEquals.map((x) => predict(x)),
+    ].sort((a, b) => a[0] - b[0]);
+
+    const chartData = finalData.map((point, index) => {
+      const prediction = predictedPoints[index][1];
+
+      const isNull = point[y] === null;
+
+      const hideInTooltip = isNull ? y : false;
+
+      return {
+        ...point,
+        [y]: isNull ? prediction : point[y],
+        hideInTooltip,
+        prediction,
+      };
+    });
+
+    console.log(chartData);
+
+    // const chartData = Object.entries(totalRow[0]).map(
+    //   ([pivotValue, measuresObject]) => {
+    //     const object = {
+    //       [delayedMeasure]: !shouldFindRates
+    //         ? getMeasureValue(measuresObject, delayedMeasure)
+    //         : getMeasureRate(measuresObject, delayedMeasure),
+    //       [pivotField]: pivotValue,
+    //     };
+
+    //     if (shouldFindRates) {
+    //       object.fraction = {
+    //         value: getMeasureFraction(measuresObject, delayedMeasure),
+    //         key: delayedMeasure,
+    //       };
+    //     }
+
+    //     return object;
+    //   }
+    // );
+
+    // console.log(chartData);
+
+    // const lookup = Object.fromEntries(
+    //   chartData.map((object) => [object[pivotField], object])
+    // );
+
+    // const dataForRegression = shouldFindRates
+    //   ? chartData
+    //   : [...pivotValues].map((value) =>
+    //       value in lookup
+    //         ? lookup[value]
+    //         : { [pivotField]: value, [delayedMeasure]: 0 }
+    //     );
+
+    // const regressionData = findRegressionData({
+    //   type: delayedRegressionType,
+    //   keyName: delayedMeasure,
+    //   data: dataForRegression,
+    // });
+
+    // const splitOnExponent = regressionData.string.split("^");
+
+    // if (splitOnExponent.length > 1) {
+    //   splitOnExponent.push(splitOnExponent[1].split(" "));
+
+    //   splitOnExponent[1] = splitOnExponent[2].shift();
+    // } else {
+    //   splitOnExponent[1] = "";
+
+    //   splitOnExponent[2] = [];
+    // }
+
+    // const [firstPart, exponent, theRest] = splitOnExponent;
+
+    // const tooltipItems = [
+    //   {
+    //     value: (
+    //       <>
+    //         {firstPart}
+    //         <sup>{exponent}</sup> {theRest.join(" ")}
+    //       </>
+    //     ),
+    //     color: brandColors.kentuckyBluegrass,
+    //     className: "fst-italic",
+    //   },
+    //   {
+    //     value: (
+    //       <>
+    //         R<sup>2</sup> = {regressionData.r2.toLocaleString()}
+    //       </>
+    //     ),
+    //     color: brandColors.kentuckyBluegrass,
+    //     className: "fst-italic",
+    //   },
+    // ];
+
+    // const finalChartData = dataForRegression.map((object, index) => {
+    //   const point = {
+    //     ...object,
+    //     predicted: regressionData.outputPoints[index][1],
+    //   };
+
+    //   const pivValue = point[pivotField];
+
+    //   if (!(pivValue in lookup)) delete point[delayedMeasure];
+
+    //   return point;
+    // });
+
+    // finalChartData.push(
+    //   ...regressionData.nextOutputPoints.slice(0, 1).map((entry) => ({
+    //     [pivotField]: `Next ${toTitleCase(pivotField)}`,
+    //     [delayedMeasure]: entry[1],
+    //     hide: delayedMeasure,
+    //     predicted: entry[1],
+    //     future: true,
+    //   }))
+    // );
+
+    // return { chartData: finalChartData, tooltipItems };
+    return { chartData: chartData, tooltipItems };
   }, [
     totalRow,
     pivotField,
@@ -424,9 +512,7 @@ const useMainMethod = () => {
 
     const x = min - difference;
 
-    console.log(x);
-
-    return [x, "auto"];
+    return ["auto", "auto"];
   }, [chartData, delayedMeasure]);
 
   const nonSelectedMeasures = useMemo(() => {
@@ -549,4 +635,42 @@ const useMainMethod = () => {
     },
     initializers: { isDropdownWithIdOpen, storeDropdownById },
   };
+};
+
+const getRegressionTooltipItems = (string, r2) => {
+  const splitOnExponent = string.split("^");
+
+  if (splitOnExponent.length > 1) {
+    splitOnExponent.push(splitOnExponent[1].split(" "));
+
+    splitOnExponent[1] = splitOnExponent[2].shift();
+  } else {
+    splitOnExponent[1] = "";
+
+    splitOnExponent[2] = [];
+  }
+
+  const [firstPart, exponent, theRest] = splitOnExponent;
+
+  return [
+    {
+      value: (
+        <>
+          {firstPart}
+          <sup>{exponent}</sup> {theRest.join(" ")}
+        </>
+      ),
+      color: brandColors.kentuckyBluegrass,
+      className: "fst-italic",
+    },
+    {
+      value: (
+        <>
+          R<sup>2</sup> = {r2.toLocaleString()}
+        </>
+      ),
+      color: brandColors.kentuckyBluegrass,
+      className: "fst-italic",
+    },
+  ];
 };

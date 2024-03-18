@@ -89,21 +89,19 @@ export const Chart = memo(
     } = {
       bar: {
         label: {
-          // position: returnedWidth > breakpoints.small ? null : "insideBottom",
           angle: returnedWidth > breakpoints.small ? 0 : -90,
           fill: brandColors.goldenrodYellow,
           formatter: valueFormatter,
           fillOpacity: "100%",
           fontSize: 20,
         },
-        // activeBar: <Rectangle fill="#AF2955" />,
         fill: brandColors.ekuMaroon,
         dataKey: barDataKey,
       },
       line: {
         stroke: brandColors.kentuckyBluegrass,
         strokeLinecap: "round",
-        dataKey: "predicted",
+        dataKey: "prediction",
         connectNulls: true,
         type: "monotone",
         strokeWidth: 3,
@@ -123,12 +121,9 @@ export const Chart = memo(
         tickFormatter: valueFormatter,
         type: "number",
       },
-      composedChart: {
-        // margin: { bottom: 0, right: 0, left: 0, top: 0 },
-        data: [...data],
-      },
       xAxis: { dataKey: xAxisDataKey, type: "category" },
       cartesianGrid: { strokeDasharray: "3 3" },
+      composedChart: { data: [...data] },
       legend: { formatter: toTitleCase },
     };
 
@@ -167,34 +162,20 @@ export const Chart = memo(
         <div ref={printRef}>
           <ResponsiveContainer {...responsiveContainer}>
             <ComposedChart {...composedChart}>
-              <defs>
-                <linearGradient
-                  gradientUnits="userSpaceOnUse"
-                  id="colorUv"
-                  y2="100%"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                >
-                  <stop stopColor="red" offset="0" />
-                  <stop stopColor="yellow" offset=".5" />
-                  <stop stopColor="green" offset="1" />
-                </linearGradient>
-              </defs>
               <CartesianGrid {...cartesianGrid} />
               <XAxis {...xAxis} />
               <YAxis {...yAxis} />
               <Tooltip {...tooltip} />
               <Legend {...legend} />
               <Bar {...bar}>
-                {data.map((entry, index) => (
+                {data.map(({ hideInTooltip = false }, index) => (
                   <Cell
                     fill={
-                      "future" in entry
+                      hideInTooltip
                         ? brandColors.kentuckyBluegrass
                         : brandColors.ekuMaroon
                     }
-                    fillOpacity={"future" in entry ? "75%" : "100%"}
+                    fillOpacity={hideInTooltip ? "75%" : "100%"}
                     key={`cell-${index}`}
                   />
                 ))}
@@ -246,10 +227,12 @@ const CustomTooltip = (props) => {
           {payload.map(({ payload, value, color, name, unit }) => {
             const [formattedValue, formattedName] = formatter(value, name);
 
-            const shouldHide = "hide" in payload && payload.hide === name;
+            const { hideInTooltip = false } = payload;
+
+            // const shouldHide = "hide" in payload && payload.hide === name;
 
             return (
-              !shouldHide && (
+              hideInTooltip !== name && (
                 <Fragment key={name}>
                   <TooltipItem
                     value={formattedValue}
