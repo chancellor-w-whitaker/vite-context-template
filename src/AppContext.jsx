@@ -361,8 +361,6 @@ const useMainMethod = () => {
       ([xVal, yVal]) => yVal !== null
     );
 
-    console.log(regressionInput, predictWhereXEquals, actualRegressionInput);
-
     // regression result found using regression type and actual regression input
     const regressionResult = findOriginalRegressionResult(
       delayedRegressionType,
@@ -510,23 +508,42 @@ const useMainMethod = () => {
   ]);
 
   const domain = useMemo(() => {
-    // const factor = 1000000;
-
-    const values = [
+    const allValues = [
       ...chartData.map(({ [delayedMeasure]: value }) => value),
       ...chartData.map(({ prediction }) => prediction),
     ];
 
-    const mean = average(values);
+    const [min, max] = [Math.min(...allValues), Math.max(...allValues)];
 
-    const [min, max] = [Math.min(...values), Math.max(...values)];
+    // const distance = max - min;
 
-    const [minFactor, maxFactor] = [
-      Math.pow(10, Math.floor(Math.log10(min))),
-      Math.pow(10, Math.floor(Math.log10(max))),
-    ];
+    // const base = 10;
 
-    const difference = max - min;
+    // const power = Math.floor(getBaseLog(base, distance));
+
+    const base = 10;
+
+    const power = Math.floor(getBaseLog(base, min));
+
+    const multiple = Math.pow(base, power);
+
+    const domain = [Math.floor(min / multiple) * multiple, "auto"];
+
+    // const reduced = [min / multiple, max / multiple];
+
+    // const neatened = [Math.floor(reduced[0]), Math.ceil(reduced[1])];
+
+    // const fitted = [neatened[0] * multiple - multiple, neatened[1] * multiple];
+
+    // console.log("min", min.toLocaleString());
+    // console.log("max", max.toLocaleString());
+    // console.log("distance", distance.toLocaleString());
+    // console.log("base", base.toLocaleString());
+    // console.log("power", power.toLocaleString());
+    // console.log("multiple", multiple.toLocaleString());
+    // console.log("reduced", reduced);
+    // console.log("neatened", neatened);
+    // console.log("fitted", fitted);
 
     // find min & max
     // find difference
@@ -545,17 +562,6 @@ const useMainMethod = () => {
 
     set ticks manually
     */
-
-    const factor = Math.pow(10, Math.floor(Math.log10(difference)));
-
-    // 3000 -> 1000
-
-    // 15000 -> 10000
-
-    const domain = [
-      Math.floor(min / factor) * factor - factor,
-      Math.ceil(max / factor) * factor,
-    ];
 
     // sometimes ticks still aren't correct
 
@@ -724,4 +730,6 @@ const getRegressionTooltipItems = (string, r2) => {
   ];
 };
 
-const average = (array) => array.reduce((a, b) => a + b) / array.length;
+function getBaseLog(x, y) {
+  return Math.log(y) / Math.log(x);
+}
