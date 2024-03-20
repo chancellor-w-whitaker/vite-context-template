@@ -515,12 +515,6 @@ const useMainMethod = () => {
 
     const [min, max] = [Math.min(...allValues), Math.max(...allValues)];
 
-    // const distance = max - min;
-
-    // const base = 10;
-
-    // const power = Math.floor(getBaseLog(base, distance));
-
     const base = 10;
 
     const power = Math.floor(getBaseLog(base, min));
@@ -528,44 +522,6 @@ const useMainMethod = () => {
     const multiple = Math.pow(base, power);
 
     const domain = [Math.floor(min / multiple) * multiple, "auto"];
-
-    // const reduced = [min / multiple, max / multiple];
-
-    // const neatened = [Math.floor(reduced[0]), Math.ceil(reduced[1])];
-
-    // const fitted = [neatened[0] * multiple - multiple, neatened[1] * multiple];
-
-    // console.log("min", min.toLocaleString());
-    // console.log("max", max.toLocaleString());
-    // console.log("distance", distance.toLocaleString());
-    // console.log("base", base.toLocaleString());
-    // console.log("power", power.toLocaleString());
-    // console.log("multiple", multiple.toLocaleString());
-    // console.log("reduced", reduced);
-    // console.log("neatened", neatened);
-    // console.log("fitted", fitted);
-
-    // find min & max
-    // find difference
-    // find log of difference
-    // convert log to factor of 10
-    // divide min & max by factor of 10
-    // floor min then * by factor of 10
-    // ceil max then * by factor of 10
-
-    /*
-    (min - max) / 4
-
-    add until reach max
-
-    12000, 13250, 14500, 15750, 17000
-
-    set ticks manually
-    */
-
-    // sometimes ticks still aren't correct
-
-    // could multiply top number by 1.1 & could multiply bottom number by 0.9
 
     return domain;
   }, [chartData, delayedMeasure]);
@@ -612,8 +568,9 @@ const useMainMethod = () => {
         measure: delayedMeasure,
         data: pivotedData,
         shouldFindRates,
+        totalRow,
       }),
-    [pivotedData, delayedMeasure, shouldFindRates]
+    [pivotedData, totalRow, delayedMeasure, shouldFindRates]
   );
 
   const defaultColDef = useMemo(() => ({ suppressMovable: true }), []);

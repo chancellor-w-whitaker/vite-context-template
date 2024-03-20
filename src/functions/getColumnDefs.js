@@ -51,30 +51,32 @@ const getRateValueFormatter =
     }
   };
 
-export const getColumnDefs = ({ shouldFindRates, measure, data }) => {
+export const getColumnDefs = ({ shouldFindRates, totalRow, measure, data }) => {
   if (!isLengthyArray(data)) return [];
 
-  const defs = Object.entries(data[0]).map(([field, stringOrObject]) => {
-    if (typeof stringOrObject === "string") {
-      return { field };
-    } else {
-      const [type, valueGetter, valueFormatter] = [
-        "numericColumn",
-        !shouldFindRates
-          ? getStandardValueGetter(measure)
-          : getRateValueGetter(measure),
-        !shouldFindRates
-          ? standardValueFormatter
-          : getRateValueFormatter(measure),
-      ];
+  const stringDefs = Object.entries(data[0])
+    .filter(([field, value]) => typeof value === "string")
+    .map(([field]) => ({ field }));
 
-      const def = { valueFormatter, valueGetter, field, type };
+  const numberDefs = Object.entries(totalRow[0]).map(([field]) => {
+    const [type, valueGetter, valueFormatter] = [
+      "numericColumn",
+      !shouldFindRates
+        ? getStandardValueGetter(measure)
+        : getRateValueGetter(measure),
+      !shouldFindRates
+        ? standardValueFormatter
+        : getRateValueFormatter(measure),
+    ];
 
-      if (shouldFindRates) def.cellRenderer = RateCellRenderer;
+    const def = { valueFormatter, valueGetter, field, type };
 
-      return def;
-    }
+    if (shouldFindRates) def.cellRenderer = RateCellRenderer;
+
+    return def;
   });
+
+  const defs = [...stringDefs, ...numberDefs];
 
   return [{ ...rowIdColumnDef }, ...defs];
 };

@@ -306,7 +306,15 @@ export const Dashboard = () => {
                 multiple
               >
                 {groupBys.map((field) => (
-                  <SelectOption value={field} key={field}>
+                  <SelectOption
+                    onClick={
+                      groupBy.length === 1 && groupBy.includes(field)
+                        ? onGroupByChange
+                        : null
+                    }
+                    value={field}
+                    key={field}
+                  >
                     {toTitleCase(field)}
                   </SelectOption>
                 ))}

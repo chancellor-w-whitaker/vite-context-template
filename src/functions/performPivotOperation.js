@@ -4,6 +4,27 @@ export const performPivotOperation = ({
   groupBy = [],
   data = [],
 }) => {
+  if (groupBy.length === 0) {
+    const summaryRow = {};
+
+    data?.forEach((row) => {
+      const pivotValue = row[pivotField];
+
+      if (!(pivotValue in summaryRow)) {
+        summaryRow[pivotValue] = {
+          [pivotField]: pivotValue,
+          ...Object.fromEntries(measures.map((measure) => [measure, 0])),
+        };
+      }
+
+      measures.forEach(
+        (measure) => (summaryRow[pivotValue][measure] += row[measure])
+      );
+    });
+
+    return { topRowData: [summaryRow], rowData: [{}] };
+  }
+
   // ! reference to each pivot row will be stored in here
   const magicArray = [];
 
