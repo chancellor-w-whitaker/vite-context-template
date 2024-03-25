@@ -335,14 +335,24 @@ const useMainMethod = () => {
       availableData.map((object) => [object[x], object])
     );
 
+    console.log(pivotValues);
+
+    const pivArray = [...pivotValues];
+
+    const lastTerm = pivArray[pivArray.length - 1];
+
+    const predictionTerm = lastTerm
+      ? getNextTerm(lastTerm, fileName)
+      : `Next ${toTitleCase(pivotField)}`;
+
     // all data points (data point for every term; null for every y value to be predicted)
     const finalData = [
-      ...[...pivotValues].map((term) =>
+      ...pivArray.map((term) =>
         term in termToDataElement
           ? termToDataElement[term]
           : { [y]: shouldFindRates ? null : 0, [x]: term }
       ),
-      { [x]: `Next ${toTitleCase(pivotField)}`, [y]: null },
+      { [x]: predictionTerm, [y]: null },
     ];
 
     // data points converted to [x, y] regression input
@@ -397,109 +407,10 @@ const useMainMethod = () => {
       };
     });
 
-    // const chartData = Object.entries(totalRow[0]).map(
-    //   ([pivotValue, measuresObject]) => {
-    //     const object = {
-    //       [delayedMeasure]: !shouldFindRates
-    //         ? getMeasureValue(measuresObject, delayedMeasure)
-    //         : getMeasureRate(measuresObject, delayedMeasure),
-    //       [pivotField]: pivotValue,
-    //     };
-
-    //     if (shouldFindRates) {
-    //       object.fraction = {
-    //         value: getMeasureFraction(measuresObject, delayedMeasure),
-    //         key: delayedMeasure,
-    //       };
-    //     }
-
-    //     return object;
-    //   }
-    // );
-
-    // console.log(chartData);
-
-    // const lookup = Object.fromEntries(
-    //   chartData.map((object) => [object[pivotField], object])
-    // );
-
-    // const dataForRegression = shouldFindRates
-    //   ? chartData
-    //   : [...pivotValues].map((value) =>
-    //       value in lookup
-    //         ? lookup[value]
-    //         : { [pivotField]: value, [delayedMeasure]: 0 }
-    //     );
-
-    // const regressionData = findRegressionData({
-    //   type: delayedRegressionType,
-    //   keyName: delayedMeasure,
-    //   data: dataForRegression,
-    // });
-
-    // const splitOnExponent = regressionData.string.split("^");
-
-    // if (splitOnExponent.length > 1) {
-    //   splitOnExponent.push(splitOnExponent[1].split(" "));
-
-    //   splitOnExponent[1] = splitOnExponent[2].shift();
-    // } else {
-    //   splitOnExponent[1] = "";
-
-    //   splitOnExponent[2] = [];
-    // }
-
-    // const [firstPart, exponent, theRest] = splitOnExponent;
-
-    // const tooltipItems = [
-    //   {
-    //     value: (
-    //       <>
-    //         {firstPart}
-    //         <sup>{exponent}</sup> {theRest.join(" ")}
-    //       </>
-    //     ),
-    //     color: brandColors.kentuckyBluegrass,
-    //     className: "fst-italic",
-    //   },
-    //   {
-    //     value: (
-    //       <>
-    //         R<sup>2</sup> = {regressionData.r2.toLocaleString()}
-    //       </>
-    //     ),
-    //     color: brandColors.kentuckyBluegrass,
-    //     className: "fst-italic",
-    //   },
-    // ];
-
-    // const finalChartData = dataForRegression.map((object, index) => {
-    //   const point = {
-    //     ...object,
-    //     predicted: regressionData.outputPoints[index][1],
-    //   };
-
-    //   const pivValue = point[pivotField];
-
-    //   if (!(pivValue in lookup)) delete point[delayedMeasure];
-
-    //   return point;
-    // });
-
-    // finalChartData.push(
-    //   ...regressionData.nextOutputPoints.slice(0, 1).map((entry) => ({
-    //     [pivotField]: `Next ${toTitleCase(pivotField)}`,
-    //     [delayedMeasure]: entry[1],
-    //     hide: delayedMeasure,
-    //     predicted: entry[1],
-    //     future: true,
-    //   }))
-    // );
-
-    // return { chartData: finalChartData, tooltipItems };
     return { tooltipItems, chartData };
   }, [
     totalRow,
+    fileName,
     pivotField,
     pivotValues,
     delayedMeasure,
@@ -581,6 +492,15 @@ const useMainMethod = () => {
 
   const onBodyScrollEnd = useCallback((e) => e.api.autoSizeAllColumns(), []);
 
+  const xAxisTickFormatter = useCallback(
+    (tickValue) => {
+      if (fileName !== "graduation") return tickValue;
+
+      return formatGradRateXValue(delayedMeasure, tickValue);
+    },
+    [fileName, delayedMeasure]
+  );
+
   return {
     onChange: {
       dropdowns: {
@@ -618,6 +538,7 @@ const useMainMethod = () => {
       valueFormatter: !shouldFindRates ? formatMeasureValue : formatMeasureRate,
       barDataKey: delayedMeasure,
       xAxisDataKey: pivotField,
+      xAxisTickFormatter,
       data: chartData,
       tooltipItems,
       domain,
@@ -690,3 +611,26 @@ const getRegressionTooltipItems = (string, r2) => {
 function getBaseLog(x, y) {
   return Math.log(y) / Math.log(x);
 }
+
+const formatGradRateXValue = (measure, value) => {
+  const termYear = toTitleCase(value).split(" ")[1];
+
+  const elapsedYears = toTitleCase(measure).split(" ")[0];
+
+  return `${value} to Summer ${Number(termYear) + Number(elapsedYears)}`;
+};
+
+const getNextTerm = (lastTerm, fileName) => {
+  if (["graduation", "spring", "summer", "fall"].includes(fileName))
+    return `${lastTerm.split(" ")[0]} ${Number(lastTerm.split(" ")[1]) + 1}`;
+
+  if (["degrees", "hours"].includes(fileName))
+    return `${Number(lastTerm.split("-")[0]) + 1}-${
+      Number(lastTerm.split("-")[1]) + 1
+    }`;
+
+  if (["retention"].includes(fileName))
+    return `Fall ${Number(lastTerm.split(" ")[1]) + 1} to Fall ${
+      Number(lastTerm.split(" ")[4]) + 1
+    }`;
+};

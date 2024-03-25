@@ -42,6 +42,7 @@ import { brandColors } from "../constants/brandColors";
 
 export const Chart = memo(
   ({
+    xAxisTickFormatter,
     valueFormatter,
     tooltipItems,
     xAxisDataKey,
@@ -110,6 +111,7 @@ export const Chart = memo(
       tooltip: {
         formatter: (value, name) => [valueFormatter(value), toTitleCase(name)],
         content: <CustomTooltip moreItems={tooltipItems}></CustomTooltip>,
+        labelFormatter: xAxisTickFormatter,
       },
       responsiveContainer: {
         onResize: (width) => setReturnedWidth(width),
@@ -121,7 +123,11 @@ export const Chart = memo(
         tickFormatter: valueFormatter,
         type: "number",
       },
-      xAxis: { dataKey: xAxisDataKey, type: "category" },
+      xAxis: {
+        tickFormatter: xAxisTickFormatter,
+        dataKey: xAxisDataKey,
+        type: "category",
+      },
       cartesianGrid: { strokeDasharray: "3 3" },
       composedChart: { data: [...data] },
       legend: { formatter: toTitleCase },
@@ -159,7 +165,40 @@ export const Chart = memo(
             <span>Zoomed</span>
           </label>
         </div>
-        <div ref={printRef}>
+        <div>
+          <ResponsiveContainer {...responsiveContainer}>
+            <ComposedChart {...composedChart}>
+              <CartesianGrid {...cartesianGrid} />
+              <XAxis {...xAxis} />
+              <YAxis {...yAxis} />
+              <Tooltip {...tooltip} />
+              <Legend {...legend} />
+              <Bar {...bar}>
+                {data.map(({ hideInTooltip = false }, index) => (
+                  <Cell
+                    fill={
+                      hideInTooltip
+                        ? brandColors.kentuckyBluegrass
+                        : brandColors.ekuMaroon
+                    }
+                    fillOpacity={hideInTooltip ? "75%" : "100%"}
+                    key={`cell-${index}`}
+                  />
+                ))}
+              </Bar>
+              <Line {...line} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+        <div
+          style={{
+            position: "fixed",
+            bottom: "100%",
+            width: 1264,
+            height: 500,
+          }}
+          ref={printRef}
+        >
           <ResponsiveContainer {...responsiveContainer}>
             <ComposedChart {...composedChart}>
               <CartesianGrid {...cartesianGrid} />
@@ -194,6 +233,7 @@ Chart.displayName = "Chart";
 const CustomTooltip = (props) => {
   const {
     moreItems = [],
+    labelFormatter,
     separator,
     formatter,
     payload,
@@ -217,7 +257,7 @@ const CustomTooltip = (props) => {
           className="recharts-tooltip-label text-center pb-1"
           style={{ margin: 0 }}
         >
-          <span className="fw-bold">{label}</span>
+          <span className="fw-bold">{labelFormatter(label)}</span>
         </p>
         <hr className="my-1"></hr>
         <ul

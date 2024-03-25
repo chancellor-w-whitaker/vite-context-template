@@ -113,6 +113,11 @@ export const Dashboard = () => {
               width,
             })?.rowColumns;
 
+            const moreThanOneListToShow =
+              [irrelevant, relevant, unavailable].filter(
+                (array) => array.length > 0
+              ).length > 1;
+
             return (
               <div
                 style={{
@@ -164,9 +169,7 @@ export const Dashboard = () => {
                         className="list-group list-group-flush text-nowrap overflow-y-scroll"
                         style={{ maxHeight: 300 }}
                       >
-                        {[irrelevant, relevant, unavailable].filter(
-                          (array) => array.length > 0
-                        ).length > 1 && (
+                        {moreThanOneListToShow && (
                           <MyDropdownItem
                             onChange={onDropdownsChange.allItems}
                             checked={fractions.all.condition}
@@ -182,10 +185,11 @@ export const Dashboard = () => {
                             onChange={onDropdownsChange.relevantItems}
                             checked={fractions.relevant.condition}
                             fraction={fractions.relevant.string}
+                            hideInput={moreThanOneListToShow}
                             name={`${field}-items`}
                             relevance="relevant"
                           >
-                            Relevant
+                            {moreThanOneListToShow ? "Relevant" : "All"}
                           </MyDropdownItem>
                         )}
                         {relevant.map((value) => (
@@ -206,10 +210,11 @@ export const Dashboard = () => {
                             onChange={onDropdownsChange.irrelevantItems}
                             checked={fractions.irrelevant.condition}
                             fraction={fractions.irrelevant.string}
+                            hideInput={moreThanOneListToShow}
                             name={`${field}-items`}
                             relevance="irrelevant"
                           >
-                            Irrelevant
+                            {moreThanOneListToShow ? "Irrelevant" : "All"}
                           </MyDropdownItem>
                         )}
                         {irrelevant.map((value) => (
@@ -229,10 +234,11 @@ export const Dashboard = () => {
                             onChange={onDropdownsChange.unavailableItems}
                             checked={fractions.unavailable.condition}
                             fraction={fractions.unavailable.string}
+                            hideInput={moreThanOneListToShow}
                             name={`${field}-items`}
                             relevance="unavailable"
                           >
-                            Unavailable
+                            {moreThanOneListToShow ? "Unavailable" : "All"}
                           </MyDropdownItem>
                         )}
                         {unavailable.map((value) => (
@@ -322,21 +328,6 @@ export const Dashboard = () => {
             }
           />
         </div>
-        {/* select group by */}
-        {/* <div className="list-group shadow-sm">
-          {groupBys.map((field) => (
-            <MyDropdownLabel className="border-0" key={field}>
-              <MyDropdownInput
-                checked={groupBy.includes(field)}
-                onChange={onGroupByChange}
-                name="group-by"
-                type="checkbox"
-                value={field}
-              ></MyDropdownInput>
-              <span>{toTitleCase(field)}</span>
-            </MyDropdownLabel>
-          ))}
-        </div> */}
         {/* grid */}
         <GridContainer
           className={loading.autoSize ? "auto-sizing" : ""}

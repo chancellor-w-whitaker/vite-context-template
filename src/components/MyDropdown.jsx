@@ -11,6 +11,7 @@ export const MyDropdownItem = memo(
     value = "value",
     checked = true,
     name = "name",
+    hideInput,
     onChange,
     children,
   }) => {
@@ -47,15 +48,17 @@ export const MyDropdownItem = memo(
 
     return (
       <MyDropdownLabel className={labelClassList.join(" ")}>
-        <MyDropdownInput
-          className={inputClassList.join(" ")}
-          onChange={onChange}
-          readOnly={readOnly}
-          checked={checked}
-          value={value}
-          name={name}
-          type={type}
-        ></MyDropdownInput>
+        {!hideInput && (
+          <MyDropdownInput
+            className={inputClassList.join(" ")}
+            onChange={onChange}
+            readOnly={readOnly}
+            checked={checked}
+            value={value}
+            name={name}
+            type={type}
+          ></MyDropdownInput>
+        )}
         <span className={`opacity-${opacity}`}>{children}</span>
         {fraction && (
           <MyDropdownBadge checked={checked}>{fraction}</MyDropdownBadge>
