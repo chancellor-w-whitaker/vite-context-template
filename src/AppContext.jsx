@@ -335,8 +335,6 @@ const useMainMethod = () => {
       availableData.map((object) => [object[x], object])
     );
 
-    console.log(pivotValues);
-
     const pivArray = [...pivotValues];
 
     const lastTerm = pivArray[pivArray.length - 1];
@@ -473,15 +471,25 @@ const useMainMethod = () => {
     ref: gridRef,
   });
 
+  const xAxisTickFormatter = useCallback(
+    (tickValue) => {
+      if (fileName !== "graduation") return tickValue;
+
+      return formatGradRateXValue(delayedMeasure, tickValue);
+    },
+    [fileName, delayedMeasure]
+  );
+
   const columnDefs = useMemo(
     () =>
       getColumnDefs({
+        headerValueGetter: ({ colDef: { field } }) => xAxisTickFormatter(field),
         measure: delayedMeasure,
         data: pivotedData,
         shouldFindRates,
         totalRow,
       }),
-    [pivotedData, totalRow, delayedMeasure, shouldFindRates]
+    [pivotedData, totalRow, delayedMeasure, shouldFindRates, xAxisTickFormatter]
   );
 
   const defaultColDef = useMemo(() => ({ suppressMovable: true }), []);
@@ -491,15 +499,6 @@ const useMainMethod = () => {
   const onSortChanged = useCallback((e) => e.api.refreshCells(), []);
 
   const onBodyScrollEnd = useCallback((e) => e.api.autoSizeAllColumns(), []);
-
-  const xAxisTickFormatter = useCallback(
-    (tickValue) => {
-      if (fileName !== "graduation") return tickValue;
-
-      return formatGradRateXValue(delayedMeasure, tickValue);
-    },
-    [fileName, delayedMeasure]
-  );
 
   return {
     onChange: {

@@ -51,7 +51,13 @@ const getRateValueFormatter =
     }
   };
 
-export const getColumnDefs = ({ shouldFindRates, totalRow, measure, data }) => {
+export const getColumnDefs = ({
+  headerValueGetter,
+  shouldFindRates,
+  totalRow,
+  measure,
+  data,
+}) => {
   if (!isLengthyArray(data)) return [];
 
   const stringDefs = Object.entries(data[0])
@@ -69,7 +75,13 @@ export const getColumnDefs = ({ shouldFindRates, totalRow, measure, data }) => {
         : getRateValueFormatter(measure),
     ];
 
-    const def = { valueFormatter, valueGetter, field, type };
+    const def = {
+      headerValueGetter,
+      valueFormatter,
+      valueGetter,
+      field,
+      type,
+    };
 
     if (shouldFindRates) def.cellRenderer = RateCellRenderer;
 
