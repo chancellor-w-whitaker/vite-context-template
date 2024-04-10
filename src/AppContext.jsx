@@ -82,6 +82,41 @@ function useNonBlockingState(initialState) {
   return [state, updateState, isPending];
 }
 
+const fieldDefs = {
+  courseOnline: {
+    valueFormatter: ({ value }) =>
+      value === "ECampus Online" ? "EKU Online" : value,
+  },
+  "4YrGraduate": { headerName: "4 Year Rate" },
+  "5YrGraduate": { headerName: "5 Year Rate" },
+  "6YrGraduate": { headerName: "6 Year Rate" },
+  numNotRet: { headerName: "Did Not Return" },
+  numGraduated: { headerName: "Graduated" },
+  numRetained: { headerName: "Retained" },
+  schedule: { headerName: "Course Type" },
+  minority: { headerName: "URM" },
+  ftpt: { headerName: "FT/PT" },
+  time: { headerName: "FT/PT" },
+};
+
+// const columnDefs = [
+//   { field: "minority", headerName: "URM" },
+//   { headerName: "FT/PT", field: "ftpt" },
+//   { headerName: "FT/PT", field: "time" },
+//   { headerName: "Retained", field: "numRetained" },
+//   { headerName: "Graduated", field: "numGraduated" },
+//   { headerName: "Did Not Return", field: "numNotRet" },
+//   { headerName: "Course Type", field: "schedule" },
+//   { headerName: "4 Year Rate", field: "4YrGraduate" },
+//   { headerName: "5 Year Rate", field: "5YrGraduate" },
+//   { headerName: "6 Year Rate", field: "6YrGraduate" },
+//   {
+//     valueFormatter: ({ value }) =>
+//       value === "ECampus Online" ? "EKU Online" : value,
+//     field: "online",
+//   },
+// ];
+
 const useMainMethod = () => {
   const gridRef = useRef();
 
@@ -166,6 +201,8 @@ const useMainMethod = () => {
     () => getRowsAndColumns(data),
     [data]
   );
+
+  console.log(columns);
 
   const rows = useMemo(
     () =>
@@ -487,6 +524,7 @@ const useMainMethod = () => {
         measure: delayedMeasure,
         data: pivotedData,
         shouldFindRates,
+        fieldDefs,
         totalRow,
       }),
     [pivotedData, totalRow, delayedMeasure, shouldFindRates, xAxisTickFormatter]
@@ -566,6 +604,7 @@ const useMainMethod = () => {
       groupBys,
     },
     initializers: { isDropdownWithIdOpen, storeDropdownById },
+    fieldDefs,
   };
 };
 

@@ -42,6 +42,7 @@ import { brandColors } from "../constants/brandColors";
 
 export const Chart = memo(
   ({
+    nameFormatter = toTitleCase,
     xAxisTickFormatter,
     valueFormatter,
     tooltipItems,
@@ -99,6 +100,14 @@ export const Chart = memo(
         fill: brandColors.ekuMaroon,
         dataKey: barDataKey,
       },
+      tooltip: {
+        formatter: (value, name) => [
+          valueFormatter(value),
+          nameFormatter(name),
+        ],
+        content: <CustomTooltip moreItems={tooltipItems}></CustomTooltip>,
+        labelFormatter: xAxisTickFormatter,
+      },
       line: {
         stroke: brandColors.kentuckyBluegrass,
         strokeLinecap: "round",
@@ -107,11 +116,6 @@ export const Chart = memo(
         type: "monotone",
         strokeWidth: 3,
         dot: false,
-      },
-      tooltip: {
-        formatter: (value, name) => [valueFormatter(value), toTitleCase(name)],
-        content: <CustomTooltip moreItems={tooltipItems}></CustomTooltip>,
-        labelFormatter: xAxisTickFormatter,
       },
       responsiveContainer: {
         onResize: (width) => setReturnedWidth(width),
@@ -129,8 +133,8 @@ export const Chart = memo(
         type: "category",
       },
       cartesianGrid: { strokeDasharray: "3 3" },
+      legend: { formatter: nameFormatter },
       composedChart: { data: [...data] },
-      legend: { formatter: toTitleCase },
     };
 
     return (

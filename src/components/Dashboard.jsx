@@ -38,12 +38,28 @@ export const Dashboard = () => {
     lists: { regressionTypes, dropdownItems, fileNames, groupBys, measures },
     initializers: { isDropdownWithIdOpen, storeDropdownById },
     grid: gridProps,
+    fieldDefs,
     chart,
     csv,
   } = context;
 
   const [squareRef, { width = 0 }] = useElementSize();
 
+  const getFieldTitle = (field) =>
+    field in fieldDefs && "headerName" in fieldDefs[field]
+      ? fieldDefs[field].headerName
+      : toTitleCase(field);
+
+  const getFormattedValue = ({ search, value, field }) =>
+    findSingleItemLabel({
+      value:
+        field in fieldDefs && "valueFormatter" in fieldDefs[field]
+          ? fieldDefs[field].valueFormatter({ value })
+          : value,
+      search,
+    });
+
+  const chartProps = { ...chart, nameFormatter: getFieldTitle };
   // console.log(width, height);
 
   return (
@@ -78,7 +94,7 @@ export const Dashboard = () => {
           >
             {measures.map((field) => (
               <SelectOption value={field} key={field}>
-                {toTitleCase(field)}
+                {getFieldTitle(field)}
               </SelectOption>
             ))}
           </FormFloatingSelect>
@@ -141,12 +157,12 @@ export const Dashboard = () => {
                   }}
                   className={`align-items-center justify-content-center w-100 d-flex btn bg-gradient dropdown-toggle shadow-sm`}
                   data-bs-auto-close="outside"
-                  title={toTitleCase(field)}
+                  title={getFieldTitle(field)}
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
                   type="button"
                 >
-                  <div className="text-truncate">{toTitleCase(field)}</div>
+                  <div className="text-truncate">{getFieldTitle(field)}</div>
                 </button>
                 <div className="dropdown-menu py-0 mx-0 rounded-3 shadow-sm overflow-hidden">
                   {isDropdownWithIdOpen(field) && (
@@ -202,7 +218,7 @@ export const Dashboard = () => {
                             key={value}
                             singleItem
                           >
-                            {findSingleItemLabel({ search, value })}
+                            {getFormattedValue({ search, field, value })}
                           </MyDropdownItem>
                         ))}
                         {irrelevant.length > 0 && (
@@ -226,7 +242,7 @@ export const Dashboard = () => {
                             key={value}
                             singleItem
                           >
-                            {findSingleItemLabel({ search, value })}
+                            {getFormattedValue({ search, field, value })}
                           </MyDropdownItem>
                         ))}
                         {unavailable.length > 0 && (
@@ -250,7 +266,7 @@ export const Dashboard = () => {
                             key={value}
                             singleItem
                           >
-                            {findSingleItemLabel({ search, value })}
+                            {getFormattedValue({ search, field, value })}
                           </MyDropdownItem>
                         ))}
                       </div>
@@ -262,7 +278,7 @@ export const Dashboard = () => {
           })}
         </div>
         {/* chart */}
-        <Chart {...chart}></Chart>
+        <Chart {...chartProps}></Chart>
         <div className="d-flex flex-row gap-2 flex-wrap">
           {/* download */}
           <CSVLink
@@ -321,7 +337,7 @@ export const Dashboard = () => {
                     value={field}
                     key={field}
                   >
-                    {toTitleCase(field)}
+                    {getFieldTitle(field)}
                   </SelectOption>
                 ))}
               </FormSelect>
