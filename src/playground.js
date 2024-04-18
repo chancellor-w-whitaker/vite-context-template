@@ -210,3 +210,44 @@ const finalDropdownsToRender = {
 
 // icon component? (probably highly unnecessary)
 // https://icons.getbootstrap.com/
+
+// ! fonts that I like
+/*
+const fonts = [
+  "anka-coder",
+  "daddytimemono",
+  "fantasque-sans",
+  "iosevka",
+  "profont",
+  "sax",
+  "serious-sans",
+  "sk-modernist",
+  "victor-mono",
+  "monoid",
+  "fairfax-hd-hax",
+  "envy-code-r",
+  "courier-prime-sans",
+  "anonymous-pro",
+  "apl385",
+  "average",
+  "b612-mono",
+  "bedstead",
+  "binchotan-sharp",
+  "cm-unicode",
+  "d2coding",
+  "fairfax-hd",
+  "hermit",
+  "inconsolata",
+  "inconsolata-otf",
+  "inconsolata-g",
+  "inconsolata-go",
+  "latin-modern",
+  "martian-mono",
+  "monofur",
+  "nanum-gothic-coding",
+  "pt",
+  "sono",
+  "source-code-pro",
+  "verily",
+];
+*/
