@@ -13,6 +13,7 @@ import { getBestRowCols } from "../functions/getBestRowCols";
 import { useElementSize } from "../hooks/useElementSize";
 import { MyDropdownItem } from "./MyDropdown";
 import { GridContainer, Grid } from "./Grid";
+import { W3Dropdown } from "./W3Dropdown";
 import { Picker } from "./Picker";
 import { Chart } from "./Chart";
 
@@ -45,19 +46,21 @@ export const Dashboard = () => {
 
   const [squareRef, { width = 0 }] = useElementSize();
 
-  const getFieldTitle = (field) =>
-    field in fieldDefs && "headerName" in fieldDefs[field]
+  const getFieldTitle = (field) => {
+    return field in fieldDefs && "headerName" in fieldDefs[field]
       ? fieldDefs[field].headerName
       : toTitleCase(field);
+  };
 
-  const getFormattedValue = ({ search, value, field }) =>
-    findSingleItemLabel({
+  const getFormattedValue = ({ search, value, field }) => {
+    return findSingleItemLabel({
       value:
         field in fieldDefs && "valueFormatter" in fieldDefs[field]
           ? fieldDefs[field].valueFormatter({ value })
           : value,
       search,
     });
+  };
 
   const chartProps = { ...chart, nameFormatter: getFieldTitle };
   // console.log(width, height);
@@ -343,6 +346,7 @@ export const Dashboard = () => {
               </FormSelect>
             }
           />
+          {/* <W3Dropdown title="Group by"></W3Dropdown> */}
         </div>
         {/* grid */}
         <GridContainer

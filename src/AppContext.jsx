@@ -91,9 +91,11 @@ const fieldDefs = {
   "5YrGraduate": { headerName: "5 Year Rate" },
   "6YrGraduate": { headerName: "6 Year Rate" },
   numNotRet: { headerName: "Did Not Return" },
+  crseNumb: { headerName: "Course Number" },
   numGraduated: { headerName: "Graduated" },
   numRetained: { headerName: "Retained" },
   schedule: { headerName: "Course Type" },
+  subject2: { headerName: "Subject" },
   minority: { headerName: "URM" },
   ftpt: { headerName: "FT/PT" },
   time: { headerName: "FT/PT" },
@@ -166,6 +168,8 @@ const useMainMethod = () => {
   );
 
   const data = useData(`data/${fileName}.json`);
+
+  console.log(data);
 
   const dataIsLoading = false;
 
@@ -290,11 +294,11 @@ const useMainMethod = () => {
       columns,
     });
 
-    adjustGroupBy({ setState: setGroupBy, pivotFields, columns });
+    // adjustGroupBy({ setState: setGroupBy, pivotFields, columns });
   }, [
     columns,
     setMeasure,
-    setGroupBy,
+    // setGroupBy,
     setDropdowns,
     measuresToOmit,
     defaultMeasure,

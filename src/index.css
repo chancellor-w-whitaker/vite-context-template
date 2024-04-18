@@ -393,3 +393,48 @@ mark {
   border-radius: 9px;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
+
+/* Dropdown Button */
+.w3-dropdown-button {
+  background-color: #3498db;
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Dropdown button on hover & focus */
+.w3-dropdown-button:hover,
+.w3-dropdown-button:focus {
+  background-color: #2980b9;
+}
+
+/* The container <div> - needed to position the dropdown content */
+.w3-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.w3-dropdown-content {
+  display: block;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+/* Links inside the dropdown */
+.w3-dropdown-content .w3-dropdown-item {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+/* Change color of dropdown links on hover */
+.w3-dropdown-content .w3-dropdown-item:hover {
+  background-color: #ddd;
+}
