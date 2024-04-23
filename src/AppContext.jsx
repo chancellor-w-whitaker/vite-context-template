@@ -53,6 +53,10 @@ export const AppContextProvider = ({ children }) => {
   );
 };
 
+// replace values less than 5 with an <5
+// replace "minority" string.toLowerCase() with URM
+// change "online" in enrollment to "eku online"
+
 const pivotFields = new Set(fileNames.map(({ pivotField }) => pivotField));
 
 const fileDefaults = {
@@ -87,6 +91,10 @@ const fieldDefs = {
     valueFormatter: ({ value }) =>
       value === "ECampus Online" ? "EKU Online" : value,
   },
+  minority: {
+    valueFormatter: ({ value }) => value.replace("Minority", "URM"),
+    headerName: "URM",
+  },
   "4YrGraduate": { headerName: "4 Year Rate" },
   "5YrGraduate": { headerName: "5 Year Rate" },
   "6YrGraduate": { headerName: "6 Year Rate" },
@@ -96,7 +104,6 @@ const fieldDefs = {
   numRetained: { headerName: "Retained" },
   schedule: { headerName: "Course Type" },
   subject2: { headerName: "Subject" },
-  minority: { headerName: "URM" },
   ftpt: { headerName: "FT/PT" },
   time: { headerName: "FT/PT" },
 };

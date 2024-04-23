@@ -12,6 +12,9 @@ import { MyDropdownItem } from "./MyDropdown";
 import { GridContainer, Grid } from "./Grid";
 import { Chart } from "./Chart";
 
+// replace values less than 5 with an *
+// replace "minority" string.toLowerCase() with URM
+
 export const Dashboard = () => {
   const context = useConsumeAppContext();
 
