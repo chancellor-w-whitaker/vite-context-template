@@ -51,6 +51,8 @@ export const Chart = memo(
     domain,
     data,
   }) => {
+    console.log(barDataKey, xAxisDataKey);
+
     const printRef = useRef();
 
     const handleDownloadImage = async () => {
@@ -108,6 +110,14 @@ export const Chart = memo(
         content: <CustomTooltip moreItems={tooltipItems}></CustomTooltip>,
         labelFormatter: xAxisTickFormatter,
       },
+      composedChart: {
+        data: [
+          ...data.map(({ [barDataKey]: value, hideInTooltip, ...rest }) => ({
+            ...rest,
+            [barDataKey]: value >= 5 || hideInTooltip ? value : null,
+          })),
+        ],
+      },
       line: {
         stroke: brandColors.kentuckyBluegrass,
         strokeLinecap: "round",
@@ -134,8 +144,9 @@ export const Chart = memo(
       },
       cartesianGrid: { strokeDasharray: "3 3" },
       legend: { formatter: nameFormatter },
-      composedChart: { data: [...data] },
     };
+
+    console.log(data);
 
     return (
       <>
@@ -178,17 +189,25 @@ export const Chart = memo(
               <Tooltip {...tooltip} />
               <Legend {...legend} />
               <Bar {...bar}>
-                {data.map(({ hideInTooltip = false }, index) => (
-                  <Cell
-                    fill={
-                      hideInTooltip
-                        ? brandColors.kentuckyBluegrass
-                        : brandColors.ekuMaroon
-                    }
-                    fillOpacity={hideInTooltip ? "75%" : "100%"}
-                    key={`cell-${index}`}
-                  />
-                ))}
+                {data.map(
+                  ({ hideInTooltip = false, [barDataKey]: value }, index) => (
+                    <Cell
+                      fillOpacity={
+                        value < 5 && !hideInTooltip
+                          ? "0%"
+                          : hideInTooltip
+                          ? "75%"
+                          : "100%"
+                      }
+                      fill={
+                        hideInTooltip
+                          ? brandColors.kentuckyBluegrass
+                          : brandColors.ekuMaroon
+                      }
+                      key={`cell-${index}`}
+                    />
+                  )
+                )}
               </Bar>
               <Line {...line} />
             </ComposedChart>

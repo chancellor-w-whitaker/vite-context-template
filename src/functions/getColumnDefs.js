@@ -16,9 +16,9 @@ const getStandardValueGetter =
     }
   };
 
-const standardValueFormatter = ({ value }) => {
+export const standardValueFormatter = ({ value }) => {
   if (isNumber(value)) {
-    return formatMeasureValue(value);
+    return value < 5 ? "<5" : formatMeasureValue(value);
   }
 };
 

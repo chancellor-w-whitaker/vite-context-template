@@ -35,7 +35,6 @@ import { getMeasureValue } from "./functions/getMeasureValue";
 import { getMeasureRate } from "./functions/getMeasureRate";
 import { getColumnDefs } from "./functions/getColumnDefs";
 import { adjustMeasure } from "./functions/adjustMeasure";
-import { adjustGroupBy } from "./functions/adjustGroupBy";
 import { useBsDropdowns } from "./hooks/useBsDropdowns";
 import { brandColors } from "./constants/brandColors";
 import { totalField } from "./constants/totalField";
@@ -53,9 +52,9 @@ export const AppContextProvider = ({ children }) => {
   );
 };
 
-// replace values less than 5 with an <5
-// replace "minority" string.toLowerCase() with URM
-// change "online" in enrollment to "eku online"
+// first gen, low income, honors, athletes
+
+// add chad to repos
 
 const pivotFields = new Set(fileNames.map(({ pivotField }) => pivotField));
 
@@ -87,12 +86,16 @@ function useNonBlockingState(initialState) {
 }
 
 const fieldDefs = {
+  online: {
+    valueFormatter: ({ value = "" }) => value.replace("Online", "EKU Online"),
+    headerName: "EKU Online",
+  },
   courseOnline: {
-    valueFormatter: ({ value }) =>
+    valueFormatter: ({ value = "" }) =>
       value === "ECampus Online" ? "EKU Online" : value,
   },
   minority: {
-    valueFormatter: ({ value }) => value.replace("Minority", "URM"),
+    valueFormatter: ({ value = "" }) => value.replace("Minority", "URM"),
     headerName: "URM",
   },
   "4YrGraduate": { headerName: "4 Year Rate" },
@@ -679,3 +682,6 @@ const getNextTerm = (lastTerm, fileName) => {
       Number(lastTerm.split(" ")[4]) + 1
     }`;
 };
+
+// const chartValueFormatter = (value, onAxis) =>
+//   onAxis ? formatMeasureValue(value) : standardValueFormatter({ value });
