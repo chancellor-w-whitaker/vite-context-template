@@ -169,8 +169,6 @@ const useMainMethod = () => {
 
   const data = useData(`data/${fileName}.json`);
 
-  console.log(data);
-
   const dataIsLoading = false;
 
   const [dropdowns, setDropdowns, delayedDropdowns, dropdownsIsLoading] =
@@ -205,8 +203,6 @@ const useMainMethod = () => {
     () => getRowsAndColumns(data),
     [data]
   );
-
-  console.log(columns);
 
   const rows = useMemo(
     () =>
@@ -575,6 +571,15 @@ const useMainMethod = () => {
       measure,
       groupBy,
     },
+    grid: {
+      pinnedTopRowData: delayedGroupBy.length > 0 ? totalRow : [],
+      rowData: delayedGroupBy.length > 0 ? pivotedData : totalRow,
+      columnDefs: columnDefs,
+      onBodyScrollEnd,
+      defaultColDef,
+      onSortChanged,
+      ref: gridRef,
+    },
     chart: {
       valueFormatter: !shouldFindRates ? formatMeasureValue : formatMeasureRate,
       barDataKey: delayedMeasure,
@@ -583,15 +588,6 @@ const useMainMethod = () => {
       data: chartData,
       tooltipItems,
       domain,
-    },
-    grid: {
-      pinnedTopRowData: totalRow,
-      columnDefs: columnDefs,
-      rowData: pivotedData,
-      onBodyScrollEnd,
-      defaultColDef,
-      onSortChanged,
-      ref: gridRef,
     },
     csv: {
       filename: `${toKebabCase(displayName)}-${toKebabCase(

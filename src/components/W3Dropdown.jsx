@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useState } from "react";
 import { useRef } from "react";
 
-const Checkbox = ({ checked }) => {
+const Checkbox = ({ children, checked }) => {
   return (
     <div className="icon-link">
       {checked ? (
@@ -29,12 +29,20 @@ const Checkbox = ({ checked }) => {
           <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z" />
         </svg>
       )}
-      Link 1
+      {children}
     </div>
   );
 };
 
-export const W3Dropdown = ({ title = "Click Me" }) => {
+export const W3DropdownItem = ({ children, checked, ...rest }) => {
+  return (
+    <div {...rest} className="w3-dropdown-item">
+      <Checkbox checked={checked}>{children}</Checkbox>
+    </div>
+  );
+};
+
+export const W3Dropdown = ({ title = "Click Me", children }) => {
   const popover = useRef();
 
   const [isOpen, toggle] = useState(false);
@@ -74,24 +82,7 @@ export const W3Dropdown = ({ title = "Click Me" }) => {
           style={{ maxHeight: 200 }}
           ref={popover}
         >
-          <div className="w3-dropdown-item">
-            <Checkbox></Checkbox>
-          </div>
-          <div className="w3-dropdown-item">
-            <Checkbox></Checkbox>
-          </div>
-          <div className="w3-dropdown-item">
-            <Checkbox></Checkbox>
-          </div>
-          <div className="w3-dropdown-item">
-            <Checkbox></Checkbox>
-          </div>
-          <div className="w3-dropdown-item">
-            <Checkbox></Checkbox>
-          </div>
-          <div className="w3-dropdown-item">
-            <Checkbox></Checkbox>
-          </div>
+          {children}
         </div>
       )}
     </div>

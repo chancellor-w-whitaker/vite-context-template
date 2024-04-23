@@ -1,20 +1,15 @@
 import { CSVLink } from "react-csv";
 
-import {
-  FormFloatingSelect,
-  SelectOption,
-  FormSelect,
-} from "./FormFloatingSelect";
+import { FormFloatingSelect, SelectOption } from "./FormFloatingSelect";
 import { findSingleItemLabel } from "../functions/findSingleItemLabel";
 import { useConsumeAppContext } from "../hooks/useConsumeAppContext";
 import { toTitleCase } from "../functions/formatters/toTitleCase";
 import { getDropdownData } from "../functions/getDropdownData";
 import { getBestRowCols } from "../functions/getBestRowCols";
+import { W3DropdownItem, W3Dropdown } from "./W3Dropdown";
 import { useElementSize } from "../hooks/useElementSize";
 import { MyDropdownItem } from "./MyDropdown";
 import { GridContainer, Grid } from "./Grid";
-import { W3Dropdown } from "./W3Dropdown";
-import { Picker } from "./Picker";
 import { Chart } from "./Chart";
 
 export const Dashboard = () => {
@@ -63,7 +58,6 @@ export const Dashboard = () => {
   };
 
   const chartProps = { ...chart, nameFormatter: getFieldTitle };
-  // console.log(width, height);
 
   return (
     <>
@@ -103,9 +97,23 @@ export const Dashboard = () => {
           </FormFloatingSelect>
           {/* select regression */}
           <FormFloatingSelect
+            label={
+              <div className="icon-link">
+                Regression Type
+                {/* <svg
+                  className="bi bi-question-circle-fill fs-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                  height={16}
+                  width={16}
+                >
+                  <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.496 6.033h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286a.237.237 0 0 0 .241.247m2.325 6.443c.61 0 1.029-.394 1.029-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94 0 .533.425.927 1.01.927z" />
+                </svg> */}
+              </div>
+            }
             onChange={onRegressionTypeChange}
             className="col col-max-md-12"
-            label="Regression Type"
             value={regressionType}
           >
             {regressionTypes.map((type) => (
@@ -301,7 +309,7 @@ export const Dashboard = () => {
             </svg>
           </CSVLink>
           {/* select group by */}
-          <Picker
+          {/* <Picker
             renderSwatch={({ isOpen, open }) => (
               <button
                 className={`btn btn-secondary bg-gradient shadow-sm icon-link ${
@@ -345,8 +353,18 @@ export const Dashboard = () => {
                 ))}
               </FormSelect>
             }
-          />
-          {/* <W3Dropdown title="Group by"></W3Dropdown> */}
+          /> */}
+          <W3Dropdown title="Group by">
+            {groupBys.map((field) => (
+              <W3DropdownItem
+                onClick={() => onGroupByChange({ target: { value: field } })}
+                checked={groupBy.includes(field)}
+                key={field}
+              >
+                {getFieldTitle(field)}
+              </W3DropdownItem>
+            ))}
+          </W3Dropdown>
         </div>
         {/* grid */}
         <GridContainer
