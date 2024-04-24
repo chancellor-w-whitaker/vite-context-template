@@ -52,6 +52,71 @@ export const AppContextProvider = ({ children }) => {
   );
 };
 
+const getRegressionTooltipItems = (string, r2) => {
+  const splitOnExponent = string.split("^");
+
+  if (splitOnExponent.length > 1) {
+    splitOnExponent.push(splitOnExponent[1].split(" "));
+
+    splitOnExponent[1] = splitOnExponent[2].shift();
+  } else {
+    splitOnExponent[1] = "";
+
+    splitOnExponent[2] = [];
+  }
+
+  const [firstPart, exponent, theRest] = splitOnExponent;
+
+  return [
+    {
+      value: (
+        <>
+          {firstPart}
+          <sup>{exponent}</sup> {theRest.join(" ")}
+        </>
+      ),
+      color: brandColors.kentuckyBluegrass,
+      className: "fst-italic",
+    },
+    {
+      value: (
+        <>
+          R<sup>2</sup> = {r2.toLocaleString()}
+        </>
+      ),
+      color: brandColors.kentuckyBluegrass,
+      className: "fst-italic",
+    },
+  ];
+};
+
+function getBaseLog(x, y) {
+  return Math.log(y) / Math.log(x);
+}
+
+const formatGradRateXValue = (measure, value) => {
+  const termYear = toTitleCase(value).split(" ")[1];
+
+  const elapsedYears = toTitleCase(measure).split(" ")[0];
+
+  return `${value} to Summer ${Number(termYear) + Number(elapsedYears)}`;
+};
+
+const getNextTerm = (lastTerm, fileName) => {
+  if (["graduation", "spring", "summer", "fall"].includes(fileName))
+    return `${lastTerm.split(" ")[0]} ${Number(lastTerm.split(" ")[1]) + 1}`;
+
+  if (["degrees", "hours"].includes(fileName))
+    return `${Number(lastTerm.split("-")[0]) + 1}-${
+      Number(lastTerm.split("-")[1]) + 1
+    }`;
+
+  if (["retention"].includes(fileName))
+    return `Fall ${Number(lastTerm.split(" ")[1]) + 1} to Fall ${
+      Number(lastTerm.split(" ")[4]) + 1
+    }`;
+};
+
 // first gen, low income, honors, athletes
 
 // add chad to repos
@@ -581,6 +646,16 @@ const useMainMethod = () => {
       measure,
       groupBy,
     },
+    chart: {
+      valueFormatter: !shouldFindRates ? formatMeasureValue : formatMeasureRate,
+      barDataKey: delayedMeasure,
+      xAxisDataKey: pivotField,
+      xAxisTickFormatter,
+      data: chartData,
+      shouldFindRates,
+      tooltipItems,
+      domain,
+    },
     grid: {
       pinnedTopRowData: delayedGroupBy.length > 0 ? totalRow : [],
       rowData: delayedGroupBy.length > 0 ? pivotedData : totalRow,
@@ -589,15 +664,6 @@ const useMainMethod = () => {
       defaultColDef,
       onSortChanged,
       ref: gridRef,
-    },
-    chart: {
-      valueFormatter: !shouldFindRates ? formatMeasureValue : formatMeasureRate,
-      barDataKey: delayedMeasure,
-      xAxisDataKey: pivotField,
-      xAxisTickFormatter,
-      data: chartData,
-      tooltipItems,
-      domain,
     },
     csv: {
       filename: `${toKebabCase(displayName)}-${toKebabCase(
@@ -616,71 +682,6 @@ const useMainMethod = () => {
     initializers: { isDropdownWithIdOpen, storeDropdownById },
     fieldDefs,
   };
-};
-
-const getRegressionTooltipItems = (string, r2) => {
-  const splitOnExponent = string.split("^");
-
-  if (splitOnExponent.length > 1) {
-    splitOnExponent.push(splitOnExponent[1].split(" "));
-
-    splitOnExponent[1] = splitOnExponent[2].shift();
-  } else {
-    splitOnExponent[1] = "";
-
-    splitOnExponent[2] = [];
-  }
-
-  const [firstPart, exponent, theRest] = splitOnExponent;
-
-  return [
-    {
-      value: (
-        <>
-          {firstPart}
-          <sup>{exponent}</sup> {theRest.join(" ")}
-        </>
-      ),
-      color: brandColors.kentuckyBluegrass,
-      className: "fst-italic",
-    },
-    {
-      value: (
-        <>
-          R<sup>2</sup> = {r2.toLocaleString()}
-        </>
-      ),
-      color: brandColors.kentuckyBluegrass,
-      className: "fst-italic",
-    },
-  ];
-};
-
-function getBaseLog(x, y) {
-  return Math.log(y) / Math.log(x);
-}
-
-const formatGradRateXValue = (measure, value) => {
-  const termYear = toTitleCase(value).split(" ")[1];
-
-  const elapsedYears = toTitleCase(measure).split(" ")[0];
-
-  return `${value} to Summer ${Number(termYear) + Number(elapsedYears)}`;
-};
-
-const getNextTerm = (lastTerm, fileName) => {
-  if (["graduation", "spring", "summer", "fall"].includes(fileName))
-    return `${lastTerm.split(" ")[0]} ${Number(lastTerm.split(" ")[1]) + 1}`;
-
-  if (["degrees", "hours"].includes(fileName))
-    return `${Number(lastTerm.split("-")[0]) + 1}-${
-      Number(lastTerm.split("-")[1]) + 1
-    }`;
-
-  if (["retention"].includes(fileName))
-    return `Fall ${Number(lastTerm.split(" ")[1]) + 1} to Fall ${
-      Number(lastTerm.split(" ")[4]) + 1
-    }`;
 };
 
 // const chartValueFormatter = (value, onAxis) =>

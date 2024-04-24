@@ -2,6 +2,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   ComposedChart,
+  LabelList,
   Tooltip,
   Legend,
   XAxis,
@@ -44,6 +45,7 @@ export const Chart = memo(
   ({
     nameFormatter = toTitleCase,
     xAxisTickFormatter,
+    shouldFindRates,
     valueFormatter,
     tooltipItems,
     xAxisDataKey,
@@ -51,8 +53,6 @@ export const Chart = memo(
     domain,
     data,
   }) => {
-    console.log(barDataKey, xAxisDataKey);
-
     const printRef = useRef();
 
     const handleDownloadImage = async () => {
@@ -80,6 +80,18 @@ export const Chart = memo(
 
     const breakpoints = { medium: 768, small: 576 };
 
+    const mapFunction = shouldFindRates
+      ? (row) => row
+      : ({ [barDataKey]: value, hideInTooltip, ...rest }) => ({
+          [barDataKey]: value > 5 || value === 0 || hideInTooltip ? value : 5,
+          hideInTooltip,
+          ...rest,
+        });
+
+    const adjustedData = data.map(mapFunction);
+
+    console.log(data);
+
     const {
       responsiveContainer,
       composedChart,
@@ -92,13 +104,55 @@ export const Chart = memo(
       bar,
     } = {
       bar: {
-        label: {
-          angle: returnedWidth > breakpoints.small ? 0 : -90,
-          fill: brandColors.goldenrodYellow,
-          formatter: valueFormatter,
-          fillOpacity: "100%",
-          fontSize: 20,
-        },
+        children: (
+          <>
+            {data.map(
+              ({ hideInTooltip = false, [barDataKey]: value }, index) => (
+                <Cell
+                  stroke={
+                    value > 5 || value === 0 || hideInTooltip
+                      ? "none"
+                      : brandColors.ekuMaroon
+                  }
+                  fill={
+                    hideInTooltip
+                      ? brandColors.kentuckyBluegrass
+                      : brandColors.ekuMaroon
+                  }
+                  fillOpacity={
+                    value > 5 || value === 0 || hideInTooltip ? "100%" : "50%"
+                  }
+                  key={`cell-${index}`}
+                />
+              )
+            )}
+            <LabelList
+              {...{
+                valueAccessor: ({ hideInTooltip, value }) =>
+                  value > 5 || value === 0 || hideInTooltip ? value : "≤5",
+                formatter: (value) =>
+                  typeof value === "number" ? valueFormatter(value) : value,
+                angle: returnedWidth > breakpoints.small ? 0 : -90,
+                fill: brandColors.goldenrodYellow,
+                strokeLinejoin: "round",
+                strokeLinecap: "round",
+                className: "fw-bold",
+                paintOrder: "stroke",
+                fillOpacity: "100%",
+                stroke: "#343a40",
+                strokeWidth: 2,
+                fontSize: 20,
+              }}
+            ></LabelList>
+          </>
+        ),
+        // label: {
+        //   angle: returnedWidth > breakpoints.small ? 0 : -90,
+        //   fill: brandColors.goldenrodYellow,
+        //   formatter: valueFormatter,
+        //   fillOpacity: "100%",
+        //   fontSize: 20,
+        // },
         fill: brandColors.ekuMaroon,
         dataKey: barDataKey,
       },
@@ -109,14 +163,6 @@ export const Chart = memo(
         ],
         content: <CustomTooltip moreItems={tooltipItems}></CustomTooltip>,
         labelFormatter: xAxisTickFormatter,
-      },
-      composedChart: {
-        data: [
-          ...data.map(({ [barDataKey]: value, hideInTooltip, ...rest }) => ({
-            ...rest,
-            [barDataKey]: value >= 5 || hideInTooltip ? value : null,
-          })),
-        ],
       },
       line: {
         stroke: brandColors.kentuckyBluegrass,
@@ -142,9 +188,26 @@ export const Chart = memo(
         dataKey: xAxisDataKey,
         type: "category",
       },
+      composedChart: {
+        data: adjustedData,
+      },
       cartesianGrid: { strokeDasharray: "3 3" },
       legend: { formatter: nameFormatter },
     };
+
+    const chartJsx = (
+      <ResponsiveContainer {...responsiveContainer}>
+        <ComposedChart {...composedChart}>
+          <CartesianGrid {...cartesianGrid} />
+          <XAxis {...xAxis} />
+          <YAxis {...yAxis} />
+          <Tooltip {...tooltip} />
+          <Legend {...legend} />
+          <Bar {...bar} />
+          <Line {...line} />
+        </ComposedChart>
+      </ResponsiveContainer>
+    );
 
     console.log(data);
 
@@ -180,39 +243,7 @@ export const Chart = memo(
             <span>Zoomed</span>
           </label>
         </div>
-        <div>
-          <ResponsiveContainer {...responsiveContainer}>
-            <ComposedChart {...composedChart}>
-              <CartesianGrid {...cartesianGrid} />
-              <XAxis {...xAxis} />
-              <YAxis {...yAxis} />
-              <Tooltip {...tooltip} />
-              <Legend {...legend} />
-              <Bar {...bar}>
-                {data.map(
-                  ({ hideInTooltip = false, [barDataKey]: value }, index) => (
-                    <Cell
-                      fillOpacity={
-                        value < 5 && !hideInTooltip
-                          ? "0%"
-                          : hideInTooltip
-                          ? "75%"
-                          : "100%"
-                      }
-                      fill={
-                        hideInTooltip
-                          ? brandColors.kentuckyBluegrass
-                          : brandColors.ekuMaroon
-                      }
-                      key={`cell-${index}`}
-                    />
-                  )
-                )}
-              </Bar>
-              <Line {...line} />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </div>
+        <div>{chartJsx}</div>
         <div
           style={{
             position: "fixed",
@@ -222,29 +253,7 @@ export const Chart = memo(
           }}
           ref={printRef}
         >
-          <ResponsiveContainer {...responsiveContainer}>
-            <ComposedChart {...composedChart}>
-              <CartesianGrid {...cartesianGrid} />
-              <XAxis {...xAxis} />
-              <YAxis {...yAxis} />
-              <Tooltip {...tooltip} />
-              <Legend {...legend} />
-              <Bar {...bar}>
-                {data.map(({ hideInTooltip = false }, index) => (
-                  <Cell
-                    fill={
-                      hideInTooltip
-                        ? brandColors.kentuckyBluegrass
-                        : brandColors.ekuMaroon
-                    }
-                    fillOpacity={hideInTooltip ? "75%" : "100%"}
-                    key={`cell-${index}`}
-                  />
-                ))}
-              </Bar>
-              <Line {...line} />
-            </ComposedChart>
-          </ResponsiveContainer>
+          {chartJsx}
         </div>
       </>
     );

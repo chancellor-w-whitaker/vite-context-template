@@ -18,7 +18,7 @@ const getStandardValueGetter =
 
 export const standardValueFormatter = ({ value }) => {
   if (isNumber(value)) {
-    return value < 5 ? "<5" : formatMeasureValue(value);
+    return value <= 5 ? "≤5" : formatMeasureValue(value);
   }
 };
 
