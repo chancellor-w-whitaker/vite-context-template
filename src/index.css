@@ -163,3 +163,7 @@ mark {
 .w3-dropdown-content .w3-dropdown-item:hover {
   background-color: #ddd;
 }
+
+.pl-36px {
+  padding-left: 36px;
+}

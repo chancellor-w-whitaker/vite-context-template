@@ -1,3 +1,7 @@
+import confidentialityNumber, {
+  confidentialityString,
+  isConfidential,
+} from "../constants/confidentialityNumber";
 import { RateCellRenderer } from "../components/RateCellRenderer";
 import { rowIdColumnDef } from "../constants/rowIdColumnDef";
 import { formatMeasureValue } from "./formatMeasureValue";
@@ -18,7 +22,9 @@ const getStandardValueGetter =
 
 export const standardValueFormatter = ({ value }) => {
   if (isNumber(value)) {
-    return value <= 5 ? "≤5" : formatMeasureValue(value);
+    return value <= confidentialityNumber
+      ? confidentialityString
+      : formatMeasureValue(value);
   }
 };
 
@@ -61,11 +67,18 @@ export const getColumnDefs = ({
 }) => {
   if (!isLengthyArray(data)) return [];
 
+  const cellClassRules = {
+    "text-danger": ({ value }) =>
+      isConfidential({ isRate: shouldFindRates, inFuture: false, value }),
+    // "fst-italic": ({ value }) => isConfidential({ inFuture: false, value }),
+    // "fw-light": ({ value }) => isConfidential({ inFuture: false, value }),
+  };
+
   const getFieldProps = (field) => (field in fieldDefs ? fieldDefs[field] : {});
 
   const stringDefs = Object.entries(data[0])
     .filter(([field, value]) => typeof value === "string")
-    .map(([field]) => ({ field, ...getFieldProps(field) }));
+    .map(([field]) => ({ cellClassRules, field, ...getFieldProps(field) }));
 
   const numberDefs = Object.entries(totalRow[0]).map(([field]) => {
     const [type, valueGetter, valueFormatter] = [
@@ -81,6 +94,7 @@ export const getColumnDefs = ({
     const def = {
       headerValueGetter,
       valueFormatter,
+      cellClassRules,
       valueGetter,
       field,
       type,

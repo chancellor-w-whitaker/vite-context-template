@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
 } from "react";
+import { useEffect } from "react";
 
 import {
   findOriginalRegressionResult,
@@ -44,8 +45,8 @@ import { fileNames } from "./constants/fileNames";
 
 export const AppContext = createContext(null);
 
-export const AppContextProvider = ({ children }) => {
-  const appContext = useMainMethod();
+export const AppContextProvider = ({ initialDropdowns, children }) => {
+  const appContext = useMainMethod(initialDropdowns);
 
   return (
     <AppContext.Provider value={appContext}>{children}</AppContext.Provider>
@@ -194,7 +195,7 @@ const fieldDefs = {
 //   },
 // ];
 
-const useMainMethod = () => {
+const useMainMethod = (initialDropdowns) => {
   const gridRef = useRef();
 
   useSetBsBgVariantOfBody("primary-subtle");
@@ -247,7 +248,7 @@ const useMainMethod = () => {
   const dataIsLoading = false;
 
   const [dropdowns, setDropdowns, delayedDropdowns, dropdownsIsLoading] =
-    useResponsiveState({});
+    useResponsiveState(initialDropdowns);
 
   const filteredRowsIsLoading = dropdownsIsLoading;
 
@@ -507,13 +508,13 @@ const useMainMethod = () => {
 
       const isNull = point[y] === null;
 
-      const hideInTooltip = isNull ? y : false;
+      const inFuture = isNull ? y : false;
 
       return {
         ...point,
         [y]: isNull ? prediction : point[y],
         prediction: prediction,
-        hideInTooltip,
+        inFuture,
       };
     });
 

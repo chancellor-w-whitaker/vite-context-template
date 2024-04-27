@@ -1,25 +1,28 @@
 import { useId } from "react";
 
 export const FormFloatingSelect = ({
+  selectClassName = "",
   className = "",
   onChange,
   children,
   label,
   value,
+  more,
 }) => {
   const id = useId();
 
   return (
     <div className={`form-floating ${className}`.trimEnd()}>
       <FormSelect
+        className={`shadow-sm ${selectClassName}`.trimEnd()}
         id={`${id}-floatingSelect`}
-        className="shadow-sm"
         onChange={onChange}
         value={value}
       >
         {children}
       </FormSelect>
       <label htmlFor={`${id}-floatingSelect`}>{label}</label>
+      {more}
     </div>
   );
 };

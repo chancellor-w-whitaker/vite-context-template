@@ -14,6 +14,10 @@ import {
 import { Fragment, useState, useRef, memo } from "react";
 import html2canvas from "html2canvas";
 
+import confidentialityNumber, {
+  confidentialityString,
+  isConfidential,
+} from "../constants/confidentialityNumber";
 import { toTitleCase } from "../functions/formatters/toTitleCase";
 import { brandColors } from "../constants/brandColors";
 
@@ -82,15 +86,19 @@ export const Chart = memo(
 
     const mapFunction = shouldFindRates
       ? (row) => row
-      : ({ [barDataKey]: value, hideInTooltip, ...rest }) => ({
-          [barDataKey]: value > 5 || value === 0 || hideInTooltip ? value : 5,
-          hideInTooltip,
+      : ({ [barDataKey]: value, inFuture, ...rest }) => ({
+          [barDataKey]: isConfidential({
+            isRate: shouldFindRates,
+            inFuture,
+            value,
+          })
+            ? confidentialityNumber
+            : value,
+          inFuture,
           ...rest,
         });
 
     const adjustedData = data.map(mapFunction);
-
-    console.log(data);
 
     const {
       responsiveContainer,
@@ -106,40 +114,40 @@ export const Chart = memo(
       bar: {
         children: (
           <>
-            {data.map(
-              ({ hideInTooltip = false, [barDataKey]: value }, index) => (
-                <Cell
-                  stroke={
-                    value > 5 || value === 0 || hideInTooltip
-                      ? "none"
-                      : brandColors.ekuMaroon
-                  }
-                  fill={
-                    hideInTooltip
-                      ? brandColors.kentuckyBluegrass
-                      : brandColors.ekuMaroon
-                  }
-                  fillOpacity={
-                    value > 5 || value === 0 || hideInTooltip ? "100%" : "50%"
-                  }
-                  key={`cell-${index}`}
-                />
-              )
-            )}
+            {data.map(({ [barDataKey]: value, inFuture = false }, index) => (
+              <Cell
+                stroke={
+                  isConfidential({ isRate: shouldFindRates, inFuture, value })
+                    ? brandColors.ekuMaroon
+                    : "none"
+                }
+                fillOpacity={
+                  isConfidential({ isRate: shouldFindRates, inFuture, value })
+                    ? "50%"
+                    : "100%"
+                }
+                fill={
+                  inFuture
+                    ? brandColors.kentuckyBluegrass
+                    : brandColors.ekuMaroon
+                }
+                key={`cell-${index}`}
+              />
+            ))}
             <LabelList
               {...{
-                valueAccessor: ({ hideInTooltip, value }) =>
-                  value > 5 || value === 0 || hideInTooltip ? value : "≤5",
+                valueAccessor: ({ inFuture, value }) =>
+                  isConfidential({ isRate: shouldFindRates, inFuture, value })
+                    ? confidentialityString
+                    : value,
                 formatter: (value) =>
                   typeof value === "number" ? valueFormatter(value) : value,
                 angle: returnedWidth > breakpoints.small ? 0 : -90,
                 fill: brandColors.goldenrodYellow,
-                strokeLinejoin: "round",
-                strokeLinecap: "round",
                 className: "fw-bold",
                 paintOrder: "stroke",
                 fillOpacity: "100%",
-                stroke: "#343a40",
+                stroke: "#212529",
                 strokeWidth: 2,
                 fontSize: 20,
               }}
@@ -157,11 +165,16 @@ export const Chart = memo(
         dataKey: barDataKey,
       },
       tooltip: {
+        content: (
+          <CustomTooltip
+            shouldFindRates={shouldFindRates}
+            moreItems={tooltipItems}
+          ></CustomTooltip>
+        ),
         formatter: (value, name) => [
           valueFormatter(value),
           nameFormatter(name),
         ],
-        content: <CustomTooltip moreItems={tooltipItems}></CustomTooltip>,
         labelFormatter: xAxisTickFormatter,
       },
       line: {
@@ -208,8 +221,6 @@ export const Chart = memo(
         </ComposedChart>
       </ResponsiveContainer>
     );
-
-    console.log(data);
 
     return (
       <>
@@ -264,6 +275,7 @@ Chart.displayName = "Chart";
 
 const CustomTooltip = (props) => {
   const {
+    shouldFindRates,
     moreItems = [],
     labelFormatter,
     separator,
@@ -299,15 +311,23 @@ const CustomTooltip = (props) => {
           {payload.map(({ payload, value, color, name, unit }) => {
             const [formattedValue, formattedName] = formatter(value, name);
 
-            const { hideInTooltip = false } = payload;
+            const { inFuture = false } = payload;
 
             // const shouldHide = "hide" in payload && payload.hide === name;
 
             return (
-              hideInTooltip !== name && (
+              inFuture !== name && (
                 <Fragment key={name}>
                   <TooltipItem
-                    value={formattedValue}
+                    value={
+                      isConfidential({
+                        isRate: shouldFindRates,
+                        inFuture,
+                        value,
+                      }) && name !== "prediction"
+                        ? confidentialityString
+                        : formattedValue
+                    }
                     separator={separator}
                     name={formattedName}
                     className="fw-bold"
