@@ -1,7 +1,4 @@
-import { useCallback } from "react";
-import { useEffect } from "react";
-import { useState } from "react";
-import { useRef } from "react";
+import { usePopover } from "../hooks/usePopover";
 
 const Checkbox = ({ children, checked }) => {
   return (
@@ -43,15 +40,7 @@ export const W3DropdownItem = ({ children, checked, ...rest }) => {
 };
 
 export const W3Dropdown = ({ title = "Click Me", children }) => {
-  const popover = useRef();
-
-  const [isOpen, toggle] = useState(false);
-
-  const open = useCallback(() => toggle(true), []);
-
-  const close = useCallback(() => toggle(false), []);
-
-  useClickOutside(popover, close);
+  const { popover, isOpen, open } = usePopover();
 
   return (
     <div className="w3-dropdown">
@@ -87,36 +76,4 @@ export const W3Dropdown = ({ title = "Click Me", children }) => {
       )}
     </div>
   );
-};
-
-// Improved version of https://usehooks.com/useOnClickOutside/
-const useClickOutside = (ref, handler) => {
-  useEffect(() => {
-    let startedInside = false;
-    let startedWhenMounted = false;
-
-    const listener = (event) => {
-      // Do nothing if `mousedown` or `touchstart` started inside ref element
-      if (startedInside || !startedWhenMounted) return;
-      // Do nothing if clicking ref's element or descendent elements
-      if (!ref.current || ref.current.contains(event.target)) return;
-
-      handler(event);
-    };
-
-    const validateEventStart = (event) => {
-      startedWhenMounted = ref.current;
-      startedInside = ref.current && ref.current.contains(event.target);
-    };
-
-    document.addEventListener("mousedown", validateEventStart);
-    document.addEventListener("touchstart", validateEventStart);
-    document.addEventListener("click", listener);
-
-    return () => {
-      document.removeEventListener("mousedown", validateEventStart);
-      document.removeEventListener("touchstart", validateEventStart);
-      document.removeEventListener("click", listener);
-    };
-  }, [ref, handler]);
 };

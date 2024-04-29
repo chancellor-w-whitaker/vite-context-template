@@ -8,12 +8,137 @@ import { getDropdownData } from "../functions/getDropdownData";
 import { getBestRowCols } from "../functions/getBestRowCols";
 import { W3DropdownItem, W3Dropdown } from "./W3Dropdown";
 import { useElementSize } from "../hooks/useElementSize";
+import { usePopover } from "../hooks/usePopover";
 import { MyDropdownItem } from "./MyDropdown";
 import { GridContainer, Grid } from "./Grid";
 import { Chart } from "./Chart";
 
 // replace values less than 5 with an *
 // replace "minority" string.toLowerCase() with URM
+
+const NewTabLink = (props) => (
+  <a {...props} rel="noreferrer" target="_blank"></a>
+);
+
+const regressionAnswers = {
+  exponential: (
+    <>
+      In simple terms,{" "}
+      <NewTabLink
+        href="https://www.spsanderson.com/steveondata/posts/2023-11-20/index.html#:~:text=Understanding%20Exponential%20Regression&text=In%20simple%20terms%2C%20it's%20a,spread%2C%20or%20even%20financial%20investments."
+        className="link-info"
+      >
+        exponential regression
+      </NewTabLink>{" "}
+      is a statistical method used to model relationships where the rate of
+      change of a variable is proportional to its current state. Think of
+      scenarios like population growth, viral spread, or even financial
+      investments.
+    </>
+  ),
+  polynomial: (
+    <>
+      <NewTabLink
+        href="https://www.analyticsvidhya.com/blog/2021/10/understanding-polynomial-regression-model/#:~:text=Polynomial%20regression%2C%20denoted%20as%20E,to%20the%20Gauss%2DMarkov%20Theorem."
+        className="link-info"
+      >
+        Polynomial regression
+      </NewTabLink>
+      , denoted as E(y | x), characterizes fitting a nonlinear relationship
+      between the x value and the conditional mean of y. Typically, this
+      corresponds to the least-squares method. The least-square approach
+      minimizes the coefficient variance according to the Gauss-Markov Theorem.
+    </>
+  ),
+  linear: (
+    <>
+      What is{" "}
+      <NewTabLink
+        href="https://www.ibm.com/topics/linear-regression#:~:text=IBM-,What%20is%20linear%20regression%3F,is%20called%20the%20independent%20variable."
+        className="link-info"
+      >
+        linear regression
+      </NewTabLink>
+      ? Linear regression analysis is used to predict the value of a variable
+      based on the value of another variable. The variable you want to predict
+      is called the dependent variable. The variable you are using to predict
+      the other variable&apos;s value is called the independent variable.
+    </>
+  ),
+  power: (
+    <>
+      <NewTabLink
+        href="https://users.wpi.edu/~goulet/MME523/chris_b.htm#:~:text=Power%20Regression%20is%20one%20in,the%20models%20in%20similar%20fashion."
+        className="link-info"
+      >
+        Power regression
+      </NewTabLink>{" "}
+      is one in which the response variable is proportional to the explanatory
+      variable raised to a power. Since both the exponential form and the power
+      form involve exponents, we can construct the models in similar fashion.
+    </>
+  ),
+  logarithmic: (
+    <>
+      A{" "}
+      <NewTabLink
+        href="https://articles.outlier.org/logarithmic-regression#:~:text=A%20logarithmic%20regression%20is%20a,the%20logarithm%20of%20a%20variable."
+        className="link-info"
+      >
+        logarithmic regression
+      </NewTabLink>{" "}
+      is a modified linear regression that includes one or more logged
+      variables, where “logged variable” simply means taking the logarithm of a
+      variable.
+    </>
+  ),
+};
+
+const Question = ({ children }) => {
+  const { popover, isOpen, open } = usePopover();
+
+  return (
+    <div
+      style={{
+        border: "1px solid transparent",
+        marginBottom: 10,
+        marginRight: 36,
+        marginLeft: 12,
+        marginTop: 26,
+      }}
+      className="w3-dropdown position-absolute bottom-0 z-3"
+    >
+      <button
+        className="btn btn-primary p-0 border-0 rounded-0 d-flex align-items-center text-dark bg-white"
+        style={{ lineHeight: 1.25 }}
+        onClick={open}
+      >
+        <svg
+          className="bi bi-question-circle-fill"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="currentColor"
+          viewBox="0 0 16 16"
+          height={16}
+          width={16}
+        >
+          <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.496 6.033h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286a.237.237 0 0 0 .241.247m2.325 6.443c.61 0 1.029-.394 1.029-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94 0 .533.425.927 1.01.927z" />
+        </svg>
+        ​
+      </button>
+      {isOpen && (
+        <div
+          className="w3-dropdown-content"
+          style={{ minWidth: 250 }}
+          ref={popover}
+        >
+          <div style={{ maxWidth: "none" }} className="tooltip-inner">
+            {children}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const Dashboard = () => {
   const context = useConsumeAppContext();
@@ -102,39 +227,13 @@ export const Dashboard = () => {
           <FormFloatingSelect
             more={
               <>
-                {/* <div
-                  style={{
-                    border: "1px solid transparent",
-                    marginBottom: 10,
-                    marginRight: 36,
-                    marginLeft: 12,
-                    marginTop: 26,
-                  }}
-                  className="position-absolute bottom-0 z-3"
-                >
-                  <button
-                    className="btn btn-primary p-0 border-0 rounded-0 d-flex align-items-center text-dark bg-white"
-                    style={{ lineHeight: 1.25 }}
-                  >
-                    <svg
-                      className="bi bi-question-circle-fill"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="currentColor"
-                      viewBox="0 0 16 16"
-                      height={16}
-                      width={16}
-                    >
-                      <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.496 6.033h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286a.237.237 0 0 0 .241.247m2.325 6.443c.61 0 1.029-.394 1.029-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94 0 .533.425.927 1.01.927z" />
-                    </svg>
-                    ​
-                  </button>
-                </div> */}
+                <Question>{regressionAnswers[regressionType]}</Question>
               </>
             }
             label={<div className="icon-link">Regression Type</div>}
             onChange={onRegressionTypeChange}
             className="col col-max-md-12"
-            // selectClassName="pl-36px"
+            selectClassName="pl-36px"
             value={regressionType}
           >
             {regressionTypes.map((type) => (

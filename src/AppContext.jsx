@@ -615,6 +615,27 @@ const useMainMethod = (initialDropdowns) => {
   const onBodyScrollEnd = useCallback((e) => e.api.autoSizeAllColumns(), []);
 
   return {
+    state: {
+      dropdowns: {
+        relevantEntries:
+          dropdowns === initialDropdowns
+            ? []
+            : Object.entries(dropdowns).filter(
+                ([key, value]) => value.dataRelevance && !pivotFields.has(key)
+              ),
+        dropdowns: dropdowns === initialDropdowns ? {} : dropdowns,
+      },
+      loading: {
+        filteredRows: filteredRowsIsLoading,
+        pivotedData: pivotedDataIsLoading,
+        data: dataIsLoading,
+        autoSize: waiting,
+      },
+      regressionType,
+      fileName,
+      measure,
+      groupBy,
+    },
     onChange: {
       dropdowns: {
         unavailableItems: onDropdownAllUnavailableChange,
@@ -628,24 +649,6 @@ const useMainMethod = (initialDropdowns) => {
       fileName: onFileNameChange,
       groupBy: onGroupByChange,
       measure: onMeasureChange,
-    },
-    state: {
-      dropdowns: {
-        relevantEntries: Object.entries(dropdowns).filter(
-          ([key, value]) => value.dataRelevance && !pivotFields.has(key)
-        ),
-        dropdowns,
-      },
-      loading: {
-        filteredRows: filteredRowsIsLoading,
-        pivotedData: pivotedDataIsLoading,
-        data: dataIsLoading,
-        autoSize: waiting,
-      },
-      regressionType,
-      fileName,
-      measure,
-      groupBy,
     },
     chart: {
       valueFormatter: !shouldFindRates ? formatMeasureValue : formatMeasureRate,
