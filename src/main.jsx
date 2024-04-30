@@ -5,12 +5,12 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import ReactDOM from "react-dom/client";
 import React from "react";
 
-import { Init } from "./components/Init.jsx";
+import App from "./App";
 import "./index.css";
 import "./fonts.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <Init></Init>
+    <App></App>
   </React.StrictMode>
 );

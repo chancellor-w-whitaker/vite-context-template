@@ -198,8 +198,6 @@ const fieldDefs = {
 const useMainMethod = (initialDropdowns) => {
   const gridRef = useRef();
 
-  useSetBsBgVariantOfBody("primary-subtle");
-
   const { isDropdownWithIdOpen, storeDropdownById } = useBsDropdowns();
 
   const [fileName, setFileName] = useNonBlockingState(fileNames[0].id);
@@ -613,9 +611,6 @@ const useMainMethod = (initialDropdowns) => {
   const onSortChanged = useCallback((e) => e.api.refreshCells(), []);
 
   const onBodyScrollEnd = useCallback((e) => e.api.autoSizeAllColumns(), []);
-
-  console.log("rowData", pivotedData);
-  console.log("pinnedTopRowData", totalRow);
 
   return {
     state: {

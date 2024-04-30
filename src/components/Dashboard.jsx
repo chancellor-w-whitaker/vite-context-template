@@ -191,7 +191,6 @@ export const Dashboard = () => {
     <>
       <div className="d-flex flex-column gap-4" ref={squareRef}>
         <div className="text-center">
-          <h1 className="display-3 mb-1">Factbook</h1>
           <h3 className="fw-normal text-muted mb-0">
             {fileNames.find(({ id }) => id === fileName).displayName}
           </h3>
