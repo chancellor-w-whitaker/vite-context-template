@@ -614,6 +614,9 @@ const useMainMethod = (initialDropdowns) => {
 
   const onBodyScrollEnd = useCallback((e) => e.api.autoSizeAllColumns(), []);
 
+  console.log("rowData", pivotedData);
+  console.log("pinnedTopRowData", totalRow);
+
   return {
     state: {
       dropdowns: {
@@ -650,8 +653,28 @@ const useMainMethod = (initialDropdowns) => {
       groupBy: onGroupByChange,
       measure: onMeasureChange,
     },
+    grid: {
+      rowData:
+        filteredRows.length === 0
+          ? []
+          : delayedGroupBy.length > 0
+          ? pivotedData
+          : totalRow,
+      pinnedTopRowData:
+        filteredRows.length === 0
+          ? []
+          : delayedGroupBy.length > 0
+          ? totalRow
+          : [],
+      columnDefs: columnDefs,
+      onBodyScrollEnd,
+      defaultColDef,
+      onSortChanged,
+      ref: gridRef,
+    },
     chart: {
       valueFormatter: !shouldFindRates ? formatMeasureValue : formatMeasureRate,
+      noRowsToShow: filteredRows.length === 0,
       barDataKey: delayedMeasure,
       xAxisDataKey: pivotField,
       xAxisTickFormatter,
@@ -659,15 +682,6 @@ const useMainMethod = (initialDropdowns) => {
       shouldFindRates,
       tooltipItems,
       domain,
-    },
-    grid: {
-      pinnedTopRowData: delayedGroupBy.length > 0 ? totalRow : [],
-      rowData: delayedGroupBy.length > 0 ? pivotedData : totalRow,
-      columnDefs: columnDefs,
-      onBodyScrollEnd,
-      defaultColDef,
-      onSortChanged,
-      ref: gridRef,
     },
     csv: {
       filename: `${toKebabCase(displayName)}-${toKebabCase(
