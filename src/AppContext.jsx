@@ -535,7 +535,7 @@ const useMainMethod = (initialDropdowns) => {
 
     const [min, max] = [Math.min(...allValues), Math.max(...allValues)];
 
-    const base = 10;
+    const base = 2;
 
     const power = Math.floor(getBaseLog(base, min));
 
