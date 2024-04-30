@@ -68,11 +68,14 @@ export const getColumnDefs = ({
   if (!isLengthyArray(data)) return [];
 
   const confidentialityFunction = ({ value }) =>
+    typeof value === "number" &&
     isConfidential({ isRate: shouldFindRates, inFuture: false, value });
+
+  const categoryFunction = ({ value }) => typeof value === "string";
 
   const cellClassRules = {
     "text-danger": confidentialityFunction,
-    // "fw-bold": confidentialityFunction,
+    "fw-bold": categoryFunction,
   };
 
   const getFieldProps = (field) => (field in fieldDefs ? fieldDefs[field] : {});
