@@ -67,8 +67,8 @@ export const W3Dropdown = ({ title = "Click Me", children }) => {
       </button>
       {isOpen && (
         <div
-          className="w3-dropdown-content overflow-y-scroll"
-          style={{ maxHeight: 200 }}
+          className="w3-dropdown-content overflow-y-scroll text-nowrap small"
+          style={{ maxHeight: 300 }}
           ref={popover}
         >
           {children}

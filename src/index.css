@@ -154,7 +154,7 @@ mark {
 /* Links inside the dropdown */
 .w3-dropdown-content .w3-dropdown-item {
   color: black;
-  padding: 12px 16px;
+  padding: 8px 12px;
   text-decoration: none;
   display: block;
 }

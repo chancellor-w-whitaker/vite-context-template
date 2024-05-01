@@ -198,6 +198,11 @@ const fieldDefs = {
 const useMainMethod = (initialDropdowns) => {
   const gridRef = useRef();
 
+  const autoSizeAllColumns = useCallback(
+    () => gridRef.current.api.autoSizeAllColumns(),
+    []
+  );
+
   const { isDropdownWithIdOpen, storeDropdownById } = useBsDropdowns();
 
   const [fileName, setFileName] = useNonBlockingState(fileNames[0].id);
@@ -693,6 +698,7 @@ const useMainMethod = (initialDropdowns) => {
       groupBys,
     },
     initializers: { isDropdownWithIdOpen, storeDropdownById },
+    autoSizeAllColumns,
     fieldDefs,
   };
 };

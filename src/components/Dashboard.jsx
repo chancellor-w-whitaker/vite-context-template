@@ -161,6 +161,7 @@ export const Dashboard = () => {
     },
     lists: { regressionTypes, dropdownItems, fileNames, groupBys, measures },
     initializers: { isDropdownWithIdOpen, storeDropdownById },
+    autoSizeAllColumns,
     grid: gridProps,
     fieldDefs,
     chart,
@@ -484,6 +485,13 @@ export const Dashboard = () => {
               </W3DropdownItem>
             ))}
           </W3Dropdown>
+          <button
+            className="btn btn-primary shadow-sm bg-gradient"
+            onClick={autoSizeAllColumns}
+            type="button"
+          >
+            Auto-Size Columns
+          </button>
         </div>
         {/* grid */}
         <GridContainer
