@@ -21,75 +21,37 @@ const NewTabLink = (props) => (
 );
 
 const regressionAnswers = {
-  exponential: (
-    <>
-      In simple terms,{" "}
-      <NewTabLink
-        href="https://www.spsanderson.com/steveondata/posts/2023-11-20/index.html#:~:text=Understanding%20Exponential%20Regression&text=In%20simple%20terms%2C%20it's%20a,spread%2C%20or%20even%20financial%20investments."
-        className="link-info"
-      >
-        exponential regression
-      </NewTabLink>{" "}
-      is a statistical method used to model relationships where the rate of
-      change of a variable is proportional to its current state. Think of
-      scenarios like population growth, viral spread, or even financial
-      investments.
-    </>
-  ),
   polynomial: (
     <>
-      <NewTabLink
-        href="https://www.analyticsvidhya.com/blog/2021/10/understanding-polynomial-regression-model/#:~:text=Polynomial%20regression%2C%20denoted%20as%20E,to%20the%20Gauss%2DMarkov%20Theorem."
-        className="link-info"
-      >
-        Polynomial regression
-      </NewTabLink>
-      , denoted as E(y | x), characterizes fitting a nonlinear relationship
-      between the x value and the conditional mean of y. Typically, this
-      corresponds to the least-squares method. The least-square approach
-      minimizes the coefficient variance according to the Gauss-Markov Theorem.
+      Polynomial regression is the simplest type of non-linear regression, where
+      the relationship between the dependent and independent variables can be
+      modeled as an nth degree polynomial function.
     </>
   ),
-  linear: (
+  exponential: (
     <>
-      What is{" "}
-      <NewTabLink
-        href="https://www.ibm.com/topics/linear-regression#:~:text=IBM-,What%20is%20linear%20regression%3F,is%20called%20the%20independent%20variable."
-        className="link-info"
-      >
-        linear regression
-      </NewTabLink>
-      ? Linear regression analysis is used to predict the value of a variable
-      based on the value of another variable. The variable you want to predict
-      is called the dependent variable. The variable you are using to predict
-      the other variable&apos;s value is called the independent variable.
-    </>
-  ),
-  power: (
-    <>
-      <NewTabLink
-        href="https://users.wpi.edu/~goulet/MME523/chris_b.htm#:~:text=Power%20Regression%20is%20one%20in,the%20models%20in%20similar%20fashion."
-        className="link-info"
-      >
-        Power regression
-      </NewTabLink>{" "}
-      is one in which the response variable is proportional to the explanatory
-      variable raised to a power. Since both the exponential form and the power
-      form involve exponents, we can construct the models in similar fashion.
+      Exponential regression is a type of non-linear regression where the
+      dependent variable is modeled as an exponential function of the
+      independent variable.
     </>
   ),
   logarithmic: (
     <>
-      A{" "}
-      <NewTabLink
-        href="https://articles.outlier.org/logarithmic-regression#:~:text=A%20logarithmic%20regression%20is%20a,the%20logarithm%20of%20a%20variable."
-        className="link-info"
-      >
-        logarithmic regression
-      </NewTabLink>{" "}
-      is a modified linear regression that includes one or more logged
-      variables, where “logged variable” simply means taking the logarithm of a
+      Logarithmic regression is a type of non-linear regression where the
+      dependent variable is modeled as a logarithmic function of the independent
       variable.
+    </>
+  ),
+  power: (
+    <>
+      Power regression is a type of non-linear regression where the dependent
+      variable is modeled as a power function of the independent variable.
+    </>
+  ),
+  linear: (
+    <>
+      Linear regression is a statistical model which estimates the linear
+      relationship between a dependent and independent variable.
     </>
   ),
 };
