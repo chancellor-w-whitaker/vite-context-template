@@ -151,18 +151,33 @@ function useNonBlockingState(initialState) {
   return [state, updateState, isPending];
 }
 
+const fixHyphenatedCaps = (value) =>
+  value
+    .split(" ")
+    .map((word) =>
+      word
+        .split("-")
+        .map((part, i) => (i === 0 ? part : part.toLocaleLowerCase()))
+        .join("-")
+    )
+    .join(" ");
+
 const fieldDefs = {
-  online: {
-    valueFormatter: ({ value = "" }) => value.replace("Online", "EKU Online"),
-    headerName: "EKU Online",
-  },
   courseOnline: {
     valueFormatter: ({ value = "" }) =>
       value === "ECampus Online" ? "EKU Online" : value,
   },
+  serviceRegion: {
+    valueFormatter: ({ value = "" }) =>
+      fixHyphenatedCaps(value.split(":").join(": ")),
+  },
   minority: {
     valueFormatter: ({ value = "" }) => value.replace("Minority", "URM"),
     headerName: "URM",
+  },
+  online: {
+    valueFormatter: ({ value = "" }) => fixHyphenatedCaps(value),
+    headerName: "Modality",
   },
   "4YrGraduate": { headerName: "4 Year Rate" },
   "5YrGraduate": { headerName: "5 Year Rate" },
@@ -170,11 +185,16 @@ const fieldDefs = {
   numNotRet: { headerName: "Did Not Return" },
   crseNumb: { headerName: "Course Number" },
   numGraduated: { headerName: "Graduated" },
+  fteMoodys: { headerName: "FTE Moody's" },
   numRetained: { headerName: "Retained" },
   schedule: { headerName: "Course Type" },
+  fteBasic: { headerName: "FTE Basic" },
+  fteIpeds: { headerName: "FTE IPEDS" },
   subject2: { headerName: "Subject" },
+  fteCpe: { headerName: "FTE CPE" },
   ftpt: { headerName: "FT/PT" },
   time: { headerName: "FT/PT" },
+  grs: { headerName: "GRS" },
 };
 
 // const columnDefs = [

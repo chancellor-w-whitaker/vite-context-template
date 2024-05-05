@@ -85,6 +85,8 @@ export const Chart = memo(
 
     const breakpoints = { medium: 768, small: 576 };
 
+    const numeratorTooLow = (value) => shouldFindRates && value <= 5;
+
     const mapFunction = shouldFindRates
       ? (row) => row
       : ({ [barDataKey]: value, inFuture, ...rest }) => ({
