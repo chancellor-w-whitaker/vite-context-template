@@ -225,8 +225,6 @@ export const Chart = memo(
       </ResponsiveContainer>
     );
 
-    // console.log(data);
-
     return (
       <>
         <div className="d-flex flex-row gap-2 flex-wrap align-items-center">

@@ -6,7 +6,6 @@ import {
   useMemo,
   useRef,
 } from "react";
-import { useEffect } from "react";
 
 import {
   findOriginalRegressionResult,
@@ -18,7 +17,6 @@ import { handleDropdownSearchChange } from "./functions/handleDropdownSearchChan
 import { handleDropdownStateChanges } from "./functions/handleDropdownStateChanges";
 import { useAutoSizeOnRowDataUpdated } from "./hooks/useAutoSizeOnRowDataUpdated";
 import { handleDropdownItemChange } from "./functions/handleDropdownItemChange";
-import { useSetBsBgVariantOfBody } from "./hooks/useSetBsBgVariantOfBody";
 import { performPivotOperation } from "./functions/performPivotOperation";
 import { findRelevantMeasures } from "./functions/findRelevantMeasures";
 import { handleGroupByChange } from "./functions/handleGroupByChange";
@@ -50,6 +48,28 @@ export const AppContextProvider = ({ initialDropdowns, children }) => {
 
   return (
     <AppContext.Provider value={appContext}>{children}</AppContext.Provider>
+  );
+};
+
+const studentTypeComparator = (a, b) => {
+  const positions = {
+    "New First Time Grad Applicant": 3,
+    "Graduate Student-Clear Admit": 6,
+    "Grad Probationary Admission": 4,
+    "Grad Provisional Admission": 5,
+    "New First Time Freshman": 0,
+    "New First Time Transfer": 1,
+    "High School Special": 7,
+    "EKU Dual Credit": 8,
+    "Non Degree": 9,
+    Continuing: 2,
+    Returning: 10,
+    Visiting: 11,
+  };
+
+  return (
+    (a in positions ? positions[a] : Object.keys(positions).length) -
+    (b in positions ? positions[b] : Object.keys(positions).length)
   );
 };
 
@@ -179,6 +199,7 @@ const fieldDefs = {
     valueFormatter: ({ value = "" }) => fixHyphenatedCaps(value),
     headerName: "Modality",
   },
+  studentType: { comparator: studentTypeComparator, sort: "asc" },
   "4YrGraduate": { headerName: "4 Year Rate" },
   "5YrGraduate": { headerName: "5 Year Rate" },
   "6YrGraduate": { headerName: "6 Year Rate" },
@@ -579,8 +600,28 @@ const useMainMethod = (initialDropdowns) => {
     return measures.filter((string) => !active.has(string));
   }, [measures, delayedMeasure, shouldFindRates]);
 
+  const rowData = useMemo(
+    () =>
+      filteredRows.length === 0
+        ? []
+        : delayedGroupBy.length > 0
+        ? pivotedData
+        : totalRow,
+    [totalRow, pivotedData, filteredRows, delayedGroupBy]
+  );
+
+  const pinnedTopRowData = useMemo(
+    () =>
+      filteredRows.length === 0
+        ? []
+        : delayedGroupBy.length > 0
+        ? totalRow
+        : [],
+    [totalRow, filteredRows, delayedGroupBy]
+  );
+
   const csvData = useMemo(() => {
-    const flattenedRows = pivotedData
+    const flattenedRows = rowData
       .map((row) =>
         Object.values(row).filter((value) => typeof value === "object")
       )
@@ -600,7 +641,7 @@ const useMainMethod = (initialDropdowns) => {
 
       return newObject;
     });
-  }, [pivotedData, nonSelectedMeasures, delayedMeasure, shouldFindRates]);
+  }, [rowData, nonSelectedMeasures, delayedMeasure, shouldFindRates]);
 
   const waiting = useAutoSizeOnRowDataUpdated({
     rowData: pivotedData,
@@ -673,25 +714,6 @@ const useMainMethod = (initialDropdowns) => {
       groupBy: onGroupByChange,
       measure: onMeasureChange,
     },
-    grid: {
-      rowData:
-        filteredRows.length === 0
-          ? []
-          : delayedGroupBy.length > 0
-          ? pivotedData
-          : totalRow,
-      pinnedTopRowData:
-        filteredRows.length === 0
-          ? []
-          : delayedGroupBy.length > 0
-          ? totalRow
-          : [],
-      columnDefs: columnDefs,
-      onBodyScrollEnd,
-      defaultColDef,
-      onSortChanged,
-      ref: gridRef,
-    },
     chart: {
       valueFormatter: !shouldFindRates ? formatMeasureValue : formatMeasureRate,
       noRowsToShow: filteredRows.length === 0,
@@ -702,6 +724,15 @@ const useMainMethod = (initialDropdowns) => {
       shouldFindRates,
       tooltipItems,
       domain,
+    },
+    grid: {
+      pinnedTopRowData,
+      onBodyScrollEnd,
+      defaultColDef,
+      onSortChanged,
+      ref: gridRef,
+      columnDefs,
+      rowData,
     },
     csv: {
       filename: `${toKebabCase(displayName)}-${toKebabCase(

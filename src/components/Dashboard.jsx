@@ -20,39 +20,60 @@ const NewTabLink = (props) => (
   <a {...props} rel="noreferrer" target="_blank"></a>
 );
 
+const RegSource = () => (
+  <NewTabLink href="https://fastercapital.com/keyword/power-regression.html">
+    Source
+  </NewTabLink>
+);
+
 const regressionAnswers = {
   polynomial: (
-    <>
-      Polynomial regression is the simplest type of non-linear regression, where
-      the relationship between the dependent and independent variables can be
-      modeled as an nth degree polynomial function.
-    </>
+    <div>
+      <div>
+        Polynomial regression is the simplest type of non-linear regression,
+        where the relationship between the dependent and independent variables
+        can be modeled as an nth degree polynomial function.
+      </div>
+      <RegSource></RegSource>
+    </div>
   ),
   exponential: (
-    <>
-      Exponential regression is a type of non-linear regression where the
-      dependent variable is modeled as an exponential function of the
-      independent variable.
-    </>
+    <div>
+      <div>
+        Exponential regression is a type of non-linear regression where the
+        dependent variable is modeled as an exponential function of the
+        independent variable.
+      </div>
+      <RegSource></RegSource>
+    </div>
   ),
   logarithmic: (
-    <>
-      Logarithmic regression is a type of non-linear regression where the
-      dependent variable is modeled as a logarithmic function of the independent
-      variable.
-    </>
+    <div>
+      <div>
+        Logarithmic regression is a type of non-linear regression where the
+        dependent variable is modeled as a logarithmic function of the
+        independent variable.
+      </div>
+      <RegSource></RegSource>
+    </div>
   ),
   power: (
-    <>
-      Power regression is a type of non-linear regression where the dependent
-      variable is modeled as a power function of the independent variable.
-    </>
+    <div>
+      <div>
+        Power regression is a type of non-linear regression where the dependent
+        variable is modeled as a power function of the independent variable.
+      </div>
+      <RegSource></RegSource>
+    </div>
   ),
   linear: (
-    <>
-      Linear regression is a statistical model which estimates the linear
-      relationship between a dependent and independent variable.
-    </>
+    <div>
+      <div>
+        Linear regression is a statistical model which estimates the linear
+        relationship between a dependent and independent variable.
+      </div>
+      <RegSource></RegSource>
+    </div>
   ),
 };
 
@@ -148,16 +169,23 @@ export const Dashboard = () => {
     });
   };
 
+  const getSortedList = (list, field) =>
+    field in fieldDefs && "comparator" in fieldDefs[field]
+      ? [...list].sort(fieldDefs[field].comparator)
+      : list;
+
   const chartProps = { ...chart, nameFormatter: getFieldTitle };
 
   return (
     <>
       <div className="d-flex flex-column gap-4" ref={squareRef}>
+        {/* subtitle */}
         <div className="text-center">
           <h3 className="fw-normal text-muted mb-0">
             {fileNames.find(({ id }) => id === fileName).displayName}
           </h3>
         </div>
+        {/* single-select selectors */}
         <div className="d-flex flex-row gap-2 flex-wrap">
           {/* select data */}
           <FormFloatingSelect
@@ -205,17 +233,18 @@ export const Dashboard = () => {
             ))}
           </FormFloatingSelect>
         </div>
-        {/* filters */}
+        {/* dropdown filters */}
         <div
           className="d-flex flex-wrap justify-content-evenly"
           style={{ marginBottom: -8, marginRight: -8 }}
         >
-          {/* column filters */}
           {relevantEntries.map(([field, { search, items }]) => {
             const {
               values: { unavailable, irrelevant, relevant },
               fractions,
             } = getDropdownData({ valueData: dropdownItems[field], items });
+
+            // console.log(unavailable, irrelevant, relevant);
 
             const rowColumns = getBestRowCols({
               count: relevantEntries.length,
@@ -228,6 +257,7 @@ export const Dashboard = () => {
               ).length > 1;
 
             return (
+              // dropdown
               <div
                 style={{
                   width: `${Math.floor(100 / rowColumns)}%`,
@@ -235,6 +265,7 @@ export const Dashboard = () => {
                 className={`dropdown flex-fill pe-2 pb-2`}
                 key={field}
               >
+                {/* dropdown button */}
                 <button
                   ref={(buttonNode) => {
                     storeDropdownById(field, buttonNode);
@@ -257,9 +288,11 @@ export const Dashboard = () => {
                 >
                   <div className="text-truncate">{getFieldTitle(field)}</div>
                 </button>
+                {/* dropdown menu */}
                 <div className="dropdown-menu py-0 mx-0 rounded-3 shadow-sm overflow-hidden">
                   {isDropdownWithIdOpen(field) && (
                     <>
+                      {/* dropdown search */}
                       <form
                         className="p-2 bg-body-tertiary border-bottom"
                         onSubmit={(e) => e.preventDefault()}
@@ -274,10 +307,12 @@ export const Dashboard = () => {
                           type="search"
                         />
                       </form>
+                      {/* dropdown lists */}
                       <div
                         className="list-group list-group-flush text-nowrap overflow-y-scroll"
                         style={{ maxHeight: 300 }}
                       >
+                        {/* all button when many lists */}
                         {moreThanOneListToShow && (
                           <MyDropdownItem
                             onChange={onDropdownsChange.allItems}
@@ -289,6 +324,7 @@ export const Dashboard = () => {
                             All
                           </MyDropdownItem>
                         )}
+                        {/* relevant label */}
                         {relevant.length > 0 && (
                           <MyDropdownItem
                             onChange={onDropdownsChange.relevantItems}
@@ -301,7 +337,8 @@ export const Dashboard = () => {
                             {moreThanOneListToShow ? "Relevant" : "All"}
                           </MyDropdownItem>
                         )}
-                        {relevant.map((value) => (
+                        {/* relevant list items */}
+                        {getSortedList(relevant, field).map((value) => (
                           <MyDropdownItem
                             onChange={onDropdownsChange.singleItem}
                             checked={items[value].checked}
@@ -314,6 +351,7 @@ export const Dashboard = () => {
                             {getFormattedValue({ search, field, value })}
                           </MyDropdownItem>
                         ))}
+                        {/* irrelevant label */}
                         {irrelevant.length > 0 && (
                           <MyDropdownItem
                             onChange={onDropdownsChange.irrelevantItems}
@@ -326,7 +364,8 @@ export const Dashboard = () => {
                             {moreThanOneListToShow ? "Irrelevant" : "All"}
                           </MyDropdownItem>
                         )}
-                        {irrelevant.map((value) => (
+                        {/* irrelevant list items */}
+                        {getSortedList(irrelevant, field).map((value) => (
                           <MyDropdownItem
                             checked={items[value].checked}
                             name={`${field}-items`}
@@ -338,6 +377,7 @@ export const Dashboard = () => {
                             {getFormattedValue({ search, field, value })}
                           </MyDropdownItem>
                         ))}
+                        {/* unavailable label */}
                         {unavailable.length > 0 && (
                           <MyDropdownItem
                             onChange={onDropdownsChange.unavailableItems}
@@ -350,7 +390,8 @@ export const Dashboard = () => {
                             {moreThanOneListToShow ? "Unavailable" : "All"}
                           </MyDropdownItem>
                         )}
-                        {unavailable.map((value) => (
+                        {/* unavailable list items */}
+                        {getSortedList(unavailable, field).map((value) => (
                           <MyDropdownItem
                             checked={items[value].checked}
                             name={`${field}-items`}
@@ -370,8 +411,9 @@ export const Dashboard = () => {
             );
           })}
         </div>
-        {/* chart */}
+        {/* bar chart */}
         <Chart {...chartProps}></Chart>
+        {/* data grid menu */}
         <div className="d-flex flex-row gap-2 flex-wrap">
           {/* download */}
           <CSVLink
@@ -390,52 +432,6 @@ export const Dashboard = () => {
               <path d="M0 64C0 28.7 28.7 0 64 0H224V128c0 17.7 14.3 32 32 32H384V304H176c-35.3 0-64 28.7-64 64V512H64c-35.3 0-64-28.7-64-64V64zm384 64H256V0L384 128zM200 352h16c22.1 0 40 17.9 40 40v8c0 8.8-7.2 16-16 16s-16-7.2-16-16v-8c0-4.4-3.6-8-8-8H200c-4.4 0-8 3.6-8 8v80c0 4.4 3.6 8 8 8h16c4.4 0 8-3.6 8-8v-8c0-8.8 7.2-16 16-16s16 7.2 16 16v8c0 22.1-17.9 40-40 40H200c-22.1 0-40-17.9-40-40V392c0-22.1 17.9-40 40-40zm133.1 0H368c8.8 0 16 7.2 16 16s-7.2 16-16 16H333.1c-7.2 0-13.1 5.9-13.1 13.1c0 5.2 3 9.9 7.8 12l37.4 16.6c16.3 7.2 26.8 23.4 26.8 41.2c0 24.9-20.2 45.1-45.1 45.1H304c-8.8 0-16-7.2-16-16s7.2-16 16-16h42.9c7.2 0 13.1-5.9 13.1-13.1c0-5.2-3-9.9-7.8-12l-37.4-16.6c-16.3-7.2-26.8-23.4-26.8-41.2c0-24.9 20.2-45.1 45.1-45.1zm98.9 0c8.8 0 16 7.2 16 16v31.6c0 23 5.5 45.6 16 66c10.5-20.3 16-42.9 16-66V368c0-8.8 7.2-16 16-16s16 7.2 16 16v31.6c0 34.7-10.3 68.7-29.6 97.6l-5.1 7.7c-3 4.5-8 7.1-13.3 7.1s-10.3-2.7-13.3-7.1l-5.1-7.7c-19.3-28.9-29.6-62.9-29.6-97.6V368c0-8.8 7.2-16 16-16z" />
             </svg>
           </CSVLink>
-          {/* select group by */}
-          {/* <Picker
-            renderSwatch={({ isOpen, open }) => (
-              <button
-                className={`btn btn-secondary bg-gradient shadow-sm icon-link ${
-                  isOpen ? "active" : ""
-                }`.trim()}
-                onClick={open}
-                type="button"
-              >
-                Group By
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="bi bi-caret-down-fill"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                  height="16"
-                  width="16"
-                >
-                  <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z" />
-                </svg>
-              </button>
-            )}
-            popoverContent={
-              <FormSelect
-                onChange={onGroupByChange}
-                style={{ width: "auto" }}
-                value={groupBy}
-                multiple
-              >
-                {groupBys.map((field) => (
-                  <SelectOption
-                    onClick={
-                      groupBy.length === 1 && groupBy.includes(field)
-                        ? onGroupByChange
-                        : null
-                    }
-                    value={field}
-                    key={field}
-                  >
-                    {getFieldTitle(field)}
-                  </SelectOption>
-                ))}
-              </FormSelect>
-            }
-          /> */}
           <W3Dropdown title="Group by">
             {groupBys.map((field) => (
               <W3DropdownItem
@@ -455,7 +451,7 @@ export const Dashboard = () => {
             Auto-Size Columns
           </button>
         </div>
-        {/* grid */}
+        {/* data grid */}
         <GridContainer
           className={loading.autoSize ? "auto-sizing" : ""}
           style={defaultGridContainerStyle}
