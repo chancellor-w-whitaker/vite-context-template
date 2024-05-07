@@ -1,4 +1,5 @@
 import { toStandardizedKey } from "./formatters/toStandardizedKey";
+import { alternateValues } from "../constants/alternateValues";
 
 export const getRowsAndColumns = (data) => {
   if (!(Array.isArray(data) && data.length > 0)) {
@@ -25,9 +26,14 @@ export const getRowsAndColumns = (data) => {
 
       const value = object[key];
 
-      const type = typeof value;
+      const actualValue =
+        field in alternateValues && value in alternateValues[field]
+          ? alternateValues[field][value]
+          : value;
 
-      values.add(value);
+      const type = typeof actualValue;
+
+      values.add(actualValue);
 
       if (!(type in types)) {
         types[type] = 0;
@@ -35,7 +41,7 @@ export const getRowsAndColumns = (data) => {
 
       types[type]++;
 
-      row[field] = value;
+      row[field] = actualValue;
     });
 
     rows.push(row);

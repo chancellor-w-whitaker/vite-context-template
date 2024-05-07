@@ -1,4 +1,4 @@
-export const valuePreProcessor = {
+export const alternateValues = {
   studentType: {
     "Graduate Student-Clear Admit": "New First Time Grad Applicant",
     "Grad Probationary Admission": "New First Time Grad Applicant",
