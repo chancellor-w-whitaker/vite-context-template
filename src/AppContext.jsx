@@ -318,82 +318,18 @@ const useMainMethod = (initialDropdowns) => {
     [measures, relevantGroupBys, filteredRows, pivotField]
   );
 
-  // const regressionResults = useMemo(() => {
-  //    // simpler usage
-  //    const [x, y] = [pivotField, delayedMeasure];
-
-  //    // all available data points
-  //    const availableData = Object.entries(totalRow[0]).map(
-  //      ([pivotValue, measuresObject]) => {
-  //        const object = {
-  //          [y]: !shouldFindRates
-  //            ? getMeasureValue(measuresObject, y)
-  //            : getMeasureRate(measuresObject, y),
-  //          [x]: pivotValue,
-  //        };
-
-  //        if (shouldFindRates) {
-  //          object.fraction = {
-  //            value: getMeasureFraction(measuresObject, delayedMeasure),
-  //            key: delayedMeasure,
-  //          };
-  //        }
-
-  //        return object;
-  //      }
-  //    );
-
-  //    const pivArray = [...pivotValues];
-
-  //    const lastTerm = pivArray[pivArray.length - 1];
-
-  //    const predictionTerm = lastTerm
-  //      ? getNextTerm(lastTerm, fileName)
-  //      : `Next ${toTitleCase(pivotField)}`;
-
-  //    // find data point by term
-  //    const termToDataElement = Object.fromEntries(
-  //      availableData.map((object) => [object[x], object])
-  //    );
-
-  //    // all data points (data point for every term; null for every y value to be predicted)
-  //    const finalData = [
-  //      ...pivArray.map((term) =>
-  //        term in termToDataElement
-  //          ? termToDataElement[term]
-  //          : { [y]: shouldFindRates ? null : 0, [x]: term }
-  //      ),
-  //      { [x]: predictionTerm, [y]: null },
-  //    ];
-
-  //    // data points converted to [x, y] regression input
-  //    const regressionInput = finalData.map((element, index) => [
-  //      index + 1,
-  //      element[y],
-  //    ]);
-
-  //    // regression input where null y values are removed
-  //    const actualRegressionInput = regressionInput.filter(
-  //      ([xVal, yVal]) => yVal !== null
-  //    );
-
-  //    const regressionResults = regressionTypes
-  //      .map((type) => findOriginalRegressionResult(type, actualRegressionInput))
-  //      .sort((a, b) => b.r2 - a.r2);
-  // }, [second])
-
-  const { tooltipItems, chartData } = useMemo(() => {
+  const regressionInformation = useMemo(() => {
     // simpler usage
-    const [x, y] = [pivotField, delayedMeasure];
+    const [xKey, yKey] = [pivotField, delayedMeasure];
 
     // all available data points
     const availableData = Object.entries(totalRow[0]).map(
       ([pivotValue, measuresObject]) => {
         const object = {
-          [y]: !shouldFindRates
-            ? getMeasureValue(measuresObject, y)
-            : getMeasureRate(measuresObject, y),
-          [x]: pivotValue,
+          [yKey]: !shouldFindRates
+            ? getMeasureValue(measuresObject, yKey)
+            : getMeasureRate(measuresObject, yKey),
+          [xKey]: pivotValue,
         };
 
         if (shouldFindRates) {
@@ -407,59 +343,79 @@ const useMainMethod = (initialDropdowns) => {
       }
     );
 
-    const pivArray = [...pivotValues];
+    const pivotArray = [...pivotValues];
 
-    const lastTerm = pivArray[pivArray.length - 1];
+    const lastTerm = pivotArray[pivotArray.length - 1];
 
     const predictionTerm = lastTerm
       ? getNextTerm(lastTerm, fileName)
       : `Next ${toTitleCase(pivotField)}`;
 
     // find data point by term
-    const termToDataElement = Object.fromEntries(
-      availableData.map((object) => [object[x], object])
+    const dataByTerm = Object.fromEntries(
+      availableData.map((object) => [object[xKey], object])
     );
 
     // all data points (data point for every term; null for every y value to be predicted)
-    const finalData = [
-      ...pivArray.map((term) =>
-        term in termToDataElement
-          ? termToDataElement[term]
-          : { [y]: shouldFindRates ? null : 0, [x]: term }
+    const dataPoints = [
+      ...pivotArray.map((term) =>
+        term in dataByTerm
+          ? dataByTerm[term]
+          : { [yKey]: shouldFindRates ? null : 0, [xKey]: term }
       ),
-      { [x]: predictionTerm, [y]: null },
+      { [xKey]: predictionTerm, [yKey]: null },
     ];
 
     // data points converted to [x, y] regression input
-    const regressionInput = finalData.map((element, index) => [
+    const xyValues = dataPoints.map((element, index) => [
       index + 1,
-      element[y],
+      element[yKey],
     ]);
 
     // regression input where null y values are removed
-    const actualRegressionInput = regressionInput.filter(
-      ([xVal, yVal]) => yVal !== null
+    const regressionInput = xyValues.filter(
+      ([xValue, yValue]) => yValue !== null
     );
 
     const regressionResults = regressionTypes
-      .map((type) => findOriginalRegressionResult(type, actualRegressionInput))
+      .map((type) => ({
+        ...findOriginalRegressionResult(type, regressionInput),
+        type,
+      }))
       .sort((a, b) => b.r2 - a.r2);
 
-    console.log(regressionResults);
+    return { regressionResults, dataPoints, xyValues, yKey };
+  }, [
+    fileName,
+    totalRow,
+    pivotField,
+    pivotValues,
+    delayedMeasure,
+    shouldFindRates,
+  ]);
+
+  const bestRegressionType = regressionInformation.regressionResults[0].type;
+
+  if (regressionType !== bestRegressionType) {
+    setRegressionType(bestRegressionType);
+  }
+
+  const { tooltipItems, chartData } = useMemo(() => {
+    const { regressionResults, dataPoints, xyValues, yKey } =
+      regressionInformation;
 
     // regression result found using regression type and actual regression input
-    const regressionResult = findOriginalRegressionResult(
-      delayedRegressionType,
-      actualRegressionInput
+    const regressionResult = regressionResults.find(
+      ({ type }) => type === delayedRegressionType
     );
 
     // easier usage of regression properties
     const { predict, points, r2 } = regressionResult;
 
     // extract all x values where y value should be predicted
-    const predictWhereXEquals = regressionInput
-      .filter(([xVal, yVal]) => yVal === null)
-      .map(([xVal]) => xVal);
+    const predictWhereXEquals = xyValues
+      .filter(([xValue, yValue]) => yValue === null)
+      .map(([xValue]) => xValue);
 
     // predicted points include
     // - points in regression result
@@ -469,16 +425,16 @@ const useMainMethod = (initialDropdowns) => {
       ...predictWhereXEquals.map((x) => predict(x)),
     ].sort((a, b) => a[0] - b[0]);
 
-    const chartData = finalData.map((point, index) => {
+    const chartData = dataPoints.map((point, index) => {
       const prediction = predictedPoints[index][1];
 
-      const isNull = point[y] === null;
+      const isNull = point[yKey] === null;
 
-      const inFuture = isNull ? y : false;
+      const inFuture = isNull ? yKey : false;
 
       return {
         ...point,
-        [y]: isNull ? prediction : point[y],
+        [yKey]: isNull ? prediction : point[yKey],
         prediction: prediction,
         inFuture,
       };
@@ -489,15 +445,7 @@ const useMainMethod = (initialDropdowns) => {
     const tooltipItems = getRegressionTooltipItems(equation, r2);
 
     return { tooltipItems, chartData };
-  }, [
-    totalRow,
-    fileName,
-    pivotField,
-    pivotValues,
-    delayedMeasure,
-    shouldFindRates,
-    delayedRegressionType,
-  ]);
+  }, [delayedRegressionType, regressionInformation]);
 
   const domain = useMemo(() => {
     const allValues = [
