@@ -5,10 +5,11 @@ export const alternateValues = {
     "Grad Provisional Admission": "New First Time Grad Applicant",
   },
   classification: {
-    GR: "Graduate Nondegree",
+    // GR: "Graduate Nondegree",
     SO: "Sophomore",
     FR: "Freshman",
     JR: "Junior",
     SR: "Senior",
   },
+  college: { "College of Arts & Sciences": "Other" },
 };
