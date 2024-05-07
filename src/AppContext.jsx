@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useTransition,
-  useCallback,
-  useState,
-  useMemo,
-  useRef,
-} from "react";
+import { createContext, useCallback, useMemo, useRef } from "react";
 
 import {
   findOriginalRegressionResult,
@@ -19,7 +12,9 @@ import { handleAllDropdownItemsChange } from "./functions/handleAllDropdownItems
 import { handleDropdownSubListChange } from "./functions/handleDropdownSubListChange";
 import { handleDropdownSearchChange } from "./functions/handleDropdownSearchChange";
 import { handleDropdownStateChanges } from "./functions/handleDropdownStateChanges";
+import { formatGradRateXValue } from "./functions/formatters/formatGradRateXValue";
 import { useAutoSizeOnRowDataUpdated } from "./hooks/useAutoSizeOnRowDataUpdated";
+import { getRegressionTooltipItems } from "./functions/getRegressionTooltipItems";
 import { handleDropdownItemChange } from "./functions/handleDropdownItemChange";
 import { performPivotOperation } from "./functions/performPivotOperation";
 import { findRelevantMeasures } from "./functions/findRelevantMeasures";
@@ -29,6 +24,7 @@ import { getMeasureFraction } from "./functions/getMeasureFraction";
 import { getRowsAndColumns } from "./functions/getRowsAndColumns";
 import { findNextDropdowns } from "./functions/findNextDropdowns";
 import { formatMeasureRate } from "./functions/formatMeasureRate";
+import { useNonBlockingState } from "./hooks/useNonBlockingState";
 import { toTitleCase } from "./functions/formatters/toTitleCase";
 import { toKebabCase } from "./functions/formatters/toKebabCase";
 import { useResponsiveState } from "./hooks/useResponsiveState";
@@ -40,7 +36,9 @@ import { getColumnDefs } from "./functions/getColumnDefs";
 import { adjustMeasure } from "./functions/adjustMeasure";
 import { useBsDropdowns } from "./hooks/useBsDropdowns";
 import { brandColors } from "./constants/brandColors";
+import { getNextTerm } from "./functions/getNextTerm";
 import { totalField } from "./constants/totalField";
+import { getBaseLog } from "./functions/getBaseLog";
 import { useData } from "./hooks/examples/useData";
 import { usePrevious } from "./hooks/usePrevious";
 import { fileNames } from "./constants/fileNames";
@@ -54,71 +52,6 @@ export const AppContextProvider = ({ initialDropdowns, children }) => {
   return (
     <AppContext.Provider value={appContext}>{children}</AppContext.Provider>
   );
-};
-
-const getRegressionTooltipItems = (string, r2) => {
-  const splitOnExponent = string.split("^");
-
-  if (splitOnExponent.length > 1) {
-    splitOnExponent.push(splitOnExponent[1].split(" "));
-
-    splitOnExponent[1] = splitOnExponent[2].shift();
-  } else {
-    splitOnExponent[1] = "";
-
-    splitOnExponent[2] = [];
-  }
-
-  const [firstPart, exponent, theRest] = splitOnExponent;
-
-  return [
-    {
-      value: (
-        <>
-          {firstPart}
-          <sup>{exponent}</sup> {theRest.join(" ")}
-        </>
-      ),
-      color: brandColors.kentuckyBluegrass,
-      className: "fst-italic",
-    },
-    {
-      value: (
-        <>
-          R<sup>2</sup> = {r2.toLocaleString()}
-        </>
-      ),
-      color: brandColors.kentuckyBluegrass,
-      className: "fst-italic",
-    },
-  ];
-};
-
-function getBaseLog(x, y) {
-  return Math.log(y) / Math.log(x);
-}
-
-const formatGradRateXValue = (measure, value) => {
-  const termYear = toTitleCase(value).split(" ")[1];
-
-  const elapsedYears = toTitleCase(measure).split(" ")[0];
-
-  return `${value} to Summer ${Number(termYear) + Number(elapsedYears)}`;
-};
-
-const getNextTerm = (lastTerm, fileName) => {
-  if (["graduation", "spring", "summer", "fall"].includes(fileName))
-    return `${lastTerm.split(" ")[0]} ${Number(lastTerm.split(" ")[1]) + 1}`;
-
-  if (["degrees", "hours"].includes(fileName))
-    return `${Number(lastTerm.split("-")[0]) + 1}-${
-      Number(lastTerm.split("-")[1]) + 1
-    }`;
-
-  if (["retention"].includes(fileName))
-    return `Fall ${Number(lastTerm.split(" ")[1]) + 1} to Fall ${
-      Number(lastTerm.split(" ")[4]) + 1
-    }`;
 };
 
 // first gen, low income, honors, athletes
@@ -140,19 +73,6 @@ const fileDefaults = {
 // rates should download as numerical (value getter result not value formatter result)
 
 // check bethany email about data page addition
-
-function useNonBlockingState(initialState) {
-  const [state, setState] = useState(initialState);
-
-  const [isPending, startTransition] = useTransition();
-
-  const updateState = useCallback(
-    (argument) => startTransition(() => setState(argument)),
-    []
-  );
-
-  return [state, updateState, isPending];
-}
 
 // const columnDefs = [
 //   { field: "minority", headerName: "URM" },
