@@ -11,6 +11,10 @@ import {
   findOriginalRegressionResult,
   findNewEquation,
 } from "./functions/findRegressionData";
+import {
+  confidentialityString,
+  isConfidential,
+} from "./constants/confidentialityNumber";
 import { handleAllDropdownItemsChange } from "./functions/handleAllDropdownItemsChange";
 import { handleDropdownSubListChange } from "./functions/handleDropdownSubListChange";
 import { handleDropdownSearchChange } from "./functions/handleDropdownSearchChange";
@@ -40,6 +44,7 @@ import { totalField } from "./constants/totalField";
 import { useData } from "./hooks/examples/useData";
 import { usePrevious } from "./hooks/usePrevious";
 import { fileNames } from "./constants/fileNames";
+import { fieldDefs } from "./constants/fieldDefs";
 
 export const AppContext = createContext(null);
 
@@ -48,28 +53,6 @@ export const AppContextProvider = ({ initialDropdowns, children }) => {
 
   return (
     <AppContext.Provider value={appContext}>{children}</AppContext.Provider>
-  );
-};
-
-const studentTypeComparator = (a, b) => {
-  const positions = {
-    "New First Time Grad Applicant": 3,
-    "Graduate Student-Clear Admit": 6,
-    "Grad Probationary Admission": 4,
-    "Grad Provisional Admission": 5,
-    "New First Time Freshman": 0,
-    "New First Time Transfer": 1,
-    "High School Special": 7,
-    "EKU Dual Credit": 8,
-    "Non Degree": 9,
-    Continuing: 2,
-    Returning: 10,
-    Visiting: 11,
-  };
-
-  return (
-    (a in positions ? positions[a] : Object.keys(positions).length) -
-    (b in positions ? positions[b] : Object.keys(positions).length)
   );
 };
 
@@ -170,53 +153,6 @@ function useNonBlockingState(initialState) {
 
   return [state, updateState, isPending];
 }
-
-const fixHyphenatedCaps = (value) =>
-  value
-    .split(" ")
-    .map((word) =>
-      word
-        .split("-")
-        .map((part, i) => (i === 0 ? part : part.toLocaleLowerCase()))
-        .join("-")
-    )
-    .join(" ");
-
-const fieldDefs = {
-  courseOnline: {
-    valueFormatter: ({ value = "" }) =>
-      value === "ECampus Online" ? "EKU Online" : value,
-  },
-  serviceRegion: {
-    valueFormatter: ({ value = "" }) =>
-      fixHyphenatedCaps(value.split(":").join(": ")),
-  },
-  minority: {
-    valueFormatter: ({ value = "" }) => value.replace("Minority", "URM"),
-    headerName: "URM",
-  },
-  online: {
-    valueFormatter: ({ value = "" }) => fixHyphenatedCaps(value),
-    headerName: "Modality",
-  },
-  studentType: { comparator: studentTypeComparator, sort: "asc" },
-  "4YrGraduate": { headerName: "4 Year Rate" },
-  "5YrGraduate": { headerName: "5 Year Rate" },
-  "6YrGraduate": { headerName: "6 Year Rate" },
-  numNotRet: { headerName: "Did Not Return" },
-  crseNumb: { headerName: "Course Number" },
-  numGraduated: { headerName: "Graduated" },
-  fteMoodys: { headerName: "FTE Moody's" },
-  numRetained: { headerName: "Retained" },
-  schedule: { headerName: "Course Type" },
-  fteBasic: { headerName: "FTE Basic" },
-  fteIpeds: { headerName: "FTE IPEDS" },
-  subject2: { headerName: "Subject" },
-  fteCpe: { headerName: "FTE CPE" },
-  ftpt: { headerName: "FT/PT" },
-  time: { headerName: "FT/PT" },
-  grs: { headerName: "GRS" },
-};
 
 // const columnDefs = [
 //   { field: "minority", headerName: "URM" },
@@ -604,20 +540,20 @@ const useMainMethod = (initialDropdowns) => {
     () =>
       filteredRows.length === 0
         ? []
-        : delayedGroupBy.length > 0
+        : relevantGroupBys.length > 0
         ? pivotedData
         : totalRow,
-    [totalRow, pivotedData, filteredRows, delayedGroupBy]
+    [totalRow, pivotedData, filteredRows, relevantGroupBys]
   );
 
   const pinnedTopRowData = useMemo(
     () =>
       filteredRows.length === 0
         ? []
-        : delayedGroupBy.length > 0
+        : relevantGroupBys.length > 0
         ? totalRow
         : [],
-    [totalRow, filteredRows, delayedGroupBy]
+    [totalRow, filteredRows, relevantGroupBys]
   );
 
   const csvData = useMemo(() => {
@@ -637,11 +573,21 @@ const useMainMethod = (initialDropdowns) => {
       if (shouldFindRates) {
         newObject[`${delayedMeasure} / ${totalField}`] =
           newObject[delayedMeasure] / newObject[totalField];
+      } else if (
+        isConfidential({
+          value: newObject[delayedMeasure],
+          inFuture: false,
+          isRate: false,
+        })
+      ) {
+        newObject[delayedMeasure] = confidentialityString;
       }
 
       return newObject;
     });
   }, [rowData, nonSelectedMeasures, delayedMeasure, shouldFindRates]);
+
+  // console.log(csvData);
 
   const waiting = useAutoSizeOnRowDataUpdated({
     rowData: pivotedData,
