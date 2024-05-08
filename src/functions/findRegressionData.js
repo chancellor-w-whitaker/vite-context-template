@@ -31,26 +31,30 @@ const findRegressionDataPoints = (data, keyName, factor = 1000000) => {
   return data.map(({ [keyName]: value }, index) => [index + 1, value * factor]);
 };
 
-export const findOriginalRegressionResult = (regressionType, dataPoints) => {
+export const findOriginalRegressionResult = (
+  regressionType,
+  settings,
+  dataPoints
+) => {
   let result;
 
-  const options = { precision: 10 };
+  // const options = { precision: 10 };
 
   switch (regressionType) {
     case "linear":
-      result = regression.linear(dataPoints, options);
+      result = regression.linear(dataPoints, settings);
       break;
     case "exponential":
-      result = regression.exponential(dataPoints, options);
+      result = regression.exponential(dataPoints, settings);
       break;
     case "logarithmic":
-      result = regression.logarithmic(dataPoints, options);
+      result = regression.logarithmic(dataPoints, settings);
       break;
     case "power":
-      result = regression.power(dataPoints, options);
+      result = regression.power(dataPoints, settings);
       break;
     case "polynomial":
-      result = regression.polynomial(dataPoints, options);
+      result = regression.polynomial(dataPoints, settings);
       break;
   }
 

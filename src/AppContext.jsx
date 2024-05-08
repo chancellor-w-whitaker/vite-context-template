@@ -27,15 +27,14 @@ import { formatMeasureRate } from "./functions/formatMeasureRate";
 import { useNonBlockingState } from "./hooks/useNonBlockingState";
 import { toTitleCase } from "./functions/formatters/toTitleCase";
 import { toKebabCase } from "./functions/formatters/toKebabCase";
+import { regNames, regTypes } from "./constants/regressionTypes";
 import { useResponsiveState } from "./hooks/useResponsiveState";
-import { regressionTypes } from "./constants/regressionTypes";
 import { adjustDropdowns } from "./functions/adjustDropdowns";
 import { getMeasureValue } from "./functions/getMeasureValue";
 import { getMeasureRate } from "./functions/getMeasureRate";
 import { getColumnDefs } from "./functions/getColumnDefs";
 import { adjustMeasure } from "./functions/adjustMeasure";
 import { useBsDropdowns } from "./hooks/useBsDropdowns";
-import { brandColors } from "./constants/brandColors";
 import { getNextTerm } from "./functions/getNextTerm";
 import { totalField } from "./constants/totalField";
 import { getBaseLog } from "./functions/getBaseLog";
@@ -120,7 +119,7 @@ const useMainMethod = (initialDropdowns) => {
     useResponsiveState([]);
 
   const [regressionType, setRegressionType, delayedRegressionType] =
-    useResponsiveState(regressionTypes[0]);
+    useResponsiveState(regTypes[0].name);
 
   const onFileNameChange = useCallback(
     ({ target: { value } }) => setFileName(value),
@@ -377,12 +376,15 @@ const useMainMethod = (initialDropdowns) => {
       ([xValue, yValue]) => yValue !== null
     );
 
-    const regressionResults = regressionTypes
-      .map((type) => ({
-        ...findOriginalRegressionResult(type, regressionInput),
+    const regressionResults = regTypes
+      .map(({ settings, type, name }) => ({
+        ...findOriginalRegressionResult(type, settings, regressionInput),
         type,
+        name,
       }))
       .sort((a, b) => b.r2 - a.r2);
+
+    console.log(regressionResults);
 
     return { regressionResults, dataPoints, xyValues, yKey };
   }, [
@@ -394,7 +396,7 @@ const useMainMethod = (initialDropdowns) => {
     shouldFindRates,
   ]);
 
-  const bestRegressionType = regressionInformation.regressionResults[0].type;
+  const bestRegressionType = regressionInformation.regressionResults[0].name;
 
   if (regressionType !== bestRegressionType) {
     setRegressionType(bestRegressionType);
@@ -406,7 +408,7 @@ const useMainMethod = (initialDropdowns) => {
 
     // regression result found using regression type and actual regression input
     const regressionResult = regressionResults.find(
-      ({ type }) => type === delayedRegressionType
+      ({ name }) => name === delayedRegressionType
     );
 
     // easier usage of regression properties
@@ -627,7 +629,7 @@ const useMainMethod = (initialDropdowns) => {
     },
     lists: {
       measures: nonOmittedMeasures,
-      regressionTypes,
+      regressionTypes: regNames,
       dropdownItems,
       fileNames,
       groupBys,

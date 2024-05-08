@@ -25,24 +25,18 @@ const classificationDefs = Object.fromEntries(
 );
 
 const collegeDefs = {
-  "College of Just, Sfty, Mil Sci": {
-    formatted: "Justice, Safety, & Military Science",
+  "Justice, Safety, & Military Science": {
     position: 6,
   },
-  "College of Edu & App Human Sci": {
-    formatted: "Education & Applied Human Sciences",
+  "Education & Applied Human Sciences": {
     position: 4,
   },
-  "College of Arts & Sciences": {
-    formatted: "Arts & Sciences (prior to 2016)",
-    position: 3,
-  },
-  "College of Health Sciences": { formatted: "Health Sciences", position: 5 },
-  "College of Ltrs, Arts, SocSci": { formatted: "CLASS", position: 2 },
-  "Academic Affairs": { formatted: "Academic Affairs", position: 0 },
-  "Graduate School": { formatted: "Graduate School", position: 8 },
-  "College of Business": { formatted: "Business", position: 1 },
-  "College of STEM": { formatted: "STEM", position: 7 },
+  "Academic Affairs": { position: 0 },
+  "Graduate School": { position: 8 },
+  "Health Sciences": { position: 5 },
+  Business: { position: 1 },
+  CLASS: { position: 2 },
+  STEM: { position: 7 },
 };
 
 const studentTypeDefs = {
@@ -71,8 +65,6 @@ const getDefComparator = (lookup) => (a, b) =>
 
 const collegeComparator = getDefComparator(collegeDefs);
 
-const collegeValueFormatter = getDefFormatter(collegeDefs);
-
 const studentTypeComparator = getDefComparator(studentTypeDefs);
 
 const classificationComparator = getDefComparator(classificationDefs);
@@ -89,10 +81,6 @@ const fixHyphenatedCaps = (value) =>
     .join(" ");
 
 export const fieldDefs = {
-  courseOnline: {
-    valueFormatter: ({ value = "" }) =>
-      value === "ECampus Online" ? "EKU Online" : value,
-  },
   serviceRegion: {
     valueFormatter: ({ value = "" }) =>
       fixHyphenatedCaps(value.split(":").join(": ")),
@@ -101,14 +89,13 @@ export const fieldDefs = {
     valueFormatter: ({ value = "" }) => value.replace("Minority", "URM"),
     headerName: "URM",
   },
-  college: {
-    valueFormatter: collegeValueFormatter,
-    comparator: collegeComparator,
-    sort: "asc",
-  },
   online: {
     valueFormatter: ({ value = "" }) => fixHyphenatedCaps(value),
     headerName: "Modality",
+  },
+  college: {
+    comparator: collegeComparator,
+    sort: "asc",
   },
   classification: { comparator: classificationComparator, sort: "asc" },
   studentType: { comparator: studentTypeComparator, sort: "asc" },
