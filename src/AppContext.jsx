@@ -338,8 +338,9 @@ const useMainMethod = (initialDropdowns) => {
 
         if (shouldFindRates) {
           object.fraction = {
-            value: getMeasureFraction(measuresObject, delayedMeasure),
-            key: delayedMeasure,
+            numerator: getMeasureValue(measuresObject, yKey),
+            value: getMeasureFraction(measuresObject, yKey),
+            key: yKey,
           };
         }
 
@@ -389,7 +390,7 @@ const useMainMethod = (initialDropdowns) => {
       }))
       .sort((a, b) => b.r2 - a.r2);
 
-    console.log(regressionResults);
+    console.log("data points", dataPoints);
 
     return { regressionResults, dataPoints, xyValues, yKey };
   }, [

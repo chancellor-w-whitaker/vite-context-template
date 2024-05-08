@@ -27,6 +27,16 @@ const RegSource = () => (
 );
 
 const regressionAnswers = {
+  "polynomial (order of 3)": (
+    <div>
+      <div>
+        Polynomial regression is the simplest type of non-linear regression,
+        where the relationship between the dependent and independent variables
+        can be modeled as an nth degree polynomial function.
+      </div>
+      <RegSource></RegSource>
+    </div>
+  ),
   polynomial: (
     <div>
       <div>

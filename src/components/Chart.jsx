@@ -86,6 +86,8 @@ export const Chart = memo(
 
     const breakpoints = { medium: 768, small: 576 };
 
+    console.log("actual chart data", data);
+
     // const numeratorTooLow = (value) => shouldFindRates && value <= 5;
 
     const mapFunction = shouldFindRates
