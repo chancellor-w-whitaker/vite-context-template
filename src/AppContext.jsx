@@ -1,4 +1,4 @@
-import { createContext, useCallback, useMemo, useRef } from "react";
+import { createContext, useCallback, useState, useMemo, useRef } from "react";
 
 import {
   findOriginalRegressionResult,
@@ -94,6 +94,8 @@ const fileDefaults = {
 const useMainMethod = (initialDropdowns) => {
   const gridRef = useRef();
 
+  const [autoSelectReg, setAutoSelectReg] = useState(true);
+
   const autoSizeAllColumns = useCallback(
     () => gridRef.current.api.autoSizeAllColumns(),
     []
@@ -138,7 +140,10 @@ const useMainMethod = (initialDropdowns) => {
   );
 
   const onRegressionTypeChange = useCallback(
-    ({ target: { value } }) => setRegressionType(value),
+    ({ target: { value } }) => {
+      setAutoSelectReg(false);
+      setRegressionType(value);
+    },
     [setRegressionType]
   );
 
@@ -398,7 +403,7 @@ const useMainMethod = (initialDropdowns) => {
 
   const bestRegressionType = regressionInformation.regressionResults[0].name;
 
-  if (regressionType !== bestRegressionType) {
+  if (regressionType !== bestRegressionType && autoSelectReg) {
     setRegressionType(bestRegressionType);
   }
 
