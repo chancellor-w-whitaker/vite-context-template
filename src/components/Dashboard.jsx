@@ -34,7 +34,7 @@ const regressionAnswers = {
         where the relationship between the dependent and independent variables
         can be modeled as an nth degree polynomial function.
       </div>
-      <RegSource></RegSource>
+      {/* <RegSource></RegSource> */}
     </div>
   ),
   polynomial: (
@@ -44,7 +44,7 @@ const regressionAnswers = {
         where the relationship between the dependent and independent variables
         can be modeled as an nth degree polynomial function.
       </div>
-      <RegSource></RegSource>
+      {/* <RegSource></RegSource> */}
     </div>
   ),
   exponential: (
@@ -54,7 +54,7 @@ const regressionAnswers = {
         dependent variable is modeled as an exponential function of the
         independent variable.
       </div>
-      <RegSource></RegSource>
+      {/* <RegSource></RegSource> */}
     </div>
   ),
   logarithmic: (
@@ -64,7 +64,7 @@ const regressionAnswers = {
         dependent variable is modeled as a logarithmic function of the
         independent variable.
       </div>
-      <RegSource></RegSource>
+      {/* <RegSource></RegSource> */}
     </div>
   ),
   power: (
@@ -73,7 +73,7 @@ const regressionAnswers = {
         Power regression is a type of non-linear regression where the dependent
         variable is modeled as a power function of the independent variable.
       </div>
-      <RegSource></RegSource>
+      {/* <RegSource></RegSource> */}
     </div>
   ),
   linear: (
@@ -82,7 +82,7 @@ const regressionAnswers = {
         Linear regression is a statistical model which estimates the linear
         relationship between a dependent and independent variable.
       </div>
-      <RegSource></RegSource>
+      {/* <RegSource></RegSource> */}
     </div>
   ),
 };
