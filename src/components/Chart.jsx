@@ -22,6 +22,8 @@ import { toTitleCase } from "../functions/formatters/toTitleCase";
 import { brandColors } from "../constants/brandColors";
 import { CustomTooltip } from "./CustomTooltip";
 
+const height = 500;
+
 // ! pattern for mapping over data for more flexibility in chart data structure
 // https://recharts.org/en-US/examples/CustomShapeBarChart
 
@@ -195,7 +197,7 @@ export const Chart = memo(
       responsiveContainer: {
         onResize: (width) => setReturnedWidth(width),
         width: "100%",
-        height: 500,
+        height,
       },
       yAxis: {
         domain: zoomed ? domain : null,
@@ -263,7 +265,7 @@ export const Chart = memo(
         {noRowsToShow ? (
           <div
             className="d-flex align-items-center justify-content-center"
-            style={{ height: 500 }}
+            style={{ height }}
           >
             No Data To Show
           </div>
@@ -275,7 +277,7 @@ export const Chart = memo(
             position: "fixed",
             bottom: "100%",
             width: 1264,
-            height: 500,
+            height,
           }}
           ref={printRef}
         >

@@ -17,11 +17,11 @@ export const regTypes = [
   { settings: defaultSettings, type: "logarithmic", name: "logarithmic" },
   { settings: defaultSettings, type: "power", name: "power" },
   { settings: defaultSettings, type: "polynomial", name: "polynomial" },
-  {
-    settings: { precision: 10, order: 3 },
-    name: "polynomial (order of 3)",
-    type: "polynomial",
-  },
+  // {
+  //   settings: { precision: 10, order: 3 },
+  //   name: "polynomial (order of 3)",
+  //   type: "polynomial",
+  // },
 ];
 
 export const regNames = regTypes.map(({ name }) => name);
