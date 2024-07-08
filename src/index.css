@@ -165,7 +165,7 @@ mark {
 }
 
 .pl-36px {
-  padding-left: 36px;
+  padding-left: 36px !important;
 }
 
 .tooltip-inner {
@@ -175,4 +175,24 @@ mark {
   text-align: center;
   background-color: black;
   border-radius: 0.375rem;
+}
+
+.page > div {
+  margin: 0 !important;
+}
+
+.page.offset-xxl-1 {
+  margin-left: 0;
+}
+
+.page.col-xxl-10 {
+  width: 100%;
+}
+
+.page {
+  padding: 1rem !important;
+}
+
+.offcanvas {
+  display: none !important;
 }

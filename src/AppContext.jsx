@@ -101,7 +101,7 @@ const useMainMethod = (initialDropdowns) => {
     []
   );
 
-  const { isDropdownWithIdOpen, storeDropdownById } = useBsDropdowns();
+  // const { isDropdownWithIdOpen, storeDropdownById } = useBsDropdowns();
 
   const [fileName, setFileName] = useNonBlockingState(fileNames[0].id);
 
@@ -640,7 +640,7 @@ const useMainMethod = (initialDropdowns) => {
       fileNames,
       groupBys,
     },
-    initializers: { isDropdownWithIdOpen, storeDropdownById },
+    // initializers: { isDropdownWithIdOpen, storeDropdownById },
     autoSizeAllColumns,
     fieldDefs,
   };

@@ -11,6 +11,7 @@ import { useElementSize } from "../hooks/useElementSize";
 import { usePopover } from "../hooks/usePopover";
 import { MyDropdownItem } from "./MyDropdown";
 import { GridContainer, Grid } from "./Grid";
+import { Popover } from "./Popover";
 import { Chart } from "./Chart";
 
 // replace values less than 5 with an *
@@ -153,7 +154,7 @@ export const Dashboard = () => {
       loading,
     },
     lists: { regressionTypes, dropdownItems, fileNames, groupBys, measures },
-    initializers: { isDropdownWithIdOpen, storeDropdownById },
+    // initializers: { isDropdownWithIdOpen, storeDropdownById },
     autoSizeAllColumns,
     grid: gridProps,
     fieldDefs,
@@ -268,156 +269,160 @@ export const Dashboard = () => {
 
             return (
               // dropdown
-              <div
+              <Popover
+                hide={
+                  <div className="d-block dropdown-menu py-0 mx-0 rounded-3 shadow-sm overflow-hidden">
+                    {
+                      // isDropdownWithIdOpen(field) &&
+                      <>
+                        {/* dropdown search */}
+                        <form
+                          className="p-2 bg-body-tertiary border-bottom"
+                          onSubmit={(e) => e.preventDefault()}
+                        >
+                          <input
+                            onChange={onDropdownsChange.search}
+                            placeholder="Type to search..."
+                            className="form-control"
+                            name={`${field}-search`}
+                            autoComplete="false"
+                            value={search}
+                            type="search"
+                          />
+                        </form>
+                        {/* dropdown lists */}
+                        <div
+                          className="list-group list-group-flush text-nowrap overflow-y-scroll"
+                          style={{ maxHeight: 300 }}
+                        >
+                          {/* all button when many lists */}
+                          {moreThanOneListToShow && (
+                            <MyDropdownItem
+                              onChange={onDropdownsChange.allItems}
+                              checked={fractions.all.condition}
+                              fraction={fractions.all.string}
+                              name={`${field}-items`}
+                              relevance="all"
+                            >
+                              All
+                            </MyDropdownItem>
+                          )}
+                          {/* relevant label */}
+                          {relevant.length > 0 && (
+                            <MyDropdownItem
+                              onChange={onDropdownsChange.relevantItems}
+                              checked={fractions.relevant.condition}
+                              fraction={fractions.relevant.string}
+                              hideInput={moreThanOneListToShow}
+                              name={`${field}-items`}
+                              relevance="relevant"
+                            >
+                              {moreThanOneListToShow ? "Relevant" : "All"}
+                            </MyDropdownItem>
+                          )}
+                          {/* relevant list items */}
+                          {getSortedList(relevant, field).map((value) => (
+                            <MyDropdownItem
+                              onChange={onDropdownsChange.singleItem}
+                              checked={items[value].checked}
+                              name={`${field}-items`}
+                              relevance="relevant"
+                              value={value}
+                              key={value}
+                              singleItem
+                            >
+                              {getFormattedValue({ search, field, value })}
+                            </MyDropdownItem>
+                          ))}
+                          {/* irrelevant label */}
+                          {irrelevant.length > 0 && (
+                            <MyDropdownItem
+                              onChange={onDropdownsChange.irrelevantItems}
+                              checked={fractions.irrelevant.condition}
+                              fraction={fractions.irrelevant.string}
+                              hideInput={moreThanOneListToShow}
+                              name={`${field}-items`}
+                              relevance="irrelevant"
+                            >
+                              {moreThanOneListToShow ? "Irrelevant" : "All"}
+                            </MyDropdownItem>
+                          )}
+                          {/* irrelevant list items */}
+                          {getSortedList(irrelevant, field).map((value) => (
+                            <MyDropdownItem
+                              checked={items[value].checked}
+                              name={`${field}-items`}
+                              relevance="irrelevant"
+                              value={value}
+                              key={value}
+                              singleItem
+                            >
+                              {getFormattedValue({ search, field, value })}
+                            </MyDropdownItem>
+                          ))}
+                          {/* unavailable label */}
+                          {unavailable.length > 0 && (
+                            <MyDropdownItem
+                              onChange={onDropdownsChange.unavailableItems}
+                              checked={fractions.unavailable.condition}
+                              fraction={fractions.unavailable.string}
+                              hideInput={moreThanOneListToShow}
+                              name={`${field}-items`}
+                              relevance="unavailable"
+                            >
+                              {moreThanOneListToShow ? "Unavailable" : "All"}
+                            </MyDropdownItem>
+                          )}
+                          {/* unavailable list items */}
+                          {getSortedList(unavailable, field).map((value) => (
+                            <MyDropdownItem
+                              checked={items[value].checked}
+                              name={`${field}-items`}
+                              relevance="unavailable"
+                              value={value}
+                              key={value}
+                              singleItem
+                            >
+                              {getFormattedValue({ search, field, value })}
+                            </MyDropdownItem>
+                          ))}
+                        </div>
+                      </>
+                    }
+                  </div>
+                }
+                openWith={
+                  <button
+                    // ref={(buttonNode) => {
+                    //   storeDropdownById(field, buttonNode);
+                    //   if (buttonNode) {
+                    //     buttonNode.classList.remove("btn-secondary");
+                    //     buttonNode.classList.remove("btn-warning");
+                    //     if (fractions.all.condition) {
+                    //       buttonNode.classList.add("btn-secondary");
+                    //     } else {
+                    //       buttonNode.classList.add("btn-warning");
+                    //     }
+                    //   }
+                    // }}
+                    className={`align-items-center justify-content-center w-100 d-flex btn bg-gradient dropdown-toggle shadow-sm ${
+                      fractions.all.condition ? "btn-secondary" : "btn-warning"
+                    }`}
+                    // data-bs-auto-close="outside"
+                    title={getFieldTitle(field)}
+                    // data-bs-toggle="dropdown"
+                    // aria-expanded="false"
+                    type="button"
+                  >
+                    <div className="text-truncate">{getFieldTitle(field)}</div>
+                  </button>
+                }
                 style={{
                   width: `${Math.floor(100 / rowColumns)}%`,
                 }}
                 className={`dropdown flex-fill pe-2 pb-2`}
                 key={field}
-              >
-                {/* dropdown button */}
-                <button
-                  ref={(buttonNode) => {
-                    storeDropdownById(field, buttonNode);
-                    if (buttonNode) {
-                      buttonNode.classList.remove("btn-secondary");
-                      buttonNode.classList.remove("btn-warning");
-                      if (fractions.all.condition) {
-                        buttonNode.classList.add("btn-secondary");
-                      } else {
-                        buttonNode.classList.add("btn-warning");
-                      }
-                    }
-                  }}
-                  className={`align-items-center justify-content-center w-100 d-flex btn bg-gradient dropdown-toggle shadow-sm`}
-                  data-bs-auto-close="outside"
-                  title={getFieldTitle(field)}
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                  type="button"
-                >
-                  <div className="text-truncate">{getFieldTitle(field)}</div>
-                </button>
-                {/* dropdown menu */}
-                <div className="dropdown-menu py-0 mx-0 rounded-3 shadow-sm overflow-hidden">
-                  {isDropdownWithIdOpen(field) && (
-                    <>
-                      {/* dropdown search */}
-                      <form
-                        className="p-2 bg-body-tertiary border-bottom"
-                        onSubmit={(e) => e.preventDefault()}
-                      >
-                        <input
-                          onChange={onDropdownsChange.search}
-                          placeholder="Type to search..."
-                          className="form-control"
-                          name={`${field}-search`}
-                          autoComplete="false"
-                          value={search}
-                          type="search"
-                        />
-                      </form>
-                      {/* dropdown lists */}
-                      <div
-                        className="list-group list-group-flush text-nowrap overflow-y-scroll"
-                        style={{ maxHeight: 300 }}
-                      >
-                        {/* all button when many lists */}
-                        {moreThanOneListToShow && (
-                          <MyDropdownItem
-                            onChange={onDropdownsChange.allItems}
-                            checked={fractions.all.condition}
-                            fraction={fractions.all.string}
-                            name={`${field}-items`}
-                            relevance="all"
-                          >
-                            All
-                          </MyDropdownItem>
-                        )}
-                        {/* relevant label */}
-                        {relevant.length > 0 && (
-                          <MyDropdownItem
-                            onChange={onDropdownsChange.relevantItems}
-                            checked={fractions.relevant.condition}
-                            fraction={fractions.relevant.string}
-                            hideInput={moreThanOneListToShow}
-                            name={`${field}-items`}
-                            relevance="relevant"
-                          >
-                            {moreThanOneListToShow ? "Relevant" : "All"}
-                          </MyDropdownItem>
-                        )}
-                        {/* relevant list items */}
-                        {getSortedList(relevant, field).map((value) => (
-                          <MyDropdownItem
-                            onChange={onDropdownsChange.singleItem}
-                            checked={items[value].checked}
-                            name={`${field}-items`}
-                            relevance="relevant"
-                            value={value}
-                            key={value}
-                            singleItem
-                          >
-                            {getFormattedValue({ search, field, value })}
-                          </MyDropdownItem>
-                        ))}
-                        {/* irrelevant label */}
-                        {irrelevant.length > 0 && (
-                          <MyDropdownItem
-                            onChange={onDropdownsChange.irrelevantItems}
-                            checked={fractions.irrelevant.condition}
-                            fraction={fractions.irrelevant.string}
-                            hideInput={moreThanOneListToShow}
-                            name={`${field}-items`}
-                            relevance="irrelevant"
-                          >
-                            {moreThanOneListToShow ? "Irrelevant" : "All"}
-                          </MyDropdownItem>
-                        )}
-                        {/* irrelevant list items */}
-                        {getSortedList(irrelevant, field).map((value) => (
-                          <MyDropdownItem
-                            checked={items[value].checked}
-                            name={`${field}-items`}
-                            relevance="irrelevant"
-                            value={value}
-                            key={value}
-                            singleItem
-                          >
-                            {getFormattedValue({ search, field, value })}
-                          </MyDropdownItem>
-                        ))}
-                        {/* unavailable label */}
-                        {unavailable.length > 0 && (
-                          <MyDropdownItem
-                            onChange={onDropdownsChange.unavailableItems}
-                            checked={fractions.unavailable.condition}
-                            fraction={fractions.unavailable.string}
-                            hideInput={moreThanOneListToShow}
-                            name={`${field}-items`}
-                            relevance="unavailable"
-                          >
-                            {moreThanOneListToShow ? "Unavailable" : "All"}
-                          </MyDropdownItem>
-                        )}
-                        {/* unavailable list items */}
-                        {getSortedList(unavailable, field).map((value) => (
-                          <MyDropdownItem
-                            checked={items[value].checked}
-                            name={`${field}-items`}
-                            relevance="unavailable"
-                            value={value}
-                            key={value}
-                            singleItem
-                          >
-                            {getFormattedValue({ search, field, value })}
-                          </MyDropdownItem>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
+              ></Popover>
             );
           })}
         </div>
