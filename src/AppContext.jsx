@@ -25,6 +25,7 @@ import { getRowsAndColumns } from "./functions/getRowsAndColumns";
 import { findNextDropdowns } from "./functions/findNextDropdowns";
 import { formatMeasureRate } from "./functions/formatMeasureRate";
 import { useNonBlockingState } from "./hooks/useNonBlockingState";
+import { getTicksAndDomain } from "./functions/getTicksAndDomain";
 import { toTitleCase } from "./functions/formatters/toTitleCase";
 import { toKebabCase } from "./functions/formatters/toKebabCase";
 import { regNames, regTypes } from "./constants/regressionTypes";
@@ -62,6 +63,7 @@ const pivotFields = new Set(fileNames.map(({ pivotField }) => pivotField));
 const fileDefaults = {
   defaultDropdowns: {},
   rowRemovalLogic: {},
+  dropdownsToOmit: [],
   measuresToOmit: [],
 };
 
@@ -108,6 +110,7 @@ const useMainMethod = (initialDropdowns) => {
   const {
     defaultDropdowns = fileDefaults.defaultDropdowns,
     rowRemovalLogic = fileDefaults.rowRemovalLogic,
+    dropdownsToOmit = fileDefaults.dropdownsToOmit,
     measuresToOmit = fileDefaults.measuresToOmit,
     defaultMeasure = "",
     shouldFindRates,
@@ -455,6 +458,15 @@ const useMainMethod = (initialDropdowns) => {
     return { tooltipItems, chartData };
   }, [delayedRegressionType, regressionInformation]);
 
+  const { domain: yAxisDomain, ticks: yAxisTicks } = useMemo(() => {
+    const dataValues = [
+      ...chartData.map(({ [delayedMeasure]: value }) => value),
+      ...chartData.map(({ prediction }) => prediction),
+    ];
+
+    return getTicksAndDomain({ dataValues });
+  }, [chartData, delayedMeasure]);
+
   const domain = useMemo(() => {
     const allValues = [
       ...chartData.map(({ [delayedMeasure]: value }) => value),
@@ -577,7 +589,10 @@ const useMainMethod = (initialDropdowns) => {
           dropdowns === initialDropdowns
             ? []
             : Object.entries(dropdowns).filter(
-                ([key, value]) => value.dataRelevance && !pivotFields.has(key)
+                ([key, value]) =>
+                  value.dataRelevance &&
+                  !pivotFields.has(key) &&
+                  !dropdownsToOmit.includes(key)
               ),
         dropdowns: dropdowns === initialDropdowns ? {} : dropdowns,
       },
@@ -615,6 +630,8 @@ const useMainMethod = (initialDropdowns) => {
       data: chartData,
       shouldFindRates,
       tooltipItems,
+      yAxisDomain,
+      yAxisTicks,
       domain,
     },
     grid: {

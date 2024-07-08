@@ -1,5 +1,6 @@
 export const fileNames = [
   {
+    dropdownsToOmit: ["department"],
     displayName: "Fall Enrollment",
     shouldFindRates: false,
     pivotField: "term",
@@ -7,17 +8,20 @@ export const fileNames = [
   },
   {
     displayName: "Spring Enrollment",
+    dropdownsToOmit: ["department"],
     shouldFindRates: false,
     pivotField: "term",
     id: "spring",
   },
   {
     displayName: "Summer Enrollment",
+    dropdownsToOmit: ["department"],
     shouldFindRates: false,
     pivotField: "term",
     id: "summer",
   },
   {
+    dropdownsToOmit: ["department"],
     displayName: "Degrees Awarded",
     shouldFindRates: false,
     pivotField: "year",
@@ -42,6 +46,7 @@ export const fileNames = [
         },
       },
     },
+    dropdownsToOmit: ["department"],
     displayName: "Retention Rates",
     pivotField: "retentionYear",
     measuresToOmit: ["total"],
@@ -56,6 +61,7 @@ export const fileNames = [
     },
     measuresToOmit: ["total", "4YrRate", "5YrRate", "6YrRate"],
     displayName: "Graduation Rates",
+    dropdownsToOmit: ["department"],
     defaultMeasure: "6YrGraduate",
     pivotField: "cohortTerm",
     shouldFindRates: true,
@@ -64,6 +70,7 @@ export const fileNames = [
   {
     displayName: "Credit Hours",
     shouldFindRates: false,
+    dropdownsToOmit: [],
     pivotField: "year",
     id: "hours",
   },

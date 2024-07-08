@@ -57,7 +57,9 @@ export const Chart = memo(
     noRowsToShow,
     tooltipItems,
     xAxisDataKey,
+    yAxisDomain,
     barDataKey,
+    yAxisTicks,
     domain,
     data,
   }) => {
@@ -194,15 +196,16 @@ export const Chart = memo(
         strokeWidth: 3,
         dot: false,
       },
+      yAxis: {
+        domain: zoomed ? yAxisDomain : null,
+        ticks: zoomed ? yAxisTicks : null,
+        tickFormatter: valueFormatter,
+        type: "number",
+      },
       responsiveContainer: {
         onResize: (width) => setReturnedWidth(width),
         width: "100%",
         height,
-      },
-      yAxis: {
-        domain: zoomed ? domain : null,
-        tickFormatter: valueFormatter,
-        type: "number",
       },
       xAxis: {
         tickFormatter: xAxisTickFormatter,
