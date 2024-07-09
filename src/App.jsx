@@ -13,7 +13,7 @@ import { AppContextProvider } from "./AppContext";
 const initialState = {};
 
 const App = () => {
-  useSetBsBgVariantOfBody("primary-subtle");
+  // useSetBsBgVariantOfBody("primary-subtle");
 
   const [state, setState] = useState(initialState);
 

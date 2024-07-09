@@ -120,13 +120,9 @@ const Question = ({ children }) => {
         ​
       </button>
       {isOpen && (
-        <div
-          className="w3-dropdown-content"
-          style={{ minWidth: 250 }}
-          ref={popover}
-        >
-          <div style={{ maxWidth: "none" }} className="tooltip-inner">
-            {children}
+        <div className="w3-dropdown-content" ref={popover}>
+          <div className="tooltip show">
+            <div className="tooltip-inner">{children}</div>
           </div>
         </div>
       )}
