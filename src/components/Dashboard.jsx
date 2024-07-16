@@ -17,16 +17,6 @@ import { Chart } from "./Chart";
 // replace values less than 5 with an *
 // replace "minority" string.toLowerCase() with URM
 
-const NewTabLink = (props) => (
-  <a {...props} rel="noreferrer" target="_blank"></a>
-);
-
-const RegSource = () => (
-  <NewTabLink href="https://fastercapital.com/keyword/power-regression.html">
-    Source
-  </NewTabLink>
-);
-
 const regressionAnswers = {
   "polynomial (order of 3)": (
     <div>
@@ -148,6 +138,7 @@ export const Dashboard = () => {
       groupBy,
       measure,
       loading,
+      note,
     },
     lists: { regressionTypes, dropdownItems, fileNames, groupBys, measures },
     // initializers: { isDropdownWithIdOpen, storeDropdownById },
@@ -424,6 +415,7 @@ export const Dashboard = () => {
         </div>
         {/* bar chart */}
         <Chart {...chartProps}></Chart>
+        <div>{`NOTE: ${note}`}</div>
         {/* data grid menu */}
         <div className="d-flex flex-row gap-2 flex-wrap">
           {/* download */}

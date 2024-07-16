@@ -1,3 +1,6 @@
+const note =
+  "Due to recent program, department, and college name changes, IE&R, IT, and the Registrar's office are currently reconciling and aligning all degree programs. As a result, it may be necessary to filter on multiple versions of program names to fulfill data needs. The reconciliation is expected to be complete in Fall 2024.";
+
 export const fileNames = [
   {
     dropdownsToOmit: ["department"],
@@ -5,6 +8,7 @@ export const fileNames = [
     shouldFindRates: false,
     pivotField: "term",
     id: "fall",
+    note,
   },
   {
     displayName: "Spring Enrollment",
@@ -12,6 +16,7 @@ export const fileNames = [
     shouldFindRates: false,
     pivotField: "term",
     id: "spring",
+    note,
   },
   {
     displayName: "Summer Enrollment",
@@ -19,6 +24,7 @@ export const fileNames = [
     shouldFindRates: false,
     pivotField: "term",
     id: "summer",
+    note,
   },
   {
     dropdownsToOmit: ["department"],
@@ -26,6 +32,7 @@ export const fileNames = [
     shouldFindRates: false,
     pivotField: "year",
     id: "degrees",
+    note,
   },
   {
     defaultDropdowns: {
@@ -52,6 +59,7 @@ export const fileNames = [
     measuresToOmit: ["total"],
     shouldFindRates: true,
     id: "retention",
+    note,
   },
   {
     rowRemovalLogic: {
@@ -66,8 +74,10 @@ export const fileNames = [
     pivotField: "cohortTerm",
     shouldFindRates: true,
     id: "graduation",
+    note,
   },
   {
+    note: "Due to recent program, department, and college name changes, IE&R, IT, and the Registrar's office are currently reconciling and aligning all degree programs. As a result, it may be necessary to filter on multiple versions of department names to fulfill data needs. The reconciliation is expected to be complete in Fall 2024.",
     displayName: "Credit Hours",
     shouldFindRates: false,
     dropdownsToOmit: [],

@@ -116,6 +116,7 @@ const useMainMethod = (initialDropdowns) => {
     shouldFindRates,
     displayName,
     pivotField,
+    note,
   } = fileNames.find(({ id }) => id === fileName);
 
   const [measure, setMeasure, delayedMeasure] = useResponsiveState();
@@ -606,6 +607,7 @@ const useMainMethod = (initialDropdowns) => {
       fileName,
       measure,
       groupBy,
+      note,
     },
     onChange: {
       dropdowns: {
