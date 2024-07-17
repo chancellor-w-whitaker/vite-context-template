@@ -415,7 +415,15 @@ export const Dashboard = () => {
         </div>
         {/* bar chart */}
         <Chart {...chartProps}></Chart>
-        <div>{`NOTE: ${note}`}</div>
+        <div>
+          <div className="fw-bold text-decoration-underline">Notes</div>
+          <ul>
+            {note.map((string, i) => (
+              <li key={i}>{`${string}`}</li>
+            ))}
+          </ul>
+        </div>
+        {/* <div>{`NOTE: ${note}`}</div> */}
         {/* data grid menu */}
         <div className="d-flex flex-row gap-2 flex-wrap">
           {/* download */}

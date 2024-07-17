@@ -1,38 +1,54 @@
-const note =
+const defaultNote =
   "Due to recent program, department, and college name changes, IE&R, IT, and the Registrar's office are currently reconciling and aligning all degree programs. As a result, it may be necessary to filter on multiple versions of program names to fulfill data needs. The reconciliation is expected to be complete in Fall 2024.";
+
+const retentionNote =
+  "Retention rates indicate cohort students who return to EKU in any major, not only those who return to a specific program (even if a specific program is selected).";
+
+const graduationNote =
+  "Graduation rates indicate cohort students who graduate from EKU in any major, not only those who graduate from a specific program (even if a specific program is selected).";
+
+const hoursNote =
+  "Due to recent program, department, and college name changes, IE&R, IT, and the Registrar's office are currently reconciling and aligning all degree programs. As a result, it may be necessary to filter on multiple versions of department names to fulfill data needs. The reconciliation is expected to be complete in Fall 2024.";
+
+const notes = {
+  graduation: [defaultNote, graduationNote],
+  retention: [defaultNote, retentionNote],
+  unspecified: [defaultNote],
+  hours: [hoursNote],
+};
 
 export const fileNames = [
   {
     dropdownsToOmit: ["department"],
     displayName: "Fall Enrollment",
+    note: notes.unspecified,
     shouldFindRates: false,
     pivotField: "term",
     id: "fall",
-    note,
   },
   {
     displayName: "Spring Enrollment",
     dropdownsToOmit: ["department"],
+    note: notes.unspecified,
     shouldFindRates: false,
     pivotField: "term",
     id: "spring",
-    note,
   },
   {
     displayName: "Summer Enrollment",
     dropdownsToOmit: ["department"],
+    note: notes.unspecified,
     shouldFindRates: false,
     pivotField: "term",
     id: "summer",
-    note,
   },
   {
     dropdownsToOmit: ["department"],
     displayName: "Degrees Awarded",
+    note: notes.unspecified,
     shouldFindRates: false,
     pivotField: "year",
     id: "degrees",
-    note,
   },
   {
     defaultDropdowns: {
@@ -58,8 +74,8 @@ export const fileNames = [
     pivotField: "retentionYear",
     measuresToOmit: ["total"],
     shouldFindRates: true,
+    note: notes.retention,
     id: "retention",
-    note,
   },
   {
     rowRemovalLogic: {
@@ -72,16 +88,16 @@ export const fileNames = [
     dropdownsToOmit: ["department"],
     defaultMeasure: "6YrGraduate",
     pivotField: "cohortTerm",
+    note: notes.graduation,
     shouldFindRates: true,
     id: "graduation",
-    note,
   },
   {
-    note: "Due to recent program, department, and college name changes, IE&R, IT, and the Registrar's office are currently reconciling and aligning all degree programs. As a result, it may be necessary to filter on multiple versions of department names to fulfill data needs. The reconciliation is expected to be complete in Fall 2024.",
     displayName: "Credit Hours",
     shouldFindRates: false,
     dropdownsToOmit: [],
     pivotField: "year",
+    note: notes.hours,
     id: "hours",
   },
 ];
