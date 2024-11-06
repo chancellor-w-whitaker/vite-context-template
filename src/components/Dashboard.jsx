@@ -1,4 +1,3 @@
-import { CSVLink } from "react-csv";
 import { useCallback } from "react";
 
 import { FormFloatingSelect, SelectOption } from "./FormFloatingSelect";
@@ -142,19 +141,17 @@ export const Dashboard = () => {
       note,
     },
     lists: { regressionTypes, dropdownItems, fileNames, groupBys, measures },
-    // initializers: { isDropdownWithIdOpen, storeDropdownById },
     autoSizeAllColumns,
     grid: gridProps,
     fieldDefs,
     chart,
-    csv,
   } = context;
 
   const { ref: gridRef } = gridProps;
 
   const onBtnExport = useCallback(() => {
     gridRef.current.api.exportDataAsCsv();
-  }, []);
+  }, [gridRef]);
 
   const [squareRef, { width = 0 }] = useElementSize();
 
