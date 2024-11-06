@@ -1,3 +1,5 @@
+import { isEkuOnline } from "./isEkuOnline";
+
 const defaultNote =
   "Due to recent program, department, and college name changes, IE&R, IT, and the Registrar's office are currently reconciling and aligning all degree programs. As a result, it may be necessary to filter on multiple versions of program names to fulfill data needs. The reconciliation is expected to be complete in Fall 2024.";
 
@@ -17,11 +19,13 @@ const notes = {
   hours: [hoursNote],
 };
 
-const removedFileNameIDs = ["degrees", "retention", "graduation"];
+const removedFileNameIDs = isEkuOnline
+  ? ["degrees", "retention", "graduation"]
+  : [];
 
 export const fileNames = [
   {
-    dropdownsToOmit: ["department", "online"],
+    dropdownsToOmit: isEkuOnline ? ["department", "online"] : ["department"],
     displayName: "Fall Enrollment",
     note: notes.unspecified,
     shouldFindRates: false,
@@ -29,7 +33,7 @@ export const fileNames = [
     id: "fall",
   },
   {
-    dropdownsToOmit: ["department", "online"],
+    dropdownsToOmit: isEkuOnline ? ["department", "online"] : ["department"],
     displayName: "Spring Enrollment",
     note: notes.unspecified,
     shouldFindRates: false,
@@ -37,7 +41,7 @@ export const fileNames = [
     id: "spring",
   },
   {
-    dropdownsToOmit: ["department", "online"],
+    dropdownsToOmit: isEkuOnline ? ["department", "online"] : ["department"],
     displayName: "Summer Enrollment",
     note: notes.unspecified,
     shouldFindRates: false,
@@ -95,18 +99,20 @@ export const fileNames = [
     id: "graduation",
   },
   {
-    defaultDropdowns: {
-      courseOnline: {
-        items: {
-          "Traditional Online": {
-            checked: false,
+    defaultDropdowns: isEkuOnline
+      ? {
+          courseOnline: {
+            items: {
+              "Traditional Online": {
+                checked: false,
+              },
+              "EKU Online": {
+                checked: true,
+              },
+            },
           },
-          "EKU Online": {
-            checked: true,
-          },
-        },
-      },
-    },
+        }
+      : {},
     displayName: "Credit Hours",
     shouldFindRates: false,
     dropdownsToOmit: [],

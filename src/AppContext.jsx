@@ -400,8 +400,6 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
       }))
       .sort((a, b) => b.r2 - a.r2);
 
-    console.log("data points", dataPoints);
-
     return { regressionResults, dataPoints, xyValues, yKey };
   }, [
     fileName,
@@ -551,8 +549,6 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
       return newObject;
     });
   }, [rowData, nonSelectedMeasures, delayedMeasure, shouldFindRates]);
-
-  // console.log(csvData);
 
   const waiting = useAutoSizeOnRowDataUpdated({
     rowData: pivotedData,

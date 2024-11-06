@@ -59,8 +59,6 @@ export const getRowsAndColumns = (data) => {
     ])
   );
 
-  console.log(rows, columns);
-
   // fall, spring, summer enrollment + credit hours
 
   // for fall enrollment, filtered rows by "online" === "Online Program" && removed "online" field

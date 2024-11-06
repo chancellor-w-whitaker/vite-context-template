@@ -1,4 +1,5 @@
 import { CSVLink } from "react-csv";
+import { useCallback } from "react";
 
 import { FormFloatingSelect, SelectOption } from "./FormFloatingSelect";
 import { findSingleItemLabel } from "../functions/findSingleItemLabel";
@@ -148,6 +149,12 @@ export const Dashboard = () => {
     chart,
     csv,
   } = context;
+
+  const { ref: gridRef } = gridProps;
+
+  const onBtnExport = useCallback(() => {
+    gridRef.current.api.exportDataAsCsv();
+  }, []);
 
   const [squareRef, { width = 0 }] = useElementSize();
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { getRowsAndColumns } from "./functions/getRowsAndColumns";
 import { findNextDropdowns } from "./functions/findNextDropdowns";
 import { adjustDropdowns } from "./functions/adjustDropdowns";
+import { isEkuOnline } from "./constants/isEkuOnline";
 import { Dashboard } from "./components/Dashboard";
 import { fileNames } from "./constants/fileNames";
 import { AppContextProvider } from "./AppContext";
@@ -14,7 +15,7 @@ const initialDataByFile = {};
 
 const courseOnlineValues = new Set(["ECampus Online", "Traditional Online"]);
 
-const dataFilterCallback = (row) => {
+const preFilterByOnline = (row) => {
   if (row["onlineDesc"] && row["onlineDesc"] !== "Online Program") {
     return false;
   }
@@ -25,6 +26,10 @@ const dataFilterCallback = (row) => {
 
   return true;
 };
+
+const noPreFilter = (row) => row;
+
+const dataFilterCallback = isEkuOnline ? preFilterByOnline : noPreFilter;
 
 const App = () => {
   const [state, setState] = useState(initialState);
@@ -67,7 +72,9 @@ const App = () => {
   return (
     <>
       {/* <MainContainer> */}
-      <h1 className="display-3 mb-1 text-center">EKU Online</h1>
+      <h1 className="display-3 mb-1 text-center">
+        {isEkuOnline ? "EKU Online" : "Factbook"}
+      </h1>
       {!ready ? (
         <div className="d-flex justify-content-center">
           <div className="spinner-border m-2" role="status">
