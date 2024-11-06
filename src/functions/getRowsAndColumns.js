@@ -59,5 +59,24 @@ export const getRowsAndColumns = (data) => {
     ])
   );
 
+  console.log(rows, columns);
+
+  // fall, spring, summer enrollment + credit hours
+
+  // for fall enrollment, filtered rows by "online" === "Online Program" && removed "online" field
+  // for others, filtered rows by "something" === "something Online" && removed "something" field
+
+  // for credit hours, filter rows by ["EKU Online","Traditional Online"].includes(courseOnline)
+  // keep columns the same
+  // have "EKU Online" be automatically set (so "Traditional Online" be unchecked)
+
   return { columns, rows };
+
+  // return {
+  //   columns: Object.fromEntries(
+  //     Object.entries(columns).filter(([key]) => key !== "online")
+  //   ),
+
+  //   rows: rows.filter(({ online }) => online === "Online Program"),
+  // };
 };

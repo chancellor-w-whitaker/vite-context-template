@@ -8,4 +8,6 @@ export const usePrevious = (value, callback) => {
 
     callback(previousValue);
   }
+
+  return previousValue;
 };

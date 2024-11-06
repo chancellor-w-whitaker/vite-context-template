@@ -46,8 +46,12 @@ import { fieldDefs } from "./constants/fieldDefs";
 
 export const AppContext = createContext(null);
 
-export const AppContextProvider = ({ initialDropdowns, children }) => {
-  const appContext = useMainMethod(initialDropdowns);
+export const AppContextProvider = ({
+  initialDropdowns,
+  dataByFile,
+  children,
+}) => {
+  const appContext = useMainMethod({ initialDropdowns, dataByFile });
 
   return (
     <AppContext.Provider value={appContext}>{children}</AppContext.Provider>
@@ -93,7 +97,7 @@ const fileDefaults = {
 //   },
 // ];
 
-const useMainMethod = (initialDropdowns) => {
+const useMainMethod = ({ initialDropdowns, dataByFile }) => {
   const gridRef = useRef();
 
   const [autoSelectReg, setAutoSelectReg] = useState(true);
@@ -151,7 +155,9 @@ const useMainMethod = (initialDropdowns) => {
     [setRegressionType]
   );
 
-  const data = useData(`data/${fileName}.json`);
+  const data = dataByFile[fileName];
+
+  // const data = useData(`data/${fileName}.json`);
 
   const dataIsLoading = false;
 

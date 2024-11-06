@@ -17,9 +17,11 @@ const notes = {
   hours: [hoursNote],
 };
 
+const removedFileNameIDs = ["degrees", "retention", "graduation"];
+
 export const fileNames = [
   {
-    dropdownsToOmit: ["department"],
+    dropdownsToOmit: ["department", "online"],
     displayName: "Fall Enrollment",
     note: notes.unspecified,
     shouldFindRates: false,
@@ -27,16 +29,16 @@ export const fileNames = [
     id: "fall",
   },
   {
+    dropdownsToOmit: ["department", "online"],
     displayName: "Spring Enrollment",
-    dropdownsToOmit: ["department"],
     note: notes.unspecified,
     shouldFindRates: false,
     pivotField: "term",
     id: "spring",
   },
   {
+    dropdownsToOmit: ["department", "online"],
     displayName: "Summer Enrollment",
-    dropdownsToOmit: ["department"],
     note: notes.unspecified,
     shouldFindRates: false,
     pivotField: "term",
@@ -93,6 +95,18 @@ export const fileNames = [
     id: "graduation",
   },
   {
+    defaultDropdowns: {
+      courseOnline: {
+        items: {
+          "Traditional Online": {
+            checked: false,
+          },
+          "EKU Online": {
+            checked: true,
+          },
+        },
+      },
+    },
     displayName: "Credit Hours",
     shouldFindRates: false,
     dropdownsToOmit: [],
@@ -100,4 +114,4 @@ export const fileNames = [
     note: notes.hours,
     id: "hours",
   },
-];
+].filter(({ id }) => !removedFileNameIDs.includes(id));
