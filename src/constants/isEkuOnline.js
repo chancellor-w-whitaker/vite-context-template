@@ -1,1 +1,1 @@
-export const isEkuOnline = false;
+export const isEkuOnline = true;

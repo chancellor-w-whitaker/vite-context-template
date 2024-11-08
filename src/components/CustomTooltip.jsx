@@ -4,6 +4,7 @@ import {
   confidentialityString,
   isConfidential,
 } from "../constants/confidentialityNumber";
+import { colors } from "../constants/colors";
 
 export const CustomTooltip = (props) => {
   const {
@@ -40,42 +41,47 @@ export const CustomTooltip = (props) => {
           className="recharts-tooltip-item-list"
           style={{ padding: 0, margin: 0 }}
         >
-          {payload.map(({ payload, value, color, name, unit }) => {
-            const [formattedValue, formattedName] = formatter(value, name);
+          {payload
+            .filter(
+              ({ dataKey, stroke }) =>
+                !(stroke === colors.lineBorder && dataKey === "prediction")
+            )
+            .map(({ payload, value, color, name, unit }) => {
+              const [formattedValue, formattedName] = formatter(value, name);
 
-            const { inFuture = false } = payload;
+              const { inFuture = false } = payload;
 
-            // const shouldHide = "hide" in payload && payload.hide === name;
+              // const shouldHide = "hide" in payload && payload.hide === name;
 
-            return (
-              inFuture !== name && (
-                <Fragment key={name}>
-                  <TooltipItem
-                    value={
-                      isConfidential({
-                        isRate: shouldFindRates,
-                        inFuture,
-                        value,
-                      }) && name !== "prediction"
-                        ? confidentialityString
-                        : formattedValue
-                    }
-                    separator={separator}
-                    name={formattedName}
-                    className="fw-bold"
-                    color={color}
-                    unit={unit}
-                  ></TooltipItem>
-                  {"fraction" in payload && payload.fraction.key === name && (
+              return (
+                inFuture !== name && (
+                  <Fragment key={name}>
                     <TooltipItem
-                      value={payload.fraction.value}
+                      value={
+                        isConfidential({
+                          isRate: shouldFindRates,
+                          inFuture,
+                          value,
+                        }) && name !== "prediction"
+                          ? confidentialityString
+                          : formattedValue
+                      }
+                      separator={separator}
+                      name={formattedName}
+                      className="fw-bold"
                       color={color}
+                      unit={unit}
                     ></TooltipItem>
-                  )}
-                </Fragment>
-              )
-            );
-          })}
+                    {"fraction" in payload && payload.fraction.key === name && (
+                      <TooltipItem
+                        value={payload.fraction.value}
+                        color={color}
+                      ></TooltipItem>
+                    )}
+                  </Fragment>
+                )
+              );
+            })}
           {moreItems.map(
             (
               { className = "", separator, value, color, name, unit },

@@ -2,6 +2,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   ComposedChart,
+  ReferenceLine,
   LabelList,
   Tooltip,
   Legend,
@@ -21,6 +22,83 @@ import confidentialityNumber, {
 import { toTitleCase } from "../functions/formatters/toTitleCase";
 import { brandColors } from "../constants/brandColors";
 import { CustomTooltip } from "./CustomTooltip";
+import { colors } from "../constants/colors";
+
+const renderLegend = (props) => {
+  const { formatter, payload } = props;
+
+  console.log(props);
+
+  const removeBorderLine = (p) =>
+    p.filter(
+      ({ value, color }) =>
+        !(color === colors.lineBorder && value === "prediction")
+    );
+
+  const drawItemShape = ({ color, type }) => {
+    if (type === "rect") {
+      return (
+        <path
+          className="recharts-legend-icon"
+          d="M0,4h32v24h-32z"
+          stroke="none"
+          fill={color}
+        />
+      );
+    }
+    if (type === "line") {
+      return (
+        <path
+          d="M0,16h10.666666666666666
+  A5.333333333333333,5.333333333333333,0,1,1,21.333333333333332,16
+  H32M21.333333333333332,16
+  A5.333333333333333,5.333333333333333,0,1,1,10.666666666666666,16"
+          className="recharts-legend-icon"
+          strokeWidth={4}
+          stroke={color}
+          fill="none"
+        />
+      );
+    }
+  };
+
+  return (
+    <ul
+      style={{ textAlign: "center", padding: 0, margin: 0 }}
+      className="recharts-default-legend"
+    >
+      {removeBorderLine(payload).map((item, index) => (
+        <li
+          style={{ display: "inline-block", marginRight: 10 }}
+          className="recharts-legend-item legend-item-0"
+          key={index}
+        >
+          <svg
+            style={{
+              display: "inline-block",
+              verticalAlign: "middle",
+              marginRight: 4,
+            }}
+            className="recharts-surface"
+            viewBox="0 0 32 32"
+            height={14}
+            width={14}
+          >
+            <title />
+            <desc />
+            {drawItemShape({ color: item.color, type: item.type })}
+          </svg>
+          <span
+            className="recharts-legend-item-text"
+            style={{ color: item.color }}
+          >
+            {formatter(item.value)}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+};
 
 const height = 500;
 
@@ -58,9 +136,9 @@ export const Chart = memo(
     tooltipItems,
     xAxisDataKey,
     yAxisDomain,
+    stretchGoal,
     barDataKey,
     yAxisTicks,
-    domain,
     data,
   }) => {
     const printRef = useRef();
@@ -116,7 +194,7 @@ export const Chart = memo(
       legend,
       xAxis,
       yAxis,
-      line,
+      lines,
       bar,
     } = {
       bar: {
@@ -160,6 +238,20 @@ export const Chart = memo(
                 fontSize: 20,
               }}
             ></LabelList>
+            <LabelList
+              {...{
+                valueAccessor: ({ inFuture }) => (inFuture ? "Forecast" : null),
+                angle: returnedWidth > breakpoints.small ? 0 : -90,
+                position: "insideBottom",
+                fill: colors.forecast,
+                className: "fw-bold",
+                paintOrder: "stroke",
+                fillOpacity: "100%",
+                stroke: "#212529",
+                strokeWidth: 2,
+                fontSize: 16,
+              }}
+            ></LabelList>
           </>
         ),
         // label: {
@@ -172,6 +264,26 @@ export const Chart = memo(
         fill: brandColors.ekuMaroon,
         dataKey: barDataKey,
       },
+      lines: [
+        {
+          stroke: colors.lineBorder,
+          strokeLinecap: "round",
+          dataKey: "prediction",
+          connectNulls: true,
+          type: "monotone",
+          strokeWidth: 4,
+          dot: false,
+        },
+        {
+          stroke: brandColors.kentuckyBluegrass,
+          strokeLinecap: "round",
+          dataKey: "prediction",
+          connectNulls: true,
+          type: "monotone",
+          strokeWidth: 3,
+          dot: false,
+        },
+      ],
       tooltip: {
         content: (
           <CustomTooltip
@@ -185,16 +297,8 @@ export const Chart = memo(
         ],
         labelFormatter: xAxisTickFormatter,
       },
-      line: {
-        stroke: brandColors.kentuckyBluegrass,
-        strokeLinecap: "round",
-        dataKey: "prediction",
-        connectNulls: true,
-        type: "monotone",
-        strokeWidth: 3,
-        dot: false,
-      },
       yAxis: {
+        // padding: stretchGoal ? { top: 20 } : null,
         domain: zoomed ? yAxisDomain : null,
         ticks: zoomed ? yAxisTicks : null,
         tickFormatter: valueFormatter,
@@ -210,11 +314,11 @@ export const Chart = memo(
         dataKey: xAxisDataKey,
         type: "category",
       },
+      legend: { formatter: nameFormatter, content: renderLegend },
       composedChart: {
         data: adjustedData,
       },
       cartesianGrid: { strokeDasharray: "3 3" },
-      legend: { formatter: nameFormatter },
     };
 
     const chartJsx = (
@@ -226,7 +330,21 @@ export const Chart = memo(
           <Tooltip {...tooltip} />
           <Legend {...legend} />
           <Bar {...bar} />
-          <Line {...line} />
+          {lines.map((line, i) => (
+            <Line key={i} {...line}></Line>
+          ))}
+          {stretchGoal && (
+            <ReferenceLine
+              label={{
+                position: "insideTopLeft",
+                value: stretchGoal.label,
+                fill: colors.goalLabel,
+              }}
+              stroke={colors.goalLine}
+              y={stretchGoal.amount}
+              strokeDasharray="3 3"
+            />
+          )}
         </ComposedChart>
       </ResponsiveContainer>
     );

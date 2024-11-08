@@ -4,10 +4,6 @@ import {
   findOriginalRegressionResult,
   findNewEquation,
 } from "./functions/findRegressionData";
-import {
-  confidentialityString,
-  isConfidential,
-} from "./constants/confidentialityNumber";
 import { handleAllDropdownItemsChange } from "./functions/handleAllDropdownItemsChange";
 import { handleDropdownSubListChange } from "./functions/handleDropdownSubListChange";
 import { handleDropdownSearchChange } from "./functions/handleDropdownSearchChange";
@@ -21,13 +17,13 @@ import { findRelevantMeasures } from "./functions/findRelevantMeasures";
 import { handleGroupByChange } from "./functions/handleGroupByChange";
 import { formatMeasureValue } from "./functions/formatMeasureValue";
 import { getMeasureFraction } from "./functions/getMeasureFraction";
+import { dataFilterCallback } from "./functions/dataFilterCallback";
 import { getRowsAndColumns } from "./functions/getRowsAndColumns";
 import { findNextDropdowns } from "./functions/findNextDropdowns";
 import { formatMeasureRate } from "./functions/formatMeasureRate";
 import { useNonBlockingState } from "./hooks/useNonBlockingState";
 import { getTicksAndDomain } from "./functions/getTicksAndDomain";
 import { toTitleCase } from "./functions/formatters/toTitleCase";
-import { toKebabCase } from "./functions/formatters/toKebabCase";
 import { regNames, regTypes } from "./constants/regressionTypes";
 import { useResponsiveState } from "./hooks/useResponsiveState";
 import { adjustDropdowns } from "./functions/adjustDropdowns";
@@ -35,10 +31,8 @@ import { getMeasureValue } from "./functions/getMeasureValue";
 import { getMeasureRate } from "./functions/getMeasureRate";
 import { getColumnDefs } from "./functions/getColumnDefs";
 import { adjustMeasure } from "./functions/adjustMeasure";
-import { useBsDropdowns } from "./hooks/useBsDropdowns";
 import { getNextTerm } from "./functions/getNextTerm";
-import { totalField } from "./constants/totalField";
-import { getBaseLog } from "./functions/getBaseLog";
+import { isEkuOnline } from "./constants/isEkuOnline";
 import { useData } from "./hooks/examples/useData";
 import { usePrevious } from "./hooks/usePrevious";
 import { fileNames } from "./constants/fileNames";
@@ -46,21 +40,19 @@ import { fieldDefs } from "./constants/fieldDefs";
 
 export const AppContext = createContext(null);
 
-export const AppContextProvider = ({
-  initialDropdowns,
-  dataByFile,
-  children,
-}) => {
-  const appContext = useMainMethod({ initialDropdowns, dataByFile });
+const stretchGoalAmount = 8000;
+
+const stretchGoalYear = 2028;
+
+const stretchGoalLabel = `Fall ${stretchGoalYear} Goal`;
+
+export const AppContextProvider = ({ initialDropdowns, children }) => {
+  const appContext = useMainMethod(initialDropdowns);
 
   return (
     <AppContext.Provider value={appContext}>{children}</AppContext.Provider>
   );
 };
-
-// first gen, low income, honors, athletes
-
-// add chad to repos
 
 const pivotFields = new Set(fileNames.map(({ pivotField }) => pivotField));
 
@@ -71,33 +63,7 @@ const fileDefaults = {
   measuresToOmit: [],
 };
 
-// what about a js linter?
-
-// download un-pivoted data (just including selected measure & rate data handle differently)
-// all values are downloading as strings (fix)
-// rates should download as numerical (value getter result not value formatter result)
-
-// check bethany email about data page addition
-
-// const columnDefs = [
-//   { field: "minority", headerName: "URM" },
-//   { headerName: "FT/PT", field: "ftpt" },
-//   { headerName: "FT/PT", field: "time" },
-//   { headerName: "Retained", field: "numRetained" },
-//   { headerName: "Graduated", field: "numGraduated" },
-//   { headerName: "Did Not Return", field: "numNotRet" },
-//   { headerName: "Course Type", field: "schedule" },
-//   { headerName: "4 Year Rate", field: "4YrGraduate" },
-//   { headerName: "5 Year Rate", field: "5YrGraduate" },
-//   { headerName: "6 Year Rate", field: "6YrGraduate" },
-//   {
-//     valueFormatter: ({ value }) =>
-//       value === "ECampus Online" ? "EKU Online" : value,
-//     field: "online",
-//   },
-// ];
-
-const useMainMethod = ({ initialDropdowns, dataByFile }) => {
+const useMainMethod = (initialDropdowns) => {
   const gridRef = useRef();
 
   const [autoSelectReg, setAutoSelectReg] = useState(true);
@@ -106,8 +72,6 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
     () => gridRef.current.api.autoSizeAllColumns(),
     []
   );
-
-  // const { isDropdownWithIdOpen, storeDropdownById } = useBsDropdowns();
 
   const [fileName, setFileName] = useNonBlockingState(fileNames[0].id);
 
@@ -118,7 +82,6 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
     measuresToOmit = fileDefaults.measuresToOmit,
     defaultMeasure = "",
     shouldFindRates,
-    displayName,
     pivotField,
     note,
   } = fileNames.find(({ id }) => id === fileName);
@@ -155,9 +118,12 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
     [setRegressionType]
   );
 
-  const data = dataByFile[fileName];
+  const fetched = useData(`data/${fileName}.json`);
 
-  // const data = useData(`data/${fileName}.json`);
+  const data = useMemo(
+    () => (Array.isArray(fetched) ? fetched : []).filter(dataFilterCallback),
+    [fetched]
+  );
 
   const dataIsLoading = false;
 
@@ -238,6 +204,8 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
     [delayedDropdowns, rows]
   );
 
+  const noRowsFilteredOut = filteredRows.length === rows.length;
+
   const onDropdownSubListChange = useCallback(
     ({ target: { name } }, subset = "relevant") =>
       handleDropdownSubListChange({
@@ -279,12 +247,9 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
       defaultMeasure,
       columns,
     });
-
-    // adjustGroupBy({ setState: setGroupBy, pivotFields, columns });
   }, [
     columns,
     setMeasure,
-    // setGroupBy,
     setDropdowns,
     measuresToOmit,
     defaultMeasure,
@@ -332,6 +297,12 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
     [measures, relevantGroupBys, filteredRows, pivotField]
   );
 
+  const showStretchGoal =
+    delayedMeasure === "total" &&
+    fileName === "fall" &&
+    noRowsFilteredOut &&
+    isEkuOnline;
+
   const regressionInformation = useMemo(() => {
     // simpler usage
     const [xKey, yKey] = [pivotField, delayedMeasure];
@@ -362,6 +333,18 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
 
     const lastTerm = pivotArray[pivotArray.length - 1];
 
+    const iterations =
+      lastTerm && showStretchGoal
+        ? stretchGoalYear - Number(lastTerm.split(" ")[1])
+        : 1;
+
+    const predictionTerms = Array.from(Array(iterations)).map(
+      (element, index) =>
+        lastTerm
+          ? getNextTerm(lastTerm, fileName, index + 1)
+          : `Next ${toTitleCase(pivotField)}`
+    );
+
     const predictionTerm = lastTerm
       ? getNextTerm(lastTerm, fileName)
       : `Next ${toTitleCase(pivotField)}`;
@@ -378,7 +361,7 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
           ? dataByTerm[term]
           : { [yKey]: shouldFindRates ? null : 0, [xKey]: term }
       ),
-      { [xKey]: predictionTerm, [yKey]: null },
+      ...predictionTerms.map((xValue) => ({ [xKey]: xValue, [yKey]: null })),
     ];
 
     // data points converted to [x, y] regression input
@@ -408,6 +391,7 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
     pivotValues,
     delayedMeasure,
     shouldFindRates,
+    showStretchGoal,
   ]);
 
   const bestRegressionType = regressionInformation.regressionResults[0].name;
@@ -469,35 +453,37 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
       ...chartData.map(({ prediction }) => prediction),
     ];
 
+    if (showStretchGoal) dataValues.push(stretchGoalAmount);
+
     return getTicksAndDomain({ dataValues });
-  }, [chartData, delayedMeasure]);
+  }, [chartData, delayedMeasure, showStretchGoal]);
 
-  const domain = useMemo(() => {
-    const allValues = [
-      ...chartData.map(({ [delayedMeasure]: value }) => value),
-      ...chartData.map(({ prediction }) => prediction),
-    ];
+  // const domain = useMemo(() => {
+  //   const allValues = [
+  //     ...chartData.map(({ [delayedMeasure]: value }) => value),
+  //     ...chartData.map(({ prediction }) => prediction),
+  //   ];
 
-    const [min, max] = [Math.min(...allValues), Math.max(...allValues)];
+  //   const [min, max] = [Math.min(...allValues), Math.max(...allValues)];
 
-    const base = 2;
+  //   const base = 2;
 
-    const power = Math.floor(getBaseLog(base, min));
+  //   const power = Math.floor(getBaseLog(base, min));
 
-    const multiple = Math.pow(base, power);
+  //   const multiple = Math.pow(base, power);
 
-    const domain = [Math.floor(min / multiple) * multiple, "auto"];
+  //   const domain = [Math.floor(min / multiple) * multiple, "auto"];
 
-    return domain;
-  }, [chartData, delayedMeasure]);
+  //   return domain;
+  // }, [chartData, delayedMeasure]);
 
-  const nonSelectedMeasures = useMemo(() => {
-    const active = new Set([delayedMeasure]);
+  // const nonSelectedMeasures = useMemo(() => {
+  //   const active = new Set([delayedMeasure]);
 
-    if (shouldFindRates) active.add(totalField);
+  //   if (shouldFindRates) active.add(totalField);
 
-    return measures.filter((string) => !active.has(string));
-  }, [measures, delayedMeasure, shouldFindRates]);
+  //   return measures.filter((string) => !active.has(string));
+  // }, [measures, delayedMeasure, shouldFindRates]);
 
   const rowData = useMemo(
     () =>
@@ -519,36 +505,36 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
     [totalRow, filteredRows, relevantGroupBys]
   );
 
-  const csvData = useMemo(() => {
-    const flattenedRows = rowData
-      .map((row) =>
-        Object.values(row).filter((value) => typeof value === "object")
-      )
-      .flat();
+  // const csvData = useMemo(() => {
+  //   const flattenedRows = rowData
+  //     .map((row) =>
+  //       Object.values(row).filter((value) => typeof value === "object")
+  //     )
+  //     .flat();
 
-    return flattenedRows.map((object) => {
-      const newObject = { ...object };
+  //   return flattenedRows.map((object) => {
+  //     const newObject = { ...object };
 
-      for (const key of nonSelectedMeasures) {
-        delete newObject[key];
-      }
+  //     for (const key of nonSelectedMeasures) {
+  //       delete newObject[key];
+  //     }
 
-      if (shouldFindRates) {
-        newObject[`${delayedMeasure} / ${totalField}`] =
-          newObject[delayedMeasure] / newObject[totalField];
-      } else if (
-        isConfidential({
-          value: newObject[delayedMeasure],
-          inFuture: false,
-          isRate: false,
-        })
-      ) {
-        newObject[delayedMeasure] = confidentialityString;
-      }
+  //     if (shouldFindRates) {
+  //       newObject[`${delayedMeasure} / ${totalField}`] =
+  //         newObject[delayedMeasure] / newObject[totalField];
+  //     } else if (
+  //       isConfidential({
+  //         value: newObject[delayedMeasure],
+  //         inFuture: false,
+  //         isRate: false,
+  //       })
+  //     ) {
+  //       newObject[delayedMeasure] = confidentialityString;
+  //     }
 
-      return newObject;
-    });
-  }, [rowData, nonSelectedMeasures, delayedMeasure, shouldFindRates]);
+  //     return newObject;
+  //   });
+  // }, [rowData, nonSelectedMeasures, delayedMeasure, shouldFindRates]);
 
   const waiting = useAutoSizeOnRowDataUpdated({
     rowData: pivotedData,
@@ -626,6 +612,10 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
       measure: onMeasureChange,
     },
     chart: {
+      stretchGoal: showStretchGoal && {
+        amount: stretchGoalAmount,
+        label: stretchGoalLabel,
+      },
       valueFormatter: !shouldFindRates ? formatMeasureValue : formatMeasureRate,
       noRowsToShow: filteredRows.length === 0,
       barDataKey: delayedMeasure,
@@ -636,7 +626,6 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
       tooltipItems,
       yAxisDomain,
       yAxisTicks,
-      domain,
     },
     grid: {
       pinnedTopRowData,
@@ -647,13 +636,13 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
       columnDefs,
       rowData,
     },
-    csv: {
-      filename: `${toKebabCase(displayName)}-${toKebabCase(
-        toTitleCase(delayedMeasure)
-      )}`,
+    // csv: {
+    //   filename: `${toKebabCase(displayName)}-${toKebabCase(
+    //     toTitleCase(delayedMeasure)
+    //   )}`,
 
-      data: csvData,
-    },
+    //   data: csvData,
+    // },
     lists: {
       measures: nonOmittedMeasures,
       regressionTypes: regNames,
@@ -661,11 +650,7 @@ const useMainMethod = ({ initialDropdowns, dataByFile }) => {
       fileNames,
       groupBys,
     },
-    // initializers: { isDropdownWithIdOpen, storeDropdownById },
     autoSizeAllColumns,
     fieldDefs,
   };
 };
-
-// const chartValueFormatter = (value, onAxis) =>
-//   onAxis ? formatMeasureValue(value) : standardValueFormatter({ value });
