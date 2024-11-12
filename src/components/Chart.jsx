@@ -27,8 +27,6 @@ import { colors } from "../constants/colors";
 const renderLegend = (props) => {
   const { formatter, payload } = props;
 
-  console.log(props);
-
   const removeBorderLine = (p) =>
     p.filter(
       ({ value, color }) =>
@@ -249,7 +247,7 @@ export const Chart = memo(
                 fillOpacity: "100%",
                 stroke: "#212529",
                 strokeWidth: 2,
-                fontSize: 16,
+                fontSize: 14,
               }}
             ></LabelList>
           </>
