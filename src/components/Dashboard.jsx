@@ -85,16 +85,13 @@ const Question = ({ children }) => {
     <div
       style={{
         border: "1px solid transparent",
-        marginBottom: 10,
-        marginRight: 36,
-        marginLeft: 12,
-        marginTop: 26,
+        marginBottom: "0.75rem",
+        marginLeft: "0.75rem",
       }}
       className="w3-dropdown position-absolute bottom-0 z-3"
     >
       <button
-        className="btn btn-primary p-0 border-0 rounded-0 d-flex align-items-center text-dark bg-white"
-        style={{ lineHeight: 1.25 }}
+        className="btn btn-primary p-0 border-0 rounded-0 d-flex align-items-end text-dark bg-transparent"
         onClick={open}
       >
         <svg
@@ -183,7 +180,7 @@ export const Dashboard = () => {
       <div className="d-flex flex-column gap-4" ref={squareRef}>
         {/* subtitle */}
         <div className="text-center">
-          <h3 className="fw-normal text-muted mb-0">
+          <h3 className="mb-0 h3">
             {fileNames.find(({ id }) => id === fileName).displayName}
           </h3>
         </div>

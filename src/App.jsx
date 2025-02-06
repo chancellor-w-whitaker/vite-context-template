@@ -42,9 +42,6 @@ const App = () => {
   return (
     <>
       {/* <MainContainer> */}
-      <h1 className="display-3 mb-1 text-center">
-        {isEkuOnline ? "EKU Online" : "Factbook"}
-      </h1>
       {!ready ? (
         <div className="d-flex justify-content-center">
           <div className="spinner-border m-2" role="status">
